@@ -16,20 +16,26 @@ report on the current state.
 
 ## What crosses the seam
 
-Four JSON values, substituted into the assembled template:
+Four JSON values, substituted into the assembled template. **A producer never
+writes these markers** - they are the contract between `New-RenderDocument` and
+a backend's markup, and only a backend author sees them:
 
 | Token | Holds |
 | --- | --- |
-| `/*__GRAPH_DATA__*/ null` | the payload: `nodes`, `links`, `unresolved` |
-| `/*__GRAPH_META__*/ null` | who and when: name, version, timestamp, root path, stats |
-| `/*__GRAPH_CONFIG__*/ null` | the resolved settings and theme |
-| `/*__GRAPH_STRINGS__*/ null` | every user-visible string |
+| `/*__DATA__*/ null` | the payload: whatever the backend's scripts expect |
+| `/*__META__*/ null` | who and when: name, version, timestamp, root path, stats |
+| `/*__CONFIG__*/ null` | the resolved settings and theme |
+| `/*__STRINGS__*/ null` | every user-visible string |
 
 `__PAGE_TITLE__` is substituted separately, as escaped text rather than JSON.
 
-**The token names are wrong and are known to be wrong.** `__GRAPH_*__` names the
-first producer's domain, and the checklist tracks renaming them. A producer
-written today has to emit against these names.
+The marker names lost their `GRAPH_` prefix in v0.2.0 and no producer sees them
+any more - `New-RenderDocument` is the only thing that knows they exist. A
+backend author does see them, and writes them into its own markup.
+
+The JavaScript consts those markers feed are still `GRAPH_DATA` and siblings.
+Unlike the markers, those reach the output document, so renaming them is not
+covered by byte-identity and waits for 0.3.0.
 
 ## Nodes and edges are the renderer's own vocabulary
 
@@ -82,13 +88,19 @@ renderer ships **no default** — a default would be the renderer knowing a
 producer's vocabulary — and when nothing supplies one the page uses a second
 message that does not mention a command.
 
-## What a producer must do for itself today
+## What a producer does
 
-More than it should. `ConvertTo-GraphHtml` in PSModuleGraph calls
-`ConvertTo-EscapedHtmlJson`, `ConvertTo-EscapedHtmlText` and
-`Resolve-RenderString` directly, and does its own token substitution against the
-assembled template. Those three are public here only because a producer needs
-them.
+One call.
 
-The charter's seam is `New-RenderDocument`, which would take a view model and do
-all of that internally. It does not exist yet. See `docs/improvements.md`.
+```powershell
+New-RenderDocument -ViewModel $payload -Meta $meta -Strings $strings -Title 'x'
+```
+
+That is the whole interface. A producer does not escape anything, does not know
+a marker name, does not know where a backend keeps its settings, and does not
+choose a backend unless it wants to (`-TemplateSet`, or `-TemplateSetPath` for
+one that ships nowhere near here).
+
+Until v0.2.0 it had to do all of that itself, which is why the module exported
+seven functions instead of four and why "a producer in Go could drive this" was
+aspirational.

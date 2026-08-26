@@ -172,12 +172,12 @@ task Test Build, {
     $config.CodeCoverage.Path = Join-Path $OutRoot "$ModuleName.psm1"
     $config.CodeCoverage.OutputFormat = 'JaCoCo'
     $config.CodeCoverage.OutputPath = Join-Path $outputParent 'coverage.xml'
-    # 70, against 71.56% measured when the renderer arrived. Deliberately just
-    # under: the suite that came across with the code covers the transport and
-    # config paths well and the document paths only through one fixture render,
-    # so the honest number is the one the suite reaches rather than the one the
-    # parent repository used. Raise it as tests arrive; see the ledger.
-    $config.CodeCoverage.CoveragePercentTarget = 70
+    # 80, against 83.33% measured at v0.2.0. It was 70 against 71.56% when the
+    # renderer arrived; the config resolvers' own tests came across and a second
+    # backend and a hand-written fixture arrived with theirs. The number follows
+    # what the suite reaches - a target nobody has seen fail is a target nobody
+    # knows works.
+    $config.CodeCoverage.CoveragePercentTarget = 80
 
     # Ensure built module is preferred on PSModulePath for tests that Import-Module by name
     $env:PSModulePath = $outputParent + [System.IO.Path]::PathSeparator + $env:PSModulePath

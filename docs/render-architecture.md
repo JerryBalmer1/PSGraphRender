@@ -22,7 +22,8 @@ every one of them without importing anything.
 
 ## The seam
 
-**`New-RenderDocument` is the seam, and it faces outward.**
+**`New-RenderDocument` is the seam, and it faces outward.** It exists as of
+v0.2.0; before that the charter described an interface the code did not have.
 
 Above it: producers. `ConvertTo-GraphHtml` in PSModuleGraph is the first one —
 it knows what a dependency graph is, converts one to a view model, and hands it
@@ -207,15 +208,15 @@ Extraction from PSModuleGraph is iteration 0.1.0 and has not happened yet. The
 checklist below tracks both halves: moving the subsystem across unchanged, and
 then making the result producer-neutral rather than merely relocated.
 
-- [ ] No producer vocabulary anywhere  (`Module`, `Ast`, `PSModuleGraph`)
-- [ ] Token contract named generically (not `__GRAPH_*__`)
-- [ ] Public functions named without `Graph` or `PSModule`
+- [ ] No producer vocabulary anywhere  (`Module`, `Ast`, `PSModuleGraph`)  (code clear; the payload's `meta.module*` fields are 0.3.0)
+- [x] Token contract named generically (not `__GRAPH_*__`)
+- [x] Public functions named without `Graph` or `PSModule`
 - [ ] All user-visible strings externalised to `strings.psd1`  (scripts done; partial markup still carries its own text)
 - [ ] All colours externalised to `theme.psd1`
 - [ ] `contract/viewmodel.schema.json` exists and every entry point validates against it
-- [ ] Suite renders a hand-written fixture with no producer installed
-- [ ] `TemplateSets/` holds the reference backend and code privileges none of them
-- [ ] A second backend exists and proves the seam
+- [x] Suite renders a hand-written fixture with no producer installed
+- [x] `TemplateSets/` holds the reference backend and code privileges none of them
+- [x] A second backend exists and proves the seam
 - [ ] CLAUDE.md pruned toward 10,000; ceiling ratcheted to match
 - [x] The settings schema is data — `settings.schema.psd1`, not a hashtable
       in a `.ps1`
@@ -263,3 +264,33 @@ in that iteration.** A pure move can be proved correct by rendering the same
 graph through both paths and comparing bytes with the timestamp normalised. That
 proof is only available if nothing is renamed at the same time, which is why the
 renames wait for the following iteration and are verified structurally instead.
+
+**2026-08-26 — `New-RenderDocument` is the seam and it now exists.** The
+charter said the seam faced outward while the actual interface was seven
+functions and four marker names a producer had to know, so a producer in
+another language would have had to reimplement the escaping before rendering
+anything. One call takes a view model, a meta block, strings and a title. The
+escapers and the two resolvers went back to private and the public surface is
+four.
+
+**2026-08-26 — A backend's location is stated once, and its name is data.**
+Three functions each resolved `TemplateSets/cytoscape` independently, which
+made a second backend three code edits and the rule that pays for the config
+split a dead letter. `Resolve-RenderTemplateSetPath` is the only answer now;
+`TemplateSets/index.psd1` names the default and discovery is enumerating
+directories with a manifest. A backend name in a `.ps1` is a test failure.
+
+**2026-08-26 — The second backend is deliberately poor.** `TemplateSets/plain`
+is a static table with no CDN, no library and no layout engine. A good second
+backend would have been a worse test: what is being proved is that the seam
+holds for something that shares none of the reference backend's assumptions,
+and the cheapest way to be sure of that is to build something that could not
+have inherited any. It also makes the offline half of the vendoring decision a
+demonstration rather than an argument.
+
+**2026-08-26 — Renames keep byte-identity; payload fields do not.** Function,
+parameter and file names and the `__*__` markers are consumed before the
+document exists, so the golden covers a rename of any of them and a red golden
+during a rename means something else changed. The JavaScript consts and the
+`meta.module*` fields DO reach the document, which is why they wait for 0.3.0
+and the structural-equivalence check the schema will need anyway.

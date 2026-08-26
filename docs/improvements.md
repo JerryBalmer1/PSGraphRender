@@ -22,39 +22,6 @@ thought about yet.
 
 ## Open
 
-### The default backend is hardcoded in two places — **medium**
-
-`Get-RenderTemplateSet` resolves `TemplateSets/cytoscape` and
-`Resolve-RenderConfiguration` resolves `TemplateSets/cytoscape/Config`, each
-independently, and nothing makes the two agree. `Resolve-RenderString` hardcodes
-the same config path a third time.
-
-**This is the rule that pays for the config split, failing.** Adding a second
-backend means editing three `.ps1` files, which the charter says is a bug in the
-design rather than work to be done. It was invisible in the old layout, where
-`Config/` and `Templates/` were siblings under `Assets/Html/` and config was
-module-level rather than per-backend. Collapsing `Templates/` into
-`TemplateSets/cytoscape/` made config per-backend, which is what the charter
-asks for, and exposed the coupling.
-
-The fix is one resolver that answers "where is backend N", called by all three.
-Whether the config path is derived from the template set path or declared in
-`templateset.psd1` is the decision to make.
-
-### A producer has to escape and substitute for itself — **large**
-
-`ConvertTo-GraphHtml` calls `ConvertTo-EscapedHtmlJson`,
-`ConvertTo-EscapedHtmlText` and `Resolve-RenderString`, then does its own
-`[string]::Replace` against the assembled template. Those three functions are
-public only because of that.
-
-The charter's seam is `New-RenderDocument`, taking a view model and returning a
-document. It would shrink the public surface from seven to about four and make
-"a producer written in Go can drive this" mean something — today such a producer
-would have to reimplement the escaping and the four token names.
-
-Large: it changes what a producer does, so it is a proposal, not an edit.
-
 ### `Get-HashtableValue` exists in both repositories — **small**
 
 A twenty-line strict-mode-safe accessor. Four moved functions need it and ten
@@ -62,45 +29,42 @@ functions in PSModuleGraph still do, so the extraction copied it rather than
 moving it. It carries no domain knowledge, so the duplication is safe, but two
 copies drift.
 
-### Producer vocabulary that survived the move — **medium**
+### Producer vocabulary still in the payload — **large**
 
-Deliberately untouched so the extraction could be proved by byte-identity.
-Iteration 2's work:
+The code is clear: no function, parameter, file name or substitution marker
+names a producer any more. What is left is in the data a producer sends, which
+is a contract change and therefore a proposal rather than an edit.
 
-- `Get-PSModuleGraphAsset`, `Get-PSModuleGraphAssetPath` — function names.
-- `$script:ModuleRoot is not set. Both PSModuleGraph.psm1 loaders...` — an error
-  message in `Get-PSModuleGraphAssetPath` naming a module that is not this one.
-- `$request.UserAgent = 'PSModuleGraph'` in `Resolve-LoopbackDocumentUrl`.
-- `__GRAPH_DATA__`, `__GRAPH_META__`, `__GRAPH_CONFIG__`, `__GRAPH_STRINGS__` —
-  the token contract. Renaming these is a contract change, so it is **large**,
-  and the old names have to survive as aliases.
-- `meta.moduleName`, `meta.moduleVersion`, `meta.moduleBase`, `meta.moduleRoot`
-  — producer vocabulary in the payload. Also a contract change.
-- `Get-RenderTemplateSet`, `Resolve-RenderConfiguration`, `New-RenderDocumentPath`,
-  `Show-RenderDocument` — public names carrying `Html` or `Graph` where the
-  charter names `Get-RenderTemplateSet`, `New-RenderDocument` and friends.
+- `meta.moduleName`, `meta.moduleVersion`, `meta.moduleBase`, `meta.moduleRoot`.
+  A renderer that receives `moduleName` from a Terraform producer is being told
+  a word that means nothing here. `title`, `version`, `rootPath` and siblings.
+- `GRAPH_DATA`, `GRAPH_META`, `GRAPH_CONFIG`, `GRAPH_STRINGS` — the JavaScript
+  consts the markers feed. These DO reach the output document, so unlike the
+  markers they are not covered by byte-identity and need the
+  structural-equivalence check instead.
 
-### The view model fixture is derived, not hand-written — **medium**
+These go together in 0.3.0 with `contract/viewmodel.schema.json`, because the
+payload rename IS the contract definition and doing them separately would mean
+writing the schema twice.
 
-`tests/fixtures/viewmodels/sample-module.json` was lifted out of a real render
-and had its timestamp and absolute path replaced. It proves the renderer needs
-no producer *at runtime*. It cannot prove the renderer accepts a payload no
-producer would have emitted, because every shape in it came from one.
+### A second golden for an awkward graph — **small**
 
-A genuinely hand-written fixture — a graph of three nodes describing something
-that is not code at all — is the checklist item.
+`tests/fixtures/viewmodels/infrastructure.json` covers the shapes the golden
+never sees: an apostrophe and an angle bracket in one label, a path with a
+space, a two-node cycle, a metric at range. It is asserted against, but not
+recorded as a golden, so a change in how any of those renders is caught only by
+the specific assertions written for it.
 
-### The instruction tier is 37% over its stated ceiling — **medium**
+### The instruction tier is still above its stated ceiling — **small**
 
-`CLAUDE.md` says 10,000 bytes and weighs 13,659. The gate in
-`tests/Instructions.Tests.ps1` is set at the measured weight so it is a real
-ratchet rather than an aspiration. Iteration 2 prunes toward 10,000:
-"Traps that survived the move" belongs in `docs/development.md` and is most of
-the overage; gravity is stated both here and in the charter, and the charter is
-the authority.
+`CLAUDE.md` says 10,000 bytes and weighs 11,301, down from 13,659 at v0.1.0.
+"Traps that survived the move" and gravity's reasoning moved down a tier in
+v0.2.0. What is left that could follow: "Build and test" belongs in
+`docs/testing.md` and "Commit" in `docs/development.md`, which is roughly the
+remaining gap between them.
 
 Do not touch "The core constraint", "The contract is the product", or "A
-template set is a rendering backend" — those are true before the work is known,
+template set is a rendering backend" - those are true before the work is known,
 which is the test.
 
 ### `Show-RenderDocument` may not belong here — **large, and already open**
@@ -113,9 +77,16 @@ before resolving it.
 
 ## Noticed, not logged as work
 
-- The renderer claims to be self-contained and is not: Cytoscape and dagre come
-  from jsdelivr with SRI hashes. This is an open decision in `CLAUDE.md`, not a
-  backlog item.
+- The renderer claims to be self-contained and is not - but only in one
+  backend. `cytoscape` still pulls Cytoscape and dagre from jsdelivr; `plain`
+  reaches no host at all and a test asserts it. Half the vendoring decision in
+  `CLAUDE.md` is now answered by demonstration: an offline reader has a view.
+  Whether the DEFAULT backend should be offline-capable is the half that is
+  still open.
+- `PSMissingModuleManifestField` fires on the `.psd1` extension alone and cannot
+  tell a backend's `settings.psd1` from a module manifest. Excluded for
+  `TemplateSets/` only, in the Lint task rather than in
+  `PSScriptAnalyzerSettings.psd1`, so the rule still guards the real manifest.
 - `PSModuleGraph`'s manifest sat at `ModuleVersion = '0.1.0'` through six
   annotated tags. Corrected to `0.7.0` during the extraction, but nothing
   enforces the agreement between the manifest and the tag.
