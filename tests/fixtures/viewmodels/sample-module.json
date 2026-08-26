@@ -1,0 +1,228 @@
+{
+  "meta": {
+    "moduleName": "SampleModule",
+    "moduleVersion": "1.2.3",
+    "generatedAt": "2026-08-26T00:00:00.0000000Z",
+    "moduleRoot": "C:/fixtures/SampleModule",
+    "stats": {
+      "NodeCount": 9,
+      "EdgeCount": 5,
+      "RootCount": 4,
+      "LeafCount": 6,
+      "UnresolvedCount": 9,
+      "FunctionCount": 5,
+      "ClassCount": 2,
+      "EnumCount": 1
+    }
+  },
+  "data": {
+    "moduleName": "SampleModule",
+    "moduleVersion": "1.2.3",
+    "moduleBase": "C:/fixtures/SampleModule",
+    "stats": {
+      "NodeCount": 9,
+      "EdgeCount": 5,
+      "RootCount": 4,
+      "LeafCount": 6,
+      "UnresolvedCount": 9,
+      "FunctionCount": 5,
+      "ClassCount": 2,
+      "EnumCount": 1
+    },
+    "metrics": [
+      "dependents",
+      "blastRadius",
+      "dependencies",
+      "reach"
+    ],
+    "nodes": [
+      {
+        "id": "function:ConvertTo-SampleName",
+        "name": "ConvertTo-SampleName",
+        "kind": "Function",
+        "isExported": false,
+        "path": "private\\ConvertTo-SampleName.ps1",
+        "startLine": 1,
+        "metrics": {
+          "dependents": 1,
+          "blastRadius": 2,
+          "dependencies": 0,
+          "reach": 0
+        }
+      },
+      {
+        "id": "function:New-SampleThing",
+        "name": "New-SampleThing",
+        "kind": "Function",
+        "isExported": false,
+        "path": "private\\New-SampleThing.ps1",
+        "startLine": 1,
+        "metrics": {
+          "dependents": 1,
+          "blastRadius": 2,
+          "dependencies": 0,
+          "reach": 0
+        }
+      },
+      {
+        "id": "function:Test-SampleThing",
+        "name": "Test-SampleThing",
+        "kind": "Function",
+        "isExported": false,
+        "path": "private\\Test-SampleThing.ps1",
+        "startLine": 1,
+        "metrics": {
+          "dependents": 1,
+          "blastRadius": 1,
+          "dependencies": 0,
+          "reach": 0
+        }
+      },
+      {
+        "id": "function:Get-SampleThing",
+        "name": "Get-SampleThing",
+        "kind": "Function",
+        "isExported": true,
+        "path": "public\\Get-SampleThing.ps1",
+        "startLine": 1,
+        "metrics": {
+          "dependents": 1,
+          "blastRadius": 1,
+          "dependencies": 2,
+          "reach": 2
+        }
+      },
+      {
+        "id": "function:Invoke-SampleWorkflow",
+        "name": "Invoke-SampleWorkflow",
+        "kind": "Function",
+        "isExported": true,
+        "path": "public\\Invoke-SampleWorkflow.ps1",
+        "startLine": 1,
+        "metrics": {
+          "dependents": 0,
+          "blastRadius": 0,
+          "dependencies": 2,
+          "reach": 4
+        }
+      },
+      {
+        "id": "class:SampleBase",
+        "name": "SampleBase",
+        "kind": "Class",
+        "isExported": false,
+        "path": "classes\\SampleTypes.ps1",
+        "startLine": 7,
+        "metrics": {
+          "dependents": 1,
+          "blastRadius": 1,
+          "dependencies": 0,
+          "reach": 0
+        }
+      },
+      {
+        "id": "class:SampleThing",
+        "name": "SampleThing",
+        "kind": "Class",
+        "isExported": false,
+        "path": "classes\\SampleTypes.ps1",
+        "startLine": 19,
+        "metrics": {
+          "dependents": 0,
+          "blastRadius": 0,
+          "dependencies": 1,
+          "reach": 1
+        }
+      },
+      {
+        "id": "enum:SampleStatus",
+        "name": "SampleStatus",
+        "kind": "Enum",
+        "isExported": false,
+        "path": "classes\\SampleTypes.ps1",
+        "startLine": 1,
+        "metrics": {
+          "dependents": 0,
+          "blastRadius": 0,
+          "dependencies": 0,
+          "reach": 0
+        }
+      },
+      {
+        "id": "script:toplevel",
+        "name": "<script>",
+        "kind": "Script",
+        "isExported": false,
+        "path": "SampleModule.psm1",
+        "startLine": 4,
+        "metrics": {
+          "dependents": 0,
+          "blastRadius": 0,
+          "dependencies": 0,
+          "reach": 0
+        }
+      }
+    ],
+    "links": [
+      {
+        "source": "function:Get-SampleThing",
+        "target": "function:ConvertTo-SampleName",
+        "sourceName": "Get-SampleThing",
+        "targetName": "ConvertTo-SampleName",
+        "kind": "CommandReference",
+        "path": "public\\Get-SampleThing.ps1",
+        "startLine": 8
+      },
+      {
+        "source": "function:Get-SampleThing",
+        "target": "function:New-SampleThing",
+        "sourceName": "Get-SampleThing",
+        "targetName": "New-SampleThing",
+        "kind": "CommandReference",
+        "path": "public\\Get-SampleThing.ps1",
+        "startLine": 9
+      },
+      {
+        "source": "function:Invoke-SampleWorkflow",
+        "target": "function:Get-SampleThing",
+        "sourceName": "Invoke-SampleWorkflow",
+        "targetName": "Get-SampleThing",
+        "kind": "CommandReference",
+        "path": "public\\Invoke-SampleWorkflow.ps1",
+        "startLine": 8
+      },
+      {
+        "source": "function:Invoke-SampleWorkflow",
+        "target": "function:Test-SampleThing",
+        "sourceName": "Invoke-SampleWorkflow",
+        "targetName": "Test-SampleThing",
+        "kind": "CommandReference",
+        "path": "public\\Invoke-SampleWorkflow.ps1",
+        "startLine": 9
+      },
+      {
+        "source": "class:SampleThing",
+        "target": "class:SampleBase",
+        "sourceName": "SampleThing",
+        "targetName": "SampleBase",
+        "kind": "Inherits",
+        "path": "classes\\SampleTypes.ps1",
+        "startLine": 19
+      }
+    ],
+    "roots": [
+      "function:Invoke-SampleWorkflow",
+      "class:SampleThing",
+      "enum:SampleStatus",
+      "script:toplevel"
+    ],
+    "leaves": [
+      "function:ConvertTo-SampleName",
+      "function:New-SampleThing",
+      "function:Test-SampleThing",
+      "class:SampleBase",
+      "enum:SampleStatus",
+      "script:toplevel"
+    ]
+  }
+}
