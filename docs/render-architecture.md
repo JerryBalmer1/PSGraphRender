@@ -203,8 +203,9 @@ the assumption that it makes no difference.
 
 ## Extraction checklist
 
-Extraction from PSModuleGraph is done. What remains is the second half: making
-the result actually producer-neutral rather than merely relocated.
+Extraction from PSModuleGraph is iteration 0.1.0 and has not happened yet. The
+checklist below tracks both halves: moving the subsystem across unchanged, and
+then making the result producer-neutral rather than merely relocated.
 
 - [ ] No producer vocabulary anywhere  (`Module`, `Ast`, `PSModuleGraph`)
 - [ ] Token contract named generically (not `__GRAPH_*__`)
