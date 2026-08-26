@@ -3,7 +3,7 @@
     function diagnosticsFor(node) {
         var rows = [
             ['node.data(path)', node.data('path')],
-            ['meta.moduleRoot', meta.moduleRoot],
+            ['meta.rootPath', meta.rootPath],
             ['absolutePathFor', absolutePathFor(node)],
             ['vsCodeUriFor', vsCodeUriFor(node)],
             ['node.data(startLine)', node.data('startLine')],

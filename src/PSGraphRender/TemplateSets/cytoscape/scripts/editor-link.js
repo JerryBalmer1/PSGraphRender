@@ -5,7 +5,7 @@
     function absolutePathFor(node) {
         var rel = node.data('path');
         if (!rel) { return null; }
-        var root = meta.moduleRoot;
+        var root = meta.rootPath;
         if (!root) { return null; }
         var joined = root.replace(/[\\/]+$/, '') + '/' + rel;
         return joined.replace(/\\/g, '/');
@@ -84,6 +84,6 @@
     // the only thing that does.
     function editorLinkCheck(node) {
         if (!node.data('path')) { return str('ReasonNoFile'); }
-        if (!meta.moduleRoot) { return str('ReasonNoModuleRoot'); }
+        if (!meta.rootPath) { return str('ReasonNoRootPath'); }
         return null;
     }

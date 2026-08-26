@@ -1,7 +1,7 @@
-const GRAPH_DATA = /*__DATA__*/ null;
-const GRAPH_META = /*__META__*/ null;
-const GRAPH_CONFIG = /*__CONFIG__*/ null;
-const GRAPH_STRINGS = /*__STRINGS__*/ null;
+const DATA = /*__DATA__*/ null;
+const META = /*__META__*/ null;
+const CONFIG = /*__CONFIG__*/ null;
+const STRINGS = /*__STRINGS__*/ null;
 
 (function () {
     'use strict';
@@ -9,7 +9,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
     if (typeof cytoscape === 'undefined') { return; }
 
     // Opened as a raw template rather than a generated report.
-    if (!GRAPH_DATA) {
+    if (!DATA) {
         document.getElementById('template-notice').hidden = false;
         return;
     }
@@ -22,7 +22,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
     // template - which bails out earlier anyway. They exist so a missing key
     // can never yield NaN and silently collapse the layout.
     function cfg(key, fallback) {
-        var v = GRAPH_CONFIG ? GRAPH_CONFIG[key] : null;
+        var v = CONFIG ? CONFIG[key] : null;
         return (typeof v === 'number' && isFinite(v)) ? v : fallback;
     }
 
@@ -30,7 +30,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
     // a perfectly valid value would otherwise fail the isFinite test and fall
     // back to the default every time.
     function cfgText(key, fallback) {
-        var v = GRAPH_CONFIG ? GRAPH_CONFIG[key] : null;
+        var v = CONFIG ? CONFIG[key] : null;
         return (typeof v === 'string' && v.length) ? v : fallback;
     }
 
@@ -38,7 +38,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
     // is one entry rather than five numbered ones - which means a reader that
     // handles only scalars cannot see it.
     function cfgList(key, fallback) {
-        var v = GRAPH_CONFIG ? GRAPH_CONFIG[key] : null;
+        var v = CONFIG ? CONFIG[key] : null;
         return (Object.prototype.toString.call(v) === '[object Array]' && v.length) ? v : fallback;
     }
 
@@ -46,7 +46,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
     // above. A missing key renders as its own name in brackets rather than as
     // nothing: a silently blank label is the one failure mode nobody notices.
     function str(key) {
-        var v = GRAPH_STRINGS ? GRAPH_STRINGS[key] : null;
+        var v = STRINGS ? STRINGS[key] : null;
         return (typeof v === 'string' && v.length) ? v : '[' + key + ']';
     }
 
@@ -54,7 +54,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
     // the values the caller passes through config, which may legitimately be
     // absent - str() alone cannot tell absent from present-and-bracketed.
     function hasStr(key) {
-        var v = GRAPH_STRINGS ? GRAPH_STRINGS[key] : null;
+        var v = STRINGS ? STRINGS[key] : null;
         return typeof v === 'string' && v.length > 0;
     }
 
@@ -97,12 +97,12 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
     var LINK_HEX = cfgMap('LinkColor');
     var EDGE_COLOR = cfgText('EdgeColor', '#6b7785');
 
-    var meta = GRAPH_META || {};
-    var data = GRAPH_DATA;
+    var meta = META || {};
+    var data = DATA;
     var COLOR_BY = cfgText('ColorBy', 'structure');
-    var nodes = GRAPH_DATA.nodes || [];
-    var links = GRAPH_DATA.links || [];
-    var unresolved = GRAPH_DATA.unresolved || [];
+    var nodes = DATA.nodes || [];
+    var links = DATA.links || [];
+    var unresolved = DATA.unresolved || [];
 
     function uniq(arr) {
         return arr.filter(function (v, i, a) { return a.indexOf(v) === i; });
@@ -117,7 +117,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
 /*__SLOT_SCRIPT_ORDER__*/
     // ---- header ----------------------------------------------------------
     document.getElementById('hdr-version').textContent =
-        (meta.moduleVersion ? str('HeaderVersionPrefix') + meta.moduleVersion : '') +
+        (meta.version ? str('HeaderVersionPrefix') + meta.version : '') +
         (meta.generatedAt ? str('HeaderGeneratedPrefix') + meta.generatedAt : '');
     document.getElementById('c-nodes').textContent = nodes.length;
     document.getElementById('c-edges').textContent = links.length;

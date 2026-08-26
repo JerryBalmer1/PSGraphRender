@@ -86,7 +86,13 @@ Describe 'Rendering a view model with no producer installed' {
         # survived the move". Asserted through the seam, because that is now
         # the only way a
         # producer can reach the escaper - which is the point of moving it.
-        $hostile = [pscustomobject]@{ label = '</script><script>alert(1)</script>' }
+        # A real node, not a bare object. The contract requires data.nodes, and
+        # the version of this test that passed { label = ... } was rejected by
+        # it the moment validation arrived - which is the contract earning its
+        # place on the first day.
+        $hostile = [pscustomobject]@{
+            nodes = @([pscustomobject]@{ id = 'n1'; name = '</script><script>alert(1)</script>' })
+        }
 
         $document = New-RenderDocument -ViewModel $hostile -Title 'Hostile'
 

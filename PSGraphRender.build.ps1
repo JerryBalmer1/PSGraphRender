@@ -120,6 +120,17 @@ task Build Clean, {
         Write-Build Green "  template sets: $setCount backend(s), $fileCount file(s)"
     }
 
+    # The contract ships WITH the module, not only in the repository. A
+    # renderer that cannot read the schema it validates against is a renderer
+    # that silently stops validating - and contract/ lives at the repository
+    # root rather than under src/ because it is versioned independently and is
+    # the product, not part of one implementation of it.
+    $contractDir = Join-Path $BuildRoot 'contract'
+    if (Test-Path -LiteralPath $contractDir) {
+        Copy-Item -LiteralPath $contractDir -Destination $OutRoot -Recurse -Force
+        Write-Build Green "  contract: $(@(Get-ChildItem -Path (Join-Path $OutRoot 'contract') -File -Recurse).Count) file(s)"
+    }
+
     # Copy culture directories (en-US, fr-FR, ...) so Get-Help finds about_ topics.
     Get-ChildItem -Path $SrcRoot -Directory |
         Where-Object { $_.Name -match '^[a-z]{2}(-[A-Za-z]{2,4})?$' } |

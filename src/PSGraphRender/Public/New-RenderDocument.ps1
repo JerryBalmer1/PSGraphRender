@@ -41,6 +41,11 @@ function New-RenderDocument {
         A backend directory of the caller's own. Takes precedence over
         -TemplateSet, and is what makes a backend that does not ship here
         possible at all.
+    .PARAMETER SkipValidation
+        Render without checking the payload against
+        contract/viewmodel.schema.json. For a caller deliberately exercising a
+        shape the contract does not describe yet - which is a proposal, not a
+        habit.
     .OUTPUTS
         System.String - the whole document.
     .EXAMPLE
@@ -69,10 +74,44 @@ function New-RenderDocument {
         [string] $TemplateSet,
 
         [Parameter()]
-        [string] $TemplateSetPath
+        [string] $TemplateSetPath,
+
+        [Parameter()]
+        [switch] $SkipValidation
     )
 
     process {
+        # A rename never deletes: read the current names, fall back to the ones
+        # they replaced, warn once naming both. See NAMING.md in PSModuleGraph,
+        # which this contract follows.
+        $resolvedMeta = Resolve-RenderMeta -Meta $Meta
+
+        # Refused by name, not rendered on a guess. A renderer that quietly
+        # tolerates a payload it does not understand teaches producers to emit
+        # payloads nobody understands.
+        Assert-RenderContractVersion -Meta $resolvedMeta
+
+        if (-not $SkipValidation) {
+            # This is the answer to a shape assumption living in a backend
+            # script. `plain` reads DATA.nodes and DATA.links directly, and that
+            # is only safe because the contract requires them - checked here,
+            # once, at the seam, rather than by every backend separately.
+            $check = Test-RenderViewModel -InputObject ([pscustomobject]@{
+                    meta = [pscustomobject]$resolvedMeta
+                    data = $ViewModel
+                })
+
+            if ($check.IsValid -eq $false) {
+                throw ("View model does not satisfy contract/viewmodel.schema.json: $($check.Reason) " +
+                    'Pass -SkipValidation to render it anyway.')
+            }
+            if ($null -eq $check.IsValid) {
+                # NOT $true. "Could not check" and "checked and passed" are
+                # different facts, and returning the second for the first is how
+                # an invalid payload reaches a reader.
+                Write-Verbose "View model not validated: $($check.Reason)"
+            }
+        }
         # One path, resolved once, handed to all three consumers. The location
         # of a backend is stated in Resolve-RenderTemplateSetPath and nowhere
         # else; see the comment there for what three copies of it cost.
@@ -88,7 +127,7 @@ function New-RenderDocument {
         # treats as substitution patterns and silently eats. The result would be
         # corrupted output rather than an error. See docs/development.md.
         $document = $template.Replace('/*__DATA__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $ViewModel))
-        $document = $document.Replace('/*__META__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $Meta))
+        $document = $document.Replace('/*__META__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $resolvedMeta))
         $document = $document.Replace('/*__CONFIG__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $config))
         $document = $document.Replace('/*__STRINGS__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $resolvedStrings))
         $document = $document.Replace('__PAGE_TITLE__', (ConvertTo-EscapedHtmlText -Text $Title))

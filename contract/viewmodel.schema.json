@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/JerryBalmer1/PSGraphRender/contract/viewmodel.schema.json",
+  "title": "PSGraphRender view model",
+  "version": "1.0.0",
+  "description": "The boundary between a producer and the renderer. Versioned independently of the module: this is 1.0.0 while PSGraphRender is 0.3.0, because the contract is the product and the module is one implementation of it.\n\nEvery field here was derived from a payload that already renders. Nothing is invented: if a producer would have to reshape its data to satisfy this, the schema is wrong.\n\nA rename never deletes. An old name stays, marked deprecated with the version it was replaced in, and the renderer reads the new name, falls back to the old, and warns once naming both.",
+  "type": "object",
+  "required": ["meta", "data"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Provenance and headline figures. Nothing here describes the graph itself.\n\ncontractVersion is NOT required, deliberately. A payload written before the field existed must still validate - that is the same rule that keeps a renamed field readable. The renderer warns when it is absent and refuses only a major it does not implement, because absent is not the same as declaring the wrong thing.",
+      "properties": {
+        "contractVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Which version of THIS document the payload was written against. The renderer refuses a major it does not implement, by name, rather than rendering on a guess."
+        },
+        "title": {
+          "type": "string",
+          "description": "What the report is about, in the producer's own words. Shown as the page heading."
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of whatever the payload describes. A free string: a semver, a git sha and a date are all legitimate."
+        },
+        "rootPath": {
+          "type": "string",
+          "description": "Absolute path everything in the payload is relative to. The page rebuilds absolute paths from it, which is how a file:// link works while payload paths stay portable."
+        },
+        "generatedAt": {
+          "type": "string",
+          "description": "When the payload was produced. Rendered as given; the renderer does not parse it."
+        },
+        "stats": {
+          "type": "object",
+          "description": "Headline figures, in the producer's own vocabulary. Deliberately unconstrained: no backend reads it, and constraining it would make it another place a producer's words have to match the renderer's.",
+          "additionalProperties": true
+        },
+        "moduleName": {
+          "type": "string",
+          "deprecated": true,
+          "since": "1.0.0",
+          "description": "DEPRECATED, replaced by title in 1.0.0. It named one producer's domain: a payload describing infrastructure was filling moduleName with a region. Still read, with a warning."
+        },
+        "moduleVersion": {
+          "type": "string",
+          "deprecated": true,
+          "since": "1.0.0",
+          "description": "DEPRECATED, replaced by version in 1.0.0. Still read, with a warning."
+        },
+        "moduleRoot": {
+          "type": "string",
+          "deprecated": true,
+          "since": "1.0.0",
+          "description": "DEPRECATED, replaced by rootPath in 1.0.0. Still read, with a warning."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "data": {
+      "type": "object",
+      "description": "The graph. A node has an id, a label, a classification and some measurements; what it REPRESENTS is the producer's business and never reaches the renderer.",
+      "required": ["nodes"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "description": "The subjects. Every backend that draws anything reads this.",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique within the payload. Links reference it. Opaque to the renderer."
+              },
+              "name": {
+                "type": "string",
+                "description": "The label a reader sees. Escaped on the way into the document; may contain anything."
+              },
+              "kind": {
+                "type": "string",
+                "description": "One classification. The renderer knows no kinds and must not: colours and labels for a classification are theme and string data. See KindColor in a backend's theme.psd1."
+              },
+              "path": {
+                "type": "string",
+                "description": "Where the subject lives, relative to meta.rootPath. A path is data - nothing normalises, quotes or escapes it on the way through."
+              },
+              "startLine": {
+                "type": "integer",
+                "description": "Line within path."
+              },
+              "isExported": {
+                "type": "boolean",
+                "description": "Whether the subject is part of a public surface. Rendered as border colour rather than fill, so it survives greyscale."
+              },
+              "metrics": {
+                "type": "object",
+                "description": "One number per measurement id. The ids are the producer's; the registry the page renders is built from whatever ids the payload carries, so a new metric is a producer-side change and two strings.",
+                "additionalProperties": { "type": "number" }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "links": {
+          "type": "array",
+          "description": "Directed edges. source and target name node ids.",
+          "items": {
+            "type": "object",
+            "required": ["source", "target"],
+            "properties": {
+              "source": { "type": "string", "description": "Node id the edge leaves." },
+              "target": { "type": "string", "description": "Node id the edge enters." },
+              "kind": {
+                "type": "string",
+                "description": "One classification for the edge. Unclassified is legitimate and renders as the default line."
+              },
+              "sourceName": { "type": "string", "description": "Label of the source, when the producer has one to hand." },
+              "targetName": { "type": "string", "description": "Label of the target." },
+              "path": { "type": "string", "description": "Where the reference was found, relative to meta.rootPath." },
+              "startLine": { "type": "integer", "description": "Line within path." }
+            },
+            "additionalProperties": true
+          }
+        },
+        "unresolved": {
+          "type": "array",
+          "description": "Targets the payload names but does not contain. The renderer invents a node for each, in its own vocabulary - no producer sends one.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": { "type": "string", "description": "Node id the reference was made from." },
+              "sourceName": { "type": "string", "description": "Label of the source." },
+              "targetName": { "type": "string", "description": "What was referenced and not found. Becomes the invented node's label." },
+              "path": { "type": "string", "description": "Where the reference was found, relative to meta.rootPath." },
+              "startLine": { "type": "integer", "description": "Line within path." }
+            },
+            "additionalProperties": true
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "description": "The measurement ids nodes carry, in the order a reader should be offered them. Absent means: derive them from the nodes.",
+          "items": { "type": "string" }
+        },
+        "roots": {
+          "type": "array",
+          "description": "Node ids nothing depends on.",
+          "items": { "type": "string" }
+        },
+        "leaves": {
+          "type": "array",
+          "description": "Node ids that depend on nothing.",
+          "items": { "type": "string" }
+        },
+        "stats": {
+          "type": "object",
+          "description": "Headline figures about the graph, in the producer's own vocabulary. Unconstrained for the same reason meta.stats is.",
+          "additionalProperties": true
+        },
+        "moduleName": {
+          "type": "string",
+          "deprecated": true,
+          "since": "1.0.0",
+          "description": "DEPRECATED in 1.0.0 and read by nothing, ever. It duplicated meta.title. Kept in the schema because a rename never deletes and a payload still carrying it must validate."
+        },
+        "moduleVersion": {
+          "type": "string",
+          "deprecated": true,
+          "since": "1.0.0",
+          "description": "DEPRECATED in 1.0.0 and read by nothing. It duplicated meta.version."
+        },
+        "moduleBase": {
+          "type": "string",
+          "deprecated": true,
+          "since": "1.0.0",
+          "description": "DEPRECATED in 1.0.0 and read by nothing. It was the same string as meta.rootPath."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

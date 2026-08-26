@@ -1,9 +1,10 @@
 {
   "meta": {
-    "moduleName": "SampleModule",
-    "moduleVersion": "1.2.3",
+    "contractVersion": "1.0.0",
+    "title": "SampleModule",
+    "version": "1.2.3",
     "generatedAt": "2026-08-26T00:00:00.0000000Z",
-    "moduleRoot": "C:/fixtures/SampleModule",
+    "rootPath": "C:/fixtures/SampleModule",
     "stats": {
       "NodeCount": 9,
       "EdgeCount": 5,
@@ -16,9 +17,6 @@
     }
   },
   "data": {
-    "moduleName": "SampleModule",
-    "moduleVersion": "1.2.3",
-    "moduleBase": "C:/fixtures/SampleModule",
     "stats": {
       "NodeCount": 9,
       "EdgeCount": 5,

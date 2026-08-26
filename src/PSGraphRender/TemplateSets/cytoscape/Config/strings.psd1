@@ -101,7 +101,7 @@
     # Sits between an action and the reason it is unavailable.
     MenuReasonSeparator           = ' — '
     ReasonNoFile                  = 'no file recorded'
-    ReasonNoModuleRoot            = 'module root unknown'
+    ReasonNoRootPath              = 'root path unknown'
     ReasonEmbedded                = 'not available in an embedded viewer, open the report in a browser'
 
     # -- Selection ---------------------------------------------------------
