@@ -1,4 +1,4 @@
-function Import-HtmlDataFile {
+function Import-RenderDataFile {
     <#
     .SYNOPSIS
         Reads one configuration data file, returning an empty table on failure.

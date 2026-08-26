@@ -28,7 +28,7 @@ function Resolve-HtmlConfiguration {
         $ConfigPath = Get-RenderAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
     }
 
-    $schema = Import-HtmlDataFile -Path (Join-Path $ConfigPath 'settings.schema.psd1') -Label 'schema'
+    $schema = Import-RenderDataFile -Path (Join-Path $ConfigPath 'settings.schema.psd1') -Label 'schema'
     $entries = Get-HashtableValue -InputObject $schema -Key 'Entries' -Default @{}
     if (-not $entries.Keys.Count) {
         throw "No settings schema found at '$(Join-Path $ConfigPath 'settings.schema.psd1')'."
@@ -37,7 +37,7 @@ function Resolve-HtmlConfiguration {
     $values = [ordered]@{}
     $origin = @{}
     foreach ($file in @{ Name = 'settings.psd1'; In = 'Settings' }, @{ Name = 'theme.psd1'; In = 'Theme' }) {
-        $supplied = Import-HtmlDataFile -Path (Join-Path $ConfigPath $file.Name) -Label $file.Name
+        $supplied = Import-RenderDataFile -Path (Join-Path $ConfigPath $file.Name) -Label $file.Name
         foreach ($key in $supplied.Keys) {
             $values[$key] = $supplied[$key]
             $origin[$key] = $file.In
@@ -60,7 +60,7 @@ function Resolve-HtmlConfiguration {
                 "$($origin[$key]) file. Applying it anyway.")
         }
 
-        $result = Test-HtmlSettingValue -Value $values[$key] -Entry $entry
+        $result = Test-RenderSettingValue -Value $values[$key] -Entry $entry
         if ($result.IsValid) {
             $resolved[$key] = $result.Value
         }
@@ -77,7 +77,7 @@ function Resolve-HtmlConfiguration {
     }
 
     $constraints = Get-HashtableValue -InputObject $schema -Key 'Constraints' -Default @()
-    Invoke-HtmlConfigurationConstraint -Configuration $resolved -Constraints $constraints -Entries $entries
+    Invoke-RenderConfigurationConstraint -Configuration $resolved -Constraints $constraints -Entries $entries
 
     $resolved
 }

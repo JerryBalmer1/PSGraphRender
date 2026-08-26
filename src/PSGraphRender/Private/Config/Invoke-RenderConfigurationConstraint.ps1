@@ -1,4 +1,4 @@
-function Invoke-HtmlConfigurationConstraint {
+function Invoke-RenderConfigurationConstraint {
     <#
     .SYNOPSIS
         Applies the schema's declared cross-field rules in place.

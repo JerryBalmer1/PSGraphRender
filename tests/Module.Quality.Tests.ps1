@@ -114,7 +114,7 @@ Describe 'Built module layout' {
         $psm1 = Join-Path $script:BuiltRoot 'PSGraphRender.psm1'
         $content = Get-Content -LiteralPath $psm1 -Raw
 
-        $content | Should-MatchString 'function Test-HtmlSettingValue'
+        $content | Should-MatchString 'function Test-RenderSettingValue'
         $content | Should-MatchString 'function Get-RenderAssetPath'
         $content | Should-MatchString 'function Resolve-LoopbackDocumentUrl'
     }

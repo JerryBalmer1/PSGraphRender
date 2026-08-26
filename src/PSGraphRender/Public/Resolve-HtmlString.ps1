@@ -39,7 +39,7 @@ function Resolve-HtmlString {
         $ConfigPath = Get-RenderAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
     }
 
-    $supplied = Import-HtmlDataFile -Path (Join-Path $ConfigPath 'strings.psd1') -Label 'strings.psd1'
+    $supplied = Import-RenderDataFile -Path (Join-Path $ConfigPath 'strings.psd1') -Label 'strings.psd1'
 
     $merged = [ordered]@{}
     foreach ($key in ($supplied.Keys | Sort-Object)) { $merged[$key] = [string]$supplied[$key] }

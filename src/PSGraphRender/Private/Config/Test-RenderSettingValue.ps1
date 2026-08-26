@@ -1,4 +1,4 @@
-function Test-HtmlSettingValue {
+function Test-RenderSettingValue {
     <#
     .SYNOPSIS
         Validates one configuration value against its schema entry.
