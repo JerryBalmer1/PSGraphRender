@@ -11,7 +11,7 @@
     # written against 6.1.0 specifically.
     Pester           = @{ RequiredVersion = '6.1.0' }
 
-    # Floor-pinned: the task syntax used in PSModuleGraph.build.ps1 is stable
+    # Floor-pinned: the task syntax used in PSGraphRender.build.ps1 is stable
     # across these, so newer is fine.
     InvokeBuild      = @{ MinimumVersion = '5.11.0' }
 
