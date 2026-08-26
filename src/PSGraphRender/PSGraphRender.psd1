@@ -12,7 +12,15 @@
     # Explicit, never derived. Public/ is not enumerated recursively and a new
     # file that is not added here builds clean and is unavailable at runtime,
     # which is the failure this list exists to make loud.
-    FunctionsToExport    = @()
+    FunctionsToExport    = @(
+        'ConvertTo-EscapedHtmlJson'
+        'ConvertTo-EscapedHtmlText'
+        'Get-HtmlTemplateSet'
+        'New-GraphReportPath'
+        'Resolve-HtmlConfiguration'
+        'Resolve-HtmlString'
+        'Show-GraphDocument'
+    )
     CmdletsToExport      = @()
     VariablesToExport    = @()
     AliasesToExport      = @()
@@ -21,7 +29,7 @@
             Tags         = @('Html', 'Report', 'Graph', 'Visualisation', 'Renderer', 'PowerShell')
             LicenseUri   = 'https://opensource.org/licenses/MIT'
             ProjectUri   = 'https://github.com/JerryBalmer1/PSGraphRender'
-            ReleaseNotes = 'Scaffolding only. The renderer has not moved across yet.'
+            ReleaseNotes = 'Extracted from PSModuleGraph. Names are unchanged from the move; renaming is the next iteration.'
         }
     }
 }
