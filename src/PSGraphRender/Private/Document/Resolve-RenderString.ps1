@@ -59,7 +59,7 @@ function Resolve-RenderString {
         foreach ($token in $Value.Keys) {
             # [string]::Replace, never the -replace operator. -replace is regex,
             # and a string may carry '$' or '\' that the engine would treat as a
-            # substitution pattern and eat. See CLAUDE.md.
+            # substitution pattern and eat. See docs/development.md.
             $text = $text.Replace('{' + $token + '}', [string]$Value[$token])
         }
         $resolved[$key] = $text

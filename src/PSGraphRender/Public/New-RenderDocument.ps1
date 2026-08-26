@@ -86,7 +86,7 @@ function New-RenderDocument {
         # [string]::Replace, never the -replace operator. -replace is regex: the
         # JSON and the CSS both contain '$' and '\', which the regex engine
         # treats as substitution patterns and silently eats. The result would be
-        # corrupted output rather than an error. See CLAUDE.md.
+        # corrupted output rather than an error. See docs/development.md.
         $document = $template.Replace('/*__DATA__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $ViewModel))
         $document = $document.Replace('/*__META__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $Meta))
         $document = $document.Replace('/*__CONFIG__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $config))

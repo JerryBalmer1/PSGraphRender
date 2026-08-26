@@ -71,8 +71,9 @@ Describe 'Rendering a view model with no producer installed' {
 
     It 'escapes a closing script sequence out of the payload' {
         # A label or a path containing </script> would otherwise terminate the
-        # block the payload lives in. See CLAUDE.md, "Traps that survived the
-        # move". Asserted through the seam, because that is now the only way a
+        # block the payload lives in. See docs/development.md, "Traps that
+        # survived the move". Asserted through the seam, because that is now
+        # the only way a
         # producer can reach the escaper - which is the point of moving it.
         $hostile = [pscustomobject]@{ label = '</script><script>alert(1)</script>' }
 

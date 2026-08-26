@@ -55,7 +55,7 @@ Describe 'Resolve-RenderString' {
 
     It 'does not treat a substituted value as a regex replacement pattern' {
         # -replace would read '$1' and a backslash as substitution syntax and
-        # eat them. [string]::Replace does not. See CLAUDE.md.
+        # eat them. [string]::Replace does not. See docs/development.md.
         $config = New-StringsConfig -Body "@{ Line = 'path is {p}' }"
 
         $result = InModuleScope PSGraphRender -Parameters @{ Path = $config } {

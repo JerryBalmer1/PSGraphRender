@@ -81,3 +81,38 @@ imported in the session is a build that says nothing.
 
 Building here before building there is the working order. The failure message
 names both candidates, so it does not need to be remembered.
+
+## Traps that survived the move
+
+Moved down a tier from `CLAUDE.md` at v0.2.0. Every one of these cost a round
+in the original repository, and none of them is stylistic - but none is true
+before the work is known either, which is what the always-loaded tier is for.
+
+
+These cost a round each in the original repository. They are not stylistic.
+
+- **Token substitution uses `[string]::Replace()`, never the `-replace`
+  operator.** `-replace` is regex. Both the embedded JSON and the CSS contain
+  `$` and `\`, which the regex engine treats as substitution patterns and eats.
+  The result is subtly corrupted output rather than an error.
+- **Template parts are read verbatim and must not end with a trailing newline.**
+  Stripping one on read is indistinguishable from deleting a deliberately blank
+  last line, and ten of the shipped parts have one.
+- **Embedded JSON escapes `<` as `\u003c`**, so a `</script>` inside a path or
+  a label cannot terminate the script block.
+- **HTML is written UTF-8 without a BOM.** A BOM ahead of `<!DOCTYPE html>` can
+  put a browser into quirks mode.
+- **Resolve assets from `$script:ModuleRoot`, never `$PSScriptRoot`.**
+  `$PSScriptRoot` is per-file: under the dev loader a file in a subfolder sees
+  that subfolder, while in the built module the same code has been concatenated
+  into a `.psm1` at the module root. Either loader works and the other breaks,
+  and the break only shows up in the built module.
+- **`Import-PowerShellDataFile` needs `-ErrorAction Stop`.** A `.psd1` that will
+  not parse raises a **non-terminating** error, so without it the `catch` never
+  runs and a broken config falls back in total silence.
+- **`isEmbeddedContext()` checks the user agent for `Electron/` and that check
+  is not redundant.** An editor preview pane is genuinely top-level, is served
+  over `file:`, and reports no ancestor origins, so the frame check, the
+  `vscode-webview:` check and the `ancestorOrigins` check all pass it as a
+  normal browser. It is not one. Before concluding a browser is blocking a
+  custom scheme, read `navigator.userAgent` in the Diagnostics block.

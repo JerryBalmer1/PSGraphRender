@@ -11,23 +11,25 @@ BeforeAll {
     # in lines, so lines measure the wrong thing. Bytes rather than characters
     # because bytes do not depend on how a host decodes the file.
     #
-    # 13,659 is what the tier WEIGHS, measured the day this test was written.
-    # CLAUDE.md claims 10,000 in its own prose; that number was asserted before
-    # the file existed and has never once been true. A ceiling set to an
-    # aspiration is a red test that gets deleted, so this establishes the
-    # baseline instead of raising one.
+    # 11,301, down from 13,659 at v0.1.0. Two moves, not deletions: "Traps that
+    # survived the move" went whole to docs/development.md, and gravity's
+    # reasoning went to the charter that was already the authority on it.
     #
-    # The ratchet governs everything after: this number follows the tier down
-    # and never back up. Raising it needs a ledger entry saying why, and "we
-    # needed more room" is not why. Iteration 2 prunes toward 10,000 and brings
-    # this down with it - see the charter's extraction checklist.
+    # Still above the 10,000 CLAUDE.md claims in its own prose. That number was
+    # asserted before the file existed and has never been true, so the gate is
+    # set to what the tier WEIGHS - a ceiling set to an aspiration is a red test
+    # that gets deleted, and a deleted test is worse than a loose one.
+    #
+    # The ratchet is the whole mechanism: this number follows the tier down and
+    # never back up. Raising it needs a ledger entry saying why, and "we needed
+    # more room" is not why.
     #
     # Bytes are still only a PROXY. They track roughly with tokens read per
     # session, which is the cost actually being paid. They say NOTHING about
     # whether the file is comprehensible: a file that trends downward in bytes
     # while getting harder to hold in your head has passed this gate and failed
     # its purpose.
-    $script:Ceiling = 13659
+    $script:Ceiling = 11301
 
     # Always-loaded means: read in full before the session knows what the work
     # is. Every CLAUDE.md in the tree, plus anything one of them @-imports.
