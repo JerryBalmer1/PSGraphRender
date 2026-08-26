@@ -12,8 +12,14 @@ function Resolve-RenderConfiguration {
         warning naming the key: one bad edit degrades one setting rather than
         failing the export. A file that will not parse at all warns and falls
         back whole.
-    .PARAMETER ConfigPath
-        Directory holding the three data files. Defaults to the module's own.
+    .PARAMETER TemplateSetPath
+        The backend directory. Its Config/ is where the three data files live,
+        appended here rather than passed in, so a caller states a backend's
+        location once and every consumer derives its own part of it.
+    .PARAMETER Name
+        A backend shipped with the module, by directory name. Defaults to
+        whatever TemplateSets/index.psd1 names. Ignored when -TemplateSetPath is
+        given.
     .OUTPUTS
         System.Collections.Specialized.OrderedDictionary
     #>
@@ -21,12 +27,14 @@ function Resolve-RenderConfiguration {
     [OutputType([System.Collections.Specialized.OrderedDictionary])]
     param(
         [Parameter()]
-        [string] $ConfigPath
+        [string] $TemplateSetPath,
+
+        [Parameter()]
+        [string] $Name
     )
 
-    if (-not $ConfigPath) {
-        $ConfigPath = Get-RenderAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
-    }
+    if (-not $TemplateSetPath) { $TemplateSetPath = Resolve-RenderTemplateSetPath -Name $Name }
+    $ConfigPath = Join-Path $TemplateSetPath 'Config'
 
     $schema = Import-RenderDataFile -Path (Join-Path $ConfigPath 'settings.schema.psd1') -Label 'schema'
     $entries = Get-HashtableValue -InputObject $schema -Key 'Entries' -Default @{}

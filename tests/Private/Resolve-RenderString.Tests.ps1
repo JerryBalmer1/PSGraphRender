@@ -8,8 +8,9 @@ BeforeAll {
         param([string] $Body)
 
         $dir = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
-        New-Item -ItemType Directory -Path $dir -Force | Out-Null
-        Set-Content -LiteralPath (Join-Path $dir 'strings.psd1') -Value $Body
+        $config = Join-Path $dir 'Config'
+        New-Item -ItemType Directory -Path $config -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $config 'strings.psd1') -Value $Body
         $dir
     }
 }
@@ -28,7 +29,7 @@ Describe 'Resolve-RenderString' {
 
         $result = InModuleScope PSGraphRender -Parameters @{ Path = $config } {
             param($Path)
-            Resolve-RenderString -ConfigPath $Path -Value @{ command = 'Do-Thing' }
+            Resolve-RenderString -TemplateSetPath $Path -Value @{ command = 'Do-Thing' }
         }
 
         $result['Greeting'] | Should-Be 'Run Do-Thing now'
@@ -46,7 +47,7 @@ Describe 'Resolve-RenderString' {
 
         $result = InModuleScope PSGraphRender -Parameters @{ Path = $config } {
             param($Path)
-            Resolve-RenderString -ConfigPath $Path
+            Resolve-RenderString -TemplateSetPath $Path
         }
 
         $result['Scale'] | Should-Be 'This has {count} items'
@@ -59,7 +60,7 @@ Describe 'Resolve-RenderString' {
 
         $result = InModuleScope PSGraphRender -Parameters @{ Path = $config } {
             param($Path)
-            Resolve-RenderString -ConfigPath $Path -Value @{ p = 'C:\temp\$1\x' }
+            Resolve-RenderString -TemplateSetPath $Path -Value @{ p = 'C:\temp\$1\x' }
         }
 
         $result['Line'] | Should-Be 'path is C:\temp\$1\x'
@@ -70,7 +71,7 @@ Describe 'Resolve-RenderString' {
 
         $result = InModuleScope PSGraphRender -Parameters @{ Path = $config } {
             param($Path)
-            Resolve-RenderString -ConfigPath $Path -Value @{ command = 'Do-Thing' } -WarningAction SilentlyContinue
+            Resolve-RenderString -TemplateSetPath $Path -Value @{ command = 'Do-Thing' } -WarningAction SilentlyContinue
         }
 
         # Degraded, not dead: the caller's own values still come through.

@@ -14,7 +14,7 @@ function Get-RenderAssetPath {
         of this resolution and one error message.
     .PARAMETER Name
         Asset path relative to the module root, e.g.
-        'TemplateSets/cytoscape/Config/theme.psd1' or 'TemplateSets/cytoscape'.
+        'TemplateSets/<name>/Config/theme.psd1' or 'TemplateSets'.
     .PARAMETER PathType
         Whether Name is expected to be a file or a directory. Template sets are
         directories, so both are legitimate here.

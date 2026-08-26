@@ -4,16 +4,19 @@ BeforeAll {
     . (Join-Path $PSScriptRoot '..\TestHelpers.ps1')
     Import-PSGraphRenderUnderTest
 
-    # Builds a config directory so a malformed file can be fed in without
-    # writing into the built module's Assets, which the build regenerates.
+    # Builds a template set shaped directory so a malformed file can be fed in
+    # without writing into the built module, which the build regenerates.
+    # Config/ is created rather than passed: the resolver appends it, which is
+    # what makes a backend's location one path rather than three.
     function New-ConfigDir {
         param([string] $Schema, [string] $Settings = '@{}', [string] $Theme = '@{}')
 
         $dir = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
-        New-Item -ItemType Directory -Path $dir -Force | Out-Null
-        Set-Content -LiteralPath (Join-Path $dir 'settings.schema.psd1') -Value $Schema
-        Set-Content -LiteralPath (Join-Path $dir 'settings.psd1') -Value $Settings
-        Set-Content -LiteralPath (Join-Path $dir 'theme.psd1') -Value $Theme
+        $config = Join-Path $dir 'Config'
+        New-Item -ItemType Directory -Path $config -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $config 'settings.schema.psd1') -Value $Schema
+        Set-Content -LiteralPath (Join-Path $config 'settings.psd1') -Value $Settings
+        Set-Content -LiteralPath (Join-Path $config 'theme.psd1') -Value $Theme
         $dir
     }
 }
@@ -55,7 +58,7 @@ Describe 'Resolve-RenderConfiguration' {
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
             $warnings = @()
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
 
             $config.ZoomSpeed | Should-Be 1.25
             ($warnings -join "`n") | Should-MatchString 'ZoomSpeed'
@@ -69,7 +72,7 @@ Describe 'Resolve-RenderConfiguration' {
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
             $warnings = @()
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
 
             $config.NodeFontSize | Should-Be 10
             ($warnings -join "`n") | Should-MatchString 'maximum'
@@ -82,7 +85,7 @@ Describe 'Resolve-RenderConfiguration' {
 
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningAction SilentlyContinue
             $config.FocusDepth | Should-Be 2
         }
     }
@@ -105,7 +108,7 @@ Describe 'Resolve-RenderConfiguration' {
 
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningAction SilentlyContinue
 
             # Every one is the wrong shape, so every one falls back.
             $config.Flag | Should-BeTrue
@@ -131,7 +134,7 @@ Describe 'Resolve-RenderConfiguration' {
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
             $warnings = @()
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
 
             $warnings.Count | Should-Be 0
             $config.Flag | Should-BeTrue
@@ -150,7 +153,7 @@ Describe 'Resolve-RenderConfiguration' {
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
             $warnings = @()
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
 
             $config.NodeFontSize | Should-Be 12
             ($warnings -join "`n") | Should-MatchString 'belongs in the Theme file'
@@ -165,7 +168,7 @@ Describe 'Resolve-RenderConfiguration' {
             param($Dir)
             # A typo that vanishes silently is worse than one that speaks up.
             $warnings = @()
-            Resolve-RenderConfiguration -ConfigPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+            Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
 
             ($warnings -join "`n") | Should-MatchString 'ZoomSpead'
         }
@@ -179,7 +182,7 @@ Describe 'Resolve-RenderConfiguration' {
             param($Dir)
             # A report the user can still read beats no report at all.
             $warnings = @()
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningVariable warnings -WarningAction SilentlyContinue
 
             $config.ZoomSpeed | Should-Be 1.25
             $warnings.Count | Should-BeGreaterThan 0
@@ -208,7 +211,7 @@ Describe 'Resolve-RenderConfiguration' {
 
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningAction SilentlyContinue
 
             # A slider whose value sits outside its own range cannot show it,
             # and a splitter cannot return to a width below its own minimum.
@@ -231,7 +234,7 @@ Describe 'Resolve-RenderConfiguration' {
 
         InModuleScope PSGraphRender -Parameters @{ Dir = $dir } {
             param($Dir)
-            $config = Resolve-RenderConfiguration -ConfigPath $Dir -WarningAction SilentlyContinue
+            $config = Resolve-RenderConfiguration -TemplateSetPath $Dir -WarningAction SilentlyContinue
             $config.ZoomSpeedMin | Should-Be 0.25
             $config.ZoomSpeedMax | Should-Be 5
         }

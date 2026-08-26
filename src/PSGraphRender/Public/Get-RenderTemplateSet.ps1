@@ -6,10 +6,12 @@ function Get-RenderTemplateSet {
         See docs/html-architecture.md. Knows nothing about what the document
         describes.
     .PARAMETER Path
-        Directory holding templateset.psd1 and the files it names. Defaults to
-        the module's own set. A caller supplying its own directory here is what
-        makes the renderer reusable, so the parameter exists before there is a
-        second caller.
+        Directory holding templateset.psd1 and the files it names. A caller
+        supplying its own directory is what makes the renderer reusable, so this
+        parameter existed before there was a second backend.
+    .PARAMETER Name
+        A backend shipped with the module, by directory name. Defaults to
+        whatever TemplateSets/index.psd1 names. Ignored when -Path is given.
     .PARAMETER SetName
         Manifest file name within Path.
     #>
@@ -20,13 +22,16 @@ function Get-RenderTemplateSet {
         [string] $Path,
 
         [Parameter()]
+        [string] $Name,
+
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [string] $SetName = 'templateset.psd1'
     )
 
-    if (-not $Path) {
-        $Path = Get-RenderAssetPath -Name 'TemplateSets/cytoscape' -PathType Container
-    }
+    # Where a backend lives is Resolve-RenderTemplateSetPath's answer and
+    # nobody else's. See the comment there for what three copies of it cost.
+    if (-not $Path) { $Path = Resolve-RenderTemplateSetPath -Name $Name }
 
     $manifestPath = Join-Path $Path $SetName
     if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {

@@ -17,8 +17,14 @@ function Resolve-RenderString {
         This is where the seam is paid for: the name of a command belonging to
         whatever program generated the report arrives as a value, so nothing
         below the seam has to know what that program is.
-    .PARAMETER ConfigPath
-        Directory holding the data files. Defaults to the module's own.
+    .PARAMETER TemplateSetPath
+        The backend directory. Its Config/ is where strings.psd1 lives, appended
+        here rather than passed in, so a caller states a backend's location once
+        and every consumer derives its own part of it.
+    .PARAMETER Name
+        A backend shipped with the module, by directory name. Defaults to
+        whatever TemplateSets/index.psd1 names. Ignored when -TemplateSetPath is
+        given.
     .PARAMETER Value
         Caller-supplied strings, merged over the file and substituted as tokens.
     .OUTPUTS
@@ -28,16 +34,18 @@ function Resolve-RenderString {
     [OutputType([System.Collections.Specialized.OrderedDictionary])]
     param(
         [Parameter()]
-        [string] $ConfigPath,
+        [string] $TemplateSetPath,
+
+        [Parameter()]
+        [string] $Name,
 
         [Parameter()]
         [ValidateNotNull()]
         [hashtable] $Value = @{}
     )
 
-    if (-not $ConfigPath) {
-        $ConfigPath = Get-RenderAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
-    }
+    if (-not $TemplateSetPath) { $TemplateSetPath = Resolve-RenderTemplateSetPath -Name $Name }
+    $ConfigPath = Join-Path $TemplateSetPath 'Config'
 
     $supplied = Import-RenderDataFile -Path (Join-Path $ConfigPath 'strings.psd1') -Label 'strings.psd1'
 

@@ -9,7 +9,7 @@ function Get-RenderAsset {
         Assets are UTF-8 and are read verbatim with -Raw.
     .PARAMETER Name
         Asset path relative to the module root, e.g.
-        'TemplateSets/cytoscape/layout.html'.
+        'TemplateSets/<name>/layout.html'.
     #>
     [CmdletBinding()]
     [OutputType([string])]
