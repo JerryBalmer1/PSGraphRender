@@ -25,7 +25,7 @@ function Resolve-HtmlConfiguration {
     )
 
     if (-not $ConfigPath) {
-        $ConfigPath = Get-PSModuleGraphAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
+        $ConfigPath = Get-RenderAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
     }
 
     $schema = Import-HtmlDataFile -Path (Join-Path $ConfigPath 'settings.schema.psd1') -Label 'schema'

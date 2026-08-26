@@ -25,7 +25,7 @@ function Get-HtmlTemplateSet {
     )
 
     if (-not $Path) {
-        $Path = Get-PSModuleGraphAssetPath -Name 'TemplateSets/cytoscape' -PathType Container
+        $Path = Get-RenderAssetPath -Name 'TemplateSets/cytoscape' -PathType Container
     }
 
     $manifestPath = Join-Path $Path $SetName

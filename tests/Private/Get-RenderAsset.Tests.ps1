@@ -6,7 +6,7 @@ BeforeAll {
     $script:BuiltRoot = Get-BuiltModuleRoot
 }
 
-Describe 'Get-PSModuleGraphAsset' {
+Describe 'Get-RenderAsset' {
     # Deliberately exercises the BUILT module, not src/. The dev loader would
     # resolve assets straight out of the source tree and would still pass if the
     # Build task stopped copying TemplateSets/ entirely. This is the only test
@@ -20,7 +20,7 @@ Describe 'Get-PSModuleGraphAsset' {
     }
 
     It 'resolves a template part from the built module' {
-        $content = & (Get-Module PSGraphRender) { Get-PSModuleGraphAsset -Name 'TemplateSets/cytoscape/layout.html' }
+        $content = & (Get-Module PSGraphRender) { Get-RenderAsset -Name 'TemplateSets/cytoscape/layout.html' }
 
         $content | Should-HaveType ([string])
         $content.Length | Should-BeGreaterThan 0
@@ -35,7 +35,7 @@ Describe 'Get-PSModuleGraphAsset' {
     It 'throws a message naming the expected path when an asset is missing' {
         $err = $null
         try {
-            & (Get-Module PSGraphRender) { Get-PSModuleGraphAsset -Name 'no-such-asset.html' }
+            & (Get-Module PSGraphRender) { Get-RenderAsset -Name 'no-such-asset.html' }
         }
         catch {
             $err = $_

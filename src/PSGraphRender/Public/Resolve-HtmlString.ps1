@@ -36,7 +36,7 @@ function Resolve-HtmlString {
     )
 
     if (-not $ConfigPath) {
-        $ConfigPath = Get-PSModuleGraphAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
+        $ConfigPath = Get-RenderAssetPath -Name 'TemplateSets/cytoscape/Config' -PathType Container
     }
 
     $supplied = Import-HtmlDataFile -Path (Join-Path $ConfigPath 'strings.psd1') -Label 'strings.psd1'

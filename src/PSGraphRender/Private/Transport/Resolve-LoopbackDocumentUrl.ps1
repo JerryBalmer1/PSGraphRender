@@ -35,7 +35,7 @@ function Get-LoopbackResponse {
         $request.Timeout = $TimeoutMilliseconds
         $request.ReadWriteTimeout = $TimeoutMilliseconds
         $request.AllowAutoRedirect = $false
-        $request.UserAgent = 'PSModuleGraph'
+        $request.UserAgent = 'PSGraphRender'
         # Nothing here is a conversation. A pooled keep-alive connection would
         # hold a socket open against a server we are only looking at.
         $request.KeepAlive = $false

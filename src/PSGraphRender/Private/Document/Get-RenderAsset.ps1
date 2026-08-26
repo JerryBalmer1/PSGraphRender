@@ -1,9 +1,9 @@
-function Get-PSModuleGraphAsset {
+function Get-RenderAsset {
     <#
     .SYNOPSIS
         Returns the raw text of an asset shipped alongside the module.
     .DESCRIPTION
-        Path resolution and its error message live in Get-PSModuleGraphAssetPath,
+        Path resolution and its error message live in Get-RenderAssetPath,
         shared with the assets that are parsed rather than read as text.
 
         Assets are UTF-8 and are read verbatim with -Raw.
@@ -19,5 +19,5 @@ function Get-PSModuleGraphAsset {
         [string] $Name
     )
 
-    Get-Content -LiteralPath (Get-PSModuleGraphAssetPath -Name $Name) -Raw -Encoding UTF8
+    Get-Content -LiteralPath (Get-RenderAssetPath -Name $Name) -Raw -Encoding UTF8
 }

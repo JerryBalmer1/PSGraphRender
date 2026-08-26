@@ -115,7 +115,7 @@ Describe 'Built module layout' {
         $content = Get-Content -LiteralPath $psm1 -Raw
 
         $content | Should-MatchString 'function Test-HtmlSettingValue'
-        $content | Should-MatchString 'function Get-PSModuleGraphAssetPath'
+        $content | Should-MatchString 'function Get-RenderAssetPath'
         $content | Should-MatchString 'function Resolve-LoopbackDocumentUrl'
     }
 
