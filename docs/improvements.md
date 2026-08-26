@@ -26,26 +26,40 @@ thought about yet.
 
 A twenty-line strict-mode-safe accessor. Four moved functions need it and ten
 functions in PSModuleGraph still do, so the extraction copied it rather than
-moving it. It carries no domain knowledge, so the duplication is safe, but two
-copies drift.
+moving it. It carries no domain knowledge, so the duplication is safe today and
+will drift.
 
-### Producer vocabulary still in the payload — **large**
+### A backend can still assume a shape the contract does not promise — **medium**
 
-The code is clear: no function, parameter, file name or substitution marker
-names a producer any more. What is left is in the data a producer sends, which
-is a contract change and therefore a proposal rather than an edit.
+`contract/viewmodel.schema.json` closes half of 0002-t4: `plain` reading
+`DATA.nodes` is now licensed, because the contract requires `nodes`.
 
-- `meta.moduleName`, `meta.moduleVersion`, `meta.moduleBase`, `meta.moduleRoot`.
-  A renderer that receives `moduleName` from a Terraform producer is being told
-  a word that means nothing here. `title`, `version`, `rootPath` and siblings.
-- `GRAPH_DATA`, `GRAPH_META`, `GRAPH_CONFIG`, `GRAPH_STRINGS` — the JavaScript
-  consts the markers feed. These DO reach the output document, so unlike the
-  markers they are not covered by byte-identity and need the
-  structural-equivalence check instead.
+The other half is open. Nothing checks that what a backend reads is what the
+contract guarantees. A backend reading `DATA.rows`, or `node.severity`, would
+render blank against every conforming payload and no test would notice. The
+shape of the check is: extract the payload accesses out of a backend's scripts
+and assert every one is a property the schema declares.
 
-These go together in 0.3.0 with `contract/viewmodel.schema.json`, because the
-payload rename IS the contract definition and doing them separately would mean
-writing the schema twice.
+### Nothing syntax-checks the JavaScript — **medium**
+
+A malformed script fails only in a browser, and `render.js` was restructured by
+about a hundred lines in v0.3.0 with nothing able to say whether it still
+parses. A brace-balance check was written and thrown away: it cannot parse a
+regex literal, so it fired on the pre-change golden as well as the new output,
+and a check that reports a false positive on known-good output is worse than
+none.
+
+The honest answers are a real parser (a dependency, on a build that currently
+needs only PowerShell) or a headless browser (much more). Neither is small.
+
+### The stronger no-producer-kinds check is weak in practice — **small**
+
+`NoProducerKinds.Tests.ps1` renders a payload of invented classifications and
+asserts the document outside the payload is unchanged. That would catch a
+PowerShell-side branch on a kind — but no backend does PowerShell-side work, so
+today it can only pass. What it is really guarding is the seam, which is worth
+guarding; it should not be read as covering the browser, where `KIND_HEX` itself
+lived.
 
 ### A second golden for an awkward graph — **small**
 
@@ -73,8 +87,6 @@ Listed under "Open decisions" in `CLAUDE.md`. It launches browsers, probes
 loopback ports and reads user agents, none of which is rendering. Raise it
 before resolving it.
 
----
-
 ## Noticed, not logged as work
 
 - The renderer claims to be self-contained and is not - but only in one
@@ -87,6 +99,10 @@ before resolving it.
   tell a backend's `settings.psd1` from a module manifest. Excluded for
   `TemplateSets/` only, in the Lint task rather than in
   `PSScriptAnalyzerSettings.psd1`, so the rule still guards the real manifest.
+- A few structural greys are still literals in `render.js` - the dimmed fill,
+  the focus highlight, the selected border. They are not classifications and no
+  producer influences them, so they are appearance the renderer owns. Worth
+  moving to `theme.psd1` eventually; not the same problem as `KIND_HEX`.
 - `PSModuleGraph`'s manifest sat at `ModuleVersion = '0.1.0'` through six
   annotated tags. Corrected to `0.7.0` during the extraction, but nothing
   enforces the agreement between the manifest and the tag.

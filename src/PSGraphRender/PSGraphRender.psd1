@@ -1,6 +1,6 @@
 @{
     RootModule           = 'PSGraphRender.psm1'
-    ModuleVersion        = '0.2.0'
+    ModuleVersion        = '0.3.0'
     GUID                 = '3f9b1c47-58ad-4c2e-b0d6-9e14a7c82f35'
     Author               = 'Jerry Balmer'
     CompanyName          = 'Community'
@@ -26,7 +26,7 @@
             Tags         = @('Html', 'Report', 'Graph', 'Visualisation', 'Renderer', 'PowerShell')
             LicenseUri   = 'https://opensource.org/licenses/MIT'
             ProjectUri   = 'https://github.com/JerryBalmer1/PSGraphRender'
-            ReleaseNotes = 'New-RenderDocument is the seam: one call takes a view model and returns a document. A backend is a directory and the default is data.'
+            ReleaseNotes = 'contract/viewmodel.schema.json is the boundary, versioned independently at 1.0.0. Payload fields renamed: meta.title, meta.version, meta.rootPath. Old names still read, with a warning.'
         }
     }
 }

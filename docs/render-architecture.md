@@ -208,19 +208,19 @@ Extraction from PSModuleGraph is iteration 0.1.0 and has not happened yet. The
 checklist below tracks both halves: moving the subsystem across unchanged, and
 then making the result producer-neutral rather than merely relocated.
 
-- [ ] No producer vocabulary anywhere  (`Module`, `Ast`, `PSModuleGraph`)  (code clear; the payload's `meta.module*` fields are 0.3.0)
+- [x] No producer vocabulary anywhere  (`Module`, `Ast`, `PSModuleGraph`)
 - [x] Token contract named generically (not `__GRAPH_*__`)
 - [x] Public functions named without `Graph` or `PSModule`
 - [ ] All user-visible strings externalised to `strings.psd1`  (scripts done; partial markup still carries its own text)
-- [ ] All colours externalised to `theme.psd1`
-- [ ] `contract/viewmodel.schema.json` exists and every entry point validates against it
+- [x] All colours externalised to `theme.psd1`  (kind and link colours moved in 0.3.0; structural greys remain in `render.js`)
+- [x] `contract/viewmodel.schema.json` exists and every entry point validates against it
 - [x] Suite renders a hand-written fixture with no producer installed
 - [x] `TemplateSets/` holds the reference backend and code privileges none of them
 - [x] A second backend exists and proves the seam
 - [ ] CLAUDE.md pruned toward 10,000; ceiling ratcheted to match
 - [x] The settings schema is data — `settings.schema.psd1`, not a hashtable
       in a `.ps1`
-- [ ] The view model contract is data — `contract/viewmodel.schema.json`, not
+- [x] The view model contract is data — `contract/viewmodel.schema.json`, not
       a `.psd1` and not a hashtable in a `.ps1`
 - [x] No partial over 250 lines
 - [x] Template set resolvable from a caller-supplied directory
@@ -294,3 +294,36 @@ document exists, so the golden covers a rename of any of them and a red golden
 during a rename means something else changed. The JavaScript consts and the
 `meta.module*` fields DO reach the document, which is why they wait for 0.3.0
 and the structural-equivalence check the schema will need anyway.
+
+**2026-08-26 - A hardcoded list of node kinds survived two iterations in
+JavaScript.** `bootstrap.js` held `KIND_HEX = { Function, Class, Enum, Script,
+External }` from the extraction until 0.3.0. Every producer-vocabulary check
+looked for words in PowerShell source or function names; this was an object
+literal whose KEYS were the vocabulary. The lesson is not "add JavaScript to
+the grep" - it is that a check written in the language of the last mistake
+finds only that mistake.
+
+**2026-08-26 - `External` and `Unresolved` are the renderer's own words and
+stay.** No producer emits either; the renderer invents both for targets a
+payload names but does not contain. `UnresolvedColor` is its own theme value
+rather than a `KindColor` entry, because sitting in a map beside four
+PowerShell kinds is what made the whole map read as renderer vocabulary.
+
+**2026-08-26 - Validation lives at the seam, and `plain` stays naive.** The
+question was whether the second backend should validate against the schema. It
+should not: `New-RenderDocument` validates once for every backend, so a backend
+validating again is duplication with two places to drift. What made `plain`
+reading `DATA.nodes` a liability was not that it skipped a check - it was that
+nothing guaranteed the field. The contract requires `nodes`, so the directness
+is licensed rather than lucky, and a backend assuming something the contract
+does not promise is still the open problem.
+
+**2026-08-26 - Semantic equivalence replaces byte-identity, and is weaker.**
+Names that reach the document cannot be verified by comparing bytes. What
+replaces it parses both documents and compares nodes, links, configuration,
+strings, element structure and visible text. Someone chose that list, so it
+catches a difference only in a dimension somebody thought to compare. Two
+instruments were tried and rejected: a positional line diff (an insertion
+shifts every following line, reporting 78% changed for three removed keys) and
+a JavaScript brace-balance check (it cannot parse a regex literal and fires on
+known-good output).

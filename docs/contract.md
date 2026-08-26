@@ -2,17 +2,23 @@
 
 On-demand. Read this when changing the view model, or when writing a producer.
 
-## Status: described, not yet specified
+## Status: specified
 
-`contract/viewmodel.schema.json` does not exist. This document describes the
-shape the renderer accepts **today**, derived from the one producer that exists,
-and it is not a specification: it has no version, nothing validates against it,
-and a producer that follows it exactly may still hit a field the renderer reads
-and this file forgot.
+`contract/viewmodel.schema.json` is the boundary. It is JSON Schema, it is
+language-neutral, and it is **versioned independently of the module**: the
+contract is 1.0.0 while PSGraphRender is 0.3.0, because the contract is the
+product and the module is one implementation of it.
 
-Writing the schema is on the extraction checklist in
-`docs/render-architecture.md`. Until it lands, treat everything here as a
-report on the current state.
+`New-RenderDocument` validates every payload against it and refuses a
+`meta.contractVersion` major it does not implement, **by name**. A payload that
+declares nothing is warned about and rendered: a payload written before the
+field existed must still work, which is the same rule that keeps a renamed field
+readable.
+
+On Windows PowerShell 5.1 there is no `Test-Json -SchemaFile`, so validation
+reports "could not check" rather than "passed". Those are different facts.
+
+This document explains the schema. The schema is the authority.
 
 ## What crosses the seam
 
@@ -59,18 +65,35 @@ Heat is **ranked, not scaled**, and the ramp is five discrete bands. The
 reasoning, and the measurements behind it, are in
 `docs/render-architecture.md`.
 
+## The rename in 1.0.0
+
+| Was | Is | Why |
+| --- | --- | --- |
+| `meta.moduleName` | `meta.title` | A Terraform payload was filling it with a region. |
+| `meta.moduleVersion` | `meta.version` | Nothing being versioned here has to be a module. |
+| `meta.moduleRoot` | `meta.rootPath` | It is a path, not a module. |
+
+**A rename never deletes.** The old names stay in the schema marked
+`deprecated` with a `since`, the renderer reads the new name and falls back to
+the old, and it warns once naming both. A producer emitting the old names still
+works and will keep working.
+
+`data.moduleName`, `data.moduleVersion` and `data.moduleBase` were **removed**
+rather than renamed. They duplicated `meta`, `moduleBase` was the same string as
+`meta.rootPath`, and nothing had ever read any of them. Renaming a duplicate is
+agreeing that a reader needs both copies.
+
 ## Paths are relative, and `meta` carries the root
 
-Payload paths are relative to `meta.moduleRoot`; the page rebuilds absolute
-paths in the browser, which is how a `file://` link works while the payload
-stays portable.
+Payload paths are relative to `meta.rootPath`; the page rebuilds absolute paths
+in the browser, which is how a `file://` link works while the payload stays
+portable.
 
-Note that `meta.moduleRoot` is itself absolute, so "no absolute paths in a
-shared report" is already weaker than it sounds. Do not add absolute paths to
+Note that `meta.rootPath` is itself absolute, so "no absolute paths in a shared
+report" is already weaker than it sounds. Do not add absolute paths to
 `nodes`/`links` on the assumption it makes no difference.
 
-`meta.moduleName`, `meta.moduleVersion` and `meta.moduleBase` are producer
-vocabulary sitting in the contract. They are on the checklist.
+Payload paths are relative to `meta.rootPath`, which is itself absolute.
 
 ## Caller tokens versus display-time tokens
 
