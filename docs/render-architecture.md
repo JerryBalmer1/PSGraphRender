@@ -216,6 +216,7 @@ then making the result producer-neutral rather than merely relocated.
 - [ ] Suite renders a hand-written fixture with no producer installed
 - [ ] `TemplateSets/` holds the reference backend and code privileges none of them
 - [ ] A second backend exists and proves the seam
+- [ ] CLAUDE.md pruned toward 10,000; ceiling ratcheted to match
 - [x] The settings schema is data — `settings.schema.psd1`, not a hashtable
       in a `.ps1`
 - [ ] The view model contract is data — `contract/viewmodel.schema.json`, not
