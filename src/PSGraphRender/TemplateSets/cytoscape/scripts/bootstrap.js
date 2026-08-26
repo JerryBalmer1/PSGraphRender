@@ -1,7 +1,7 @@
-const GRAPH_DATA = /*__GRAPH_DATA__*/ null;
-const GRAPH_META = /*__GRAPH_META__*/ null;
-const GRAPH_CONFIG = /*__GRAPH_CONFIG__*/ null;
-const GRAPH_STRINGS = /*__GRAPH_STRINGS__*/ null;
+const GRAPH_DATA = /*__DATA__*/ null;
+const GRAPH_META = /*__META__*/ null;
+const GRAPH_CONFIG = /*__CONFIG__*/ null;
+const GRAPH_STRINGS = /*__STRINGS__*/ null;
 
 (function () {
     'use strict';

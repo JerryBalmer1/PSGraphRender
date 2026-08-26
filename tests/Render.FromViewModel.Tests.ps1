@@ -43,14 +43,14 @@ Describe 'Rendering a view model with no producer installed' {
         $config = Resolve-RenderConfiguration
         $strings = Resolve-RenderString -Value @{}
 
-        $document = $template.Replace('/*__GRAPH_DATA__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.data))
-        $document = $document.Replace('/*__GRAPH_META__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.meta))
-        $document = $document.Replace('/*__GRAPH_CONFIG__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $config))
-        $document = $document.Replace('/*__GRAPH_STRINGS__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $strings))
+        $document = $template.Replace('/*__DATA__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.data))
+        $document = $document.Replace('/*__META__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.meta))
+        $document = $document.Replace('/*__CONFIG__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $config))
+        $document = $document.Replace('/*__STRINGS__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $strings))
         $document = $document.Replace('__PAGE_TITLE__', (ConvertTo-EscapedHtmlText -Text 'A fixture'))
 
         $document | Should-NotMatchString '__PAGE_TITLE__'
-        $document | Should-NotMatchString '/\*__GRAPH_[A-Z]+__\*/ null'
+        $document | Should-NotMatchString '/\*__[A-Z]+__\*/ null'
         $document | Should-MatchString '<!DOCTYPE html>'
         $document | Should-MatchString 'A fixture'
     }
