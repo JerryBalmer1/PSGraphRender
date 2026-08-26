@@ -4,7 +4,17 @@ BeforeAll {
     . (Join-Path $PSScriptRoot 'TestHelpers.ps1')
     $script:BuiltManifest = Get-BuiltModulePath
     $script:BuiltRoot = Get-BuiltModuleRoot
-    $script:CytoscapeSet = Join-Path $script:BuiltRoot 'TemplateSets/cytoscape'
+    $script:TemplateSetsRoot = Join-Path $script:BuiltRoot 'TemplateSets'
+
+    # Every backend that shipped, discovered the same way the module discovers
+    # them. Naming them here would be a second registry to forget, and the
+    # whole point of this design is that there is no registry.
+    $script:Backends = @(
+        Get-ChildItem -LiteralPath $script:TemplateSetsRoot -Directory -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'templateset.psd1') } |
+            Select-Object -ExpandProperty FullName |
+            Sort-Object
+    )
 }
 
 Describe 'Built module layout' {
@@ -14,71 +24,86 @@ Describe 'Built module layout' {
         }
     }
 
-    It 'ships the reference template set' {
-        # Guards against a future build change silently dropping the copy.
-        # Without the template set every render fails at runtime, not at build
-        # time. Asserting the manifest and one file of each kind rather than a
-        # fixed list: partials get split as they grow, and a test that names
-        # every one of them fails for the wrong reason.
-        foreach ($part in 'templateset.psd1', 'layout.html', 'partials/sidebar.html',
-            'styles/base.css', 'scripts/bootstrap.js') {
-            $full = Join-Path $script:CytoscapeSet $part
-            Test-Path -LiteralPath $full | Should-BeTrue
-            (Get-Item -LiteralPath $full).Length | Should-BeGreaterThan 0
-        }
+    It 'ships more than one backend' {
+        # A seam with one implementation is an assertion, not a seam. The second
+        # backend is deliberately trivial; its job is to be different enough
+        # that a Cytoscape assumption could not have leaked into it.
+        @($script:Backends).Count | Should-BeGreaterThan 1
     }
 
-    It 'ships every file the template set manifest names' {
+    It 'names a default backend in data' {
+        # Changing which backend renders by default must be one data edit. If a
+        # name appears in a .ps1, the reference implementation is privileged in
+        # code and "a template set is a rendering backend" has stopped being
+        # true.
+        $index = Join-Path $script:TemplateSetsRoot 'index.psd1'
+        Test-Path -LiteralPath $index | Should-BeTrue
+
+        $default = (Import-PowerShellDataFile -LiteralPath $index).Default
+        Test-Path -LiteralPath (Join-Path (Join-Path $script:TemplateSetsRoot $default) 'templateset.psd1') |
+            Should-BeTrue
+    }
+
+    It 'ships every file each backend manifest names' {
         # The manifest is the contract. A part added to it but not copied by the
-        # build would fail only when someone rendered a report.
-        $manifest = Import-PowerShellDataFile -LiteralPath (Join-Path $script:CytoscapeSet 'templateset.psd1')
+        # build would fail only when someone rendered a report. Asserted for
+        # every backend, so a third one is covered without editing this test.
+        foreach ($set in $script:Backends) {
+            $manifest = Import-PowerShellDataFile -LiteralPath (Join-Path $set 'templateset.psd1')
 
-        $declared = @($manifest.Layout) + @($manifest.Slots.Values | ForEach-Object { $_ })
-        foreach ($part in $declared) {
-            Test-Path -LiteralPath (Join-Path $script:CytoscapeSet $part) | Should-BeTrue
-        }
-    }
-
-    It 'ships the four config data files for the backend and they still parse' {
-        # If the build stops copying these, every render warns and falls back to
-        # the schema defaults - a change the user made would just stop taking
-        # effect.
-        $config = Join-Path $script:CytoscapeSet 'Config'
-
-        foreach ($file in 'settings.schema.psd1', 'settings.psd1', 'theme.psd1', 'strings.psd1') {
-            $full = Join-Path $config $file
-            Test-Path -LiteralPath $full | Should-BeTrue
-            Import-PowerShellDataFile -LiteralPath $full | Should-NotBeNull
-        }
-
-        (Import-PowerShellDataFile -LiteralPath (Join-Path $config 'settings.psd1')).ZoomSpeed |
-            Should-Be 1.25
-    }
-
-    It 'declares every shipped value in the schema' {
-        # The rule that pays for this design: a setting is added by editing data
-        # only. A value with no schema entry would warn at every user.
-        $config = Join-Path $script:CytoscapeSet 'Config'
-        $schema = Import-PowerShellDataFile -LiteralPath (Join-Path $config 'settings.schema.psd1')
-
-        foreach ($file in 'settings.psd1', 'theme.psd1') {
-            $values = Import-PowerShellDataFile -LiteralPath (Join-Path $config $file)
-            foreach ($key in $values.Keys) {
-                $schema.Entries.ContainsKey($key) | Should-BeTrue
+            $declared = @($manifest.Layout) + @($manifest.Slots.Values | ForEach-Object { $_ })
+            foreach ($part in $declared) {
+                $full = Join-Path $set $part
+                $message = "$(Split-Path $set -Leaf) declares '$part' and it did not ship"
+                Test-Path -LiteralPath $full | Should-BeTrue -Because $message
+                (Get-Item -LiteralPath $full).Length | Should-BeGreaterThan 0 -Because $message
             }
         }
     }
 
-    It 'keeps a producer command name out of the template set' {
-        # Extraction checklist: no producer vocabulary anywhere below the seam.
-        # The substituted document may carry the name a producer handed down;
-        # the shipped backend must not know it. This assertion came across from
-        # PSModuleGraph with the files it guards - it was never about the
-        # producer, only about what shipped beside it.
-        $offenders = @(Get-ChildItem -Path $script:CytoscapeSet -File -Recurse |
-                Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match 'PSModuleGraphEditorLink' })
+    It 'ships four config data files per backend and they still parse' {
+        # If the build stops copying these, every render warns and falls back to
+        # the schema defaults - a change the user made would just stop taking
+        # effect.
+        foreach ($set in $script:Backends) {
+            $config = Join-Path $set 'Config'
 
-        $offenders.Count | Should-Be 0
+            foreach ($file in 'settings.schema.psd1', 'settings.psd1', 'theme.psd1', 'strings.psd1') {
+                $full = Join-Path $config $file
+                $message = "$(Split-Path $set -Leaf) is missing $file"
+                Test-Path -LiteralPath $full | Should-BeTrue -Because $message
+                Import-PowerShellDataFile -LiteralPath $full | Should-NotBeNull -Because $message
+            }
+        }
+    }
+
+    It 'declares every shipped value in its own backend schema' {
+        # The rule that pays for this design: a setting is added by editing data
+        # only. A value with no schema entry warns at every user.
+        foreach ($set in $script:Backends) {
+            $config = Join-Path $set 'Config'
+            $schema = Import-PowerShellDataFile -LiteralPath (Join-Path $config 'settings.schema.psd1')
+
+            foreach ($file in 'settings.psd1', 'theme.psd1') {
+                $values = Import-PowerShellDataFile -LiteralPath (Join-Path $config $file)
+                foreach ($key in $values.Keys) {
+                    $message = "$(Split-Path $set -Leaf) ships '$key' with no schema entry"
+                    $schema.Entries.ContainsKey($key) | Should-BeTrue -Because $message
+                }
+            }
+        }
+    }
+
+    It 'keeps a producer command name out of every backend' {
+        # Extraction checklist: no producer vocabulary anywhere below the seam.
+        # The rendered document may carry a name a producer handed down; the
+        # shipped backend must not know it.
+        foreach ($set in $script:Backends) {
+            $offenders = @(Get-ChildItem -LiteralPath $set -File -Recurse |
+                    Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match 'PSModuleGraphEditorLink' })
+
+            $offenders.Count | Should-Be 0 -Because "$(Split-Path $set -Leaf) names a producer command"
+        }
     }
 
     It 'produces a manifest that still parses' {

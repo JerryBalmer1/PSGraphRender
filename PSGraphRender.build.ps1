@@ -21,7 +21,30 @@ task Clean {
 task Lint {
     # Rule configuration lives in PSScriptAnalyzerSettings.psd1 so editors and
     # CI lint identically to this task.
-    $results = @(Invoke-ScriptAnalyzer -Path $SrcRoot -Recurse -Settings $AnalyzerSettings)
+    $templateSets = Join-Path $SrcRoot 'TemplateSets'
+
+    $results = @(
+        Get-ChildItem -LiteralPath $SrcRoot -Directory |
+            Where-Object { $_.FullName -ne $templateSets } |
+            ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName -Recurse -Settings $AnalyzerSettings }
+    )
+    $results += @(
+        Get-ChildItem -LiteralPath $SrcRoot -File |
+            ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName -Settings $AnalyzerSettings }
+    )
+
+    # A backend's four data files are configuration, not a module manifest, and
+    # PSMissingModuleManifestField cannot tell the difference - it fires on the
+    # .psd1 extension alone. It reported a backend whose settings.psd1 is empty,
+    # which is a legitimate thing for a backend with no behaviour to decide.
+    #
+    # Excluded HERE rather than in PSScriptAnalyzerSettings.psd1, so the rule
+    # still guards the one file it is actually about: the module manifest.
+    if (Test-Path -LiteralPath $templateSets) {
+        $results += @(Invoke-ScriptAnalyzer -Path $templateSets -Recurse -Settings $AnalyzerSettings `
+                -ExcludeRule PSMissingModuleManifestField)
+    }
+
     if ($results) {
         $results | Format-Table -AutoSize | Out-String | Write-Host
         throw "PSScriptAnalyzer reported $($results.Count) issue(s)."
