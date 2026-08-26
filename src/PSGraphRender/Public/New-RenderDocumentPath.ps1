@@ -17,8 +17,9 @@ function New-RenderDocumentPath {
 
         Nothing is deleted after opening. The browser may not have read the file
         when the pipeline returns, and a cleanup racing it is a bug generator.
-    .PARAMETER ModuleName
-        Used as the file name stem.
+    .PARAMETER Name
+        Used as the file name stem, with anything outside [A-Za-z0-9._-]
+        replaced. What the name means is the caller's business.
     .PARAMETER BasePath
         Directory the output/reports tree hangs off. The caller passes the
         session's current filesystem location; the tests pass a temp directory.
@@ -29,7 +30,7 @@ function New-RenderDocumentPath {
     [OutputType([string])]
     param(
         [Parameter()]
-        [string] $ModuleName,
+        [string] $Name,
 
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -39,7 +40,7 @@ function New-RenderDocumentPath {
         [string] $Timestamp
     )
 
-    $safeName = if ($ModuleName) { $ModuleName -replace '[^A-Za-z0-9._-]', '_' } else { 'module' }
+    $safeName = if ($Name) { $Name -replace '[^A-Za-z0-9._-]', '_' } else { 'report' }
     $stamp = if ($Timestamp) { $Timestamp } else { (Get-Date).ToString('yyyyMMdd-HHmmss') }
 
     # [System.IO.Directory]::CreateDirectory, not New-Item. New-Item supports

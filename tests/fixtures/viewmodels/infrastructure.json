@@ -1,0 +1,204 @@
+{
+  "meta": {
+    "moduleName": "prod-eu-west-1",
+    "moduleVersion": "2024.11.3",
+    "generatedAt": "2026-08-26T00:00:00.0000000Z",
+    "moduleRoot": "/srv/infra/prod eu-west-1",
+    "stats": {
+      "NodeCount": 17,
+      "EdgeCount": 19,
+      "RootCount": 4,
+      "LeafCount": 5,
+      "UnresolvedCount": 2
+    }
+  },
+  "data": {
+    "moduleName": "prod-eu-west-1",
+    "moduleVersion": "2024.11.3",
+    "moduleBase": "/srv/infra/prod eu-west-1",
+    "nodes": [
+      {
+        "id": "var.environment",
+        "name": "environment",
+        "kind": "variable",
+        "path": "variables.tf",
+        "startLine": 1,
+        "metrics": { "blastRadius": 14, "reach": 0, "dependents": 6 }
+      },
+      {
+        "id": "var.region",
+        "name": "region",
+        "kind": "variable",
+        "path": "variables.tf",
+        "startLine": 9,
+        "metrics": { "blastRadius": 11, "reach": 0, "dependents": 4 }
+      },
+      {
+        "id": "module.network",
+        "name": "network",
+        "kind": "module",
+        "path": "modules/network/main.tf",
+        "startLine": 1,
+        "metrics": { "blastRadius": 9, "reach": 2, "dependents": 5 }
+      },
+      {
+        "id": "aws_vpc.main",
+        "name": "main",
+        "kind": "resource",
+        "path": "modules/network/vpc.tf",
+        "startLine": 3,
+        "metrics": { "blastRadius": 8, "reach": 3, "dependents": 4 }
+      },
+      {
+        "id": "aws_subnet.private",
+        "name": "private",
+        "kind": "resource",
+        "path": "modules/network/subnets.tf",
+        "startLine": 12,
+        "metrics": { "blastRadius": 5, "reach": 4, "dependents": 3 }
+      },
+      {
+        "id": "aws_subnet.public",
+        "name": "public",
+        "kind": "resource",
+        "path": "modules/network/subnets.tf",
+        "startLine": 31,
+        "metrics": { "blastRadius": 3, "reach": 4, "dependents": 2 }
+      },
+      {
+        "id": "aws_security_group.database",
+        "name": "database",
+        "kind": "resource",
+        "path": "modules/data store/security.tf",
+        "startLine": 7,
+        "metrics": { "blastRadius": 4, "reach": 5, "dependents": 2 }
+      },
+      {
+        "id": "aws_security_group.application",
+        "name": "application",
+        "kind": "resource",
+        "path": "modules/data store/security.tf",
+        "startLine": 44,
+        "metrics": { "blastRadius": 4, "reach": 5, "dependents": 2 }
+      },
+      {
+        "id": "aws_db_instance.orders",
+        "name": "orders",
+        "kind": "resource",
+        "path": "modules/data store/rds.tf",
+        "startLine": 2,
+        "metrics": { "blastRadius": 2, "reach": 7, "dependents": 1 }
+      },
+      {
+        "id": "aws_ecs_service.checkout",
+        "name": "checkout",
+        "kind": "resource",
+        "path": "services/checkout/ecs.tf",
+        "startLine": 18,
+        "metrics": { "blastRadius": 1, "reach": 9, "dependents": 1 }
+      },
+      {
+        "id": "aws_ecs_service.fulfilment",
+        "name": "fulfilment",
+        "kind": "resource",
+        "path": "services/fulfilment/ecs.tf",
+        "startLine": 18,
+        "metrics": { "blastRadius": 0, "reach": 9, "dependents": 0 }
+      },
+      {
+        "id": "aws_s3_bucket.customer_uploads",
+        "name": "customers' uploads <staging>",
+        "kind": "resource",
+        "path": "modules/data store/buckets.tf",
+        "startLine": 1,
+        "metrics": { "blastRadius": 1, "reach": 2, "dependents": 1 }
+      },
+      {
+        "id": "aws_iam_role.task",
+        "name": "task",
+        "kind": "resource",
+        "path": "modules/iam/roles.tf",
+        "startLine": 5,
+        "metrics": { "blastRadius": 2, "reach": 1, "dependents": 2 }
+      },
+      {
+        "id": "aws_iam_policy.upload",
+        "name": "upload",
+        "kind": "resource",
+        "path": "modules/iam/policies.tf",
+        "startLine": 21,
+        "metrics": { "blastRadius": 1, "reach": 2, "dependents": 1 }
+      },
+      {
+        "id": "output.vpc_id",
+        "name": "vpc_id",
+        "kind": "output",
+        "path": "outputs.tf",
+        "startLine": 1,
+        "metrics": { "blastRadius": 0, "reach": 4, "dependents": 0 }
+      },
+      {
+        "id": "output.database_endpoint",
+        "name": "database_endpoint",
+        "kind": "output",
+        "path": "outputs.tf",
+        "startLine": 8,
+        "metrics": { "blastRadius": 0, "reach": 8, "dependents": 0 }
+      },
+      {
+        "id": "output.checkout_url",
+        "name": "checkout_url",
+        "kind": "output",
+        "path": "outputs.tf",
+        "startLine": 15,
+        "metrics": { "blastRadius": 0, "reach": 10, "dependents": 0 }
+      }
+    ],
+    "links": [
+      { "source": "module.network", "target": "var.environment", "kind": "references" },
+      { "source": "module.network", "target": "var.region", "kind": "references" },
+      { "source": "aws_vpc.main", "target": "module.network", "kind": "declares" },
+      { "source": "aws_subnet.private", "target": "aws_vpc.main", "kind": "references" },
+      { "source": "aws_subnet.public", "target": "aws_vpc.main", "kind": "references" },
+      { "source": "aws_security_group.database", "target": "aws_vpc.main", "kind": "references" },
+      { "source": "aws_security_group.application", "target": "aws_vpc.main", "kind": "references" },
+      { "source": "aws_security_group.database", "target": "aws_security_group.application", "kind": "allows" },
+      { "source": "aws_security_group.application", "target": "aws_security_group.database", "kind": "allows" },
+      { "source": "aws_db_instance.orders", "target": "aws_subnet.private", "kind": "references" },
+      { "source": "aws_db_instance.orders", "target": "aws_security_group.database", "kind": "references" },
+      { "source": "aws_ecs_service.checkout", "target": "aws_subnet.private", "kind": "references" },
+      { "source": "aws_ecs_service.checkout", "target": "aws_db_instance.orders", "kind": "references" },
+      { "source": "aws_ecs_service.fulfilment", "target": "aws_db_instance.orders", "kind": "references" },
+      { "source": "aws_ecs_service.fulfilment", "target": "aws_iam_role.task", "kind": "references" },
+      { "source": "aws_iam_policy.upload", "target": "aws_s3_bucket.customer_uploads", "kind": "references" },
+      { "source": "aws_iam_role.task", "target": "aws_iam_policy.upload", "kind": "attaches" },
+      { "source": "output.vpc_id", "target": "aws_vpc.main", "kind": "references" },
+      { "source": "output.database_endpoint", "target": "aws_db_instance.orders", "kind": "references" },
+      { "source": "output.checkout_url", "target": "aws_ecs_service.checkout", "kind": "references" }
+    ],
+    "unresolved": [
+      {
+        "source": "aws_ecs_service.checkout",
+        "sourceName": "checkout",
+        "targetName": "data.aws_ssm_parameter.stripe_key",
+        "path": "services/checkout/ecs.tf",
+        "startLine": 41
+      },
+      {
+        "source": "aws_db_instance.orders",
+        "sourceName": "orders",
+        "targetName": "data.aws_kms_key.rds",
+        "path": "modules/data store/rds.tf",
+        "startLine": 19
+      }
+    ],
+    "roots": ["var.environment", "var.region", "module.network", "aws_vpc.main"],
+    "leaves": [
+      "aws_ecs_service.fulfilment",
+      "output.vpc_id",
+      "output.database_endpoint",
+      "output.checkout_url",
+      "aws_s3_bucket.customer_uploads"
+    ]
+  }
+}
