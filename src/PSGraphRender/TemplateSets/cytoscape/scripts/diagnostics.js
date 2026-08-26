@@ -22,7 +22,7 @@
     // preformatted text, a list of label/value rows, and a row of actions.
     // Diagnostics uses the text; the selection panel uses rows and actions. A
     // third caller should need no markup either - see the kaizen note in
-    // docs/html-architecture.md.
+    // docs/render-architecture.md.
     var infoPanel = document.getElementById('info-panel');
     var infoBody = document.getElementById('info-body');
     var infoRows = document.getElementById('info-rows');

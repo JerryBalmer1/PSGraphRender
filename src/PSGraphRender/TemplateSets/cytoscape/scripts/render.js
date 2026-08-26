@@ -3,11 +3,29 @@
         try { cytoscape.use(cytoscapeDagre); } catch (e) { /* already registered */ }
     }
 
-    var cy = cytoscape({
-        container: document.getElementById('cy'),
-        elements: els,
-        wheelSensitivity: ZOOM_SPEED_DEFAULT,
-        style: [
+    // One rule pair per link classification the theme names, generated rather
+    // than written. WHICH kinds exist is the payload's business; that a named
+    // kind is drawn dashed is the renderer's, and that stays here.
+    //
+    // Spliced in below rather than appended: these must lose to .dimmed and
+    // .focus-edge, which are declared after them and win by declaration order.
+    var LINK_KIND_STYLE = [];
+    Object.keys(LINK_HEX).forEach(function (kind) {
+        var colour = LINK_HEX[kind];
+        LINK_KIND_STYLE.push({
+            selector: 'edge[kind = "' + kind + '"]',
+            style: {
+                'line-color': colour, 'target-arrow-color': colour,
+                'line-style': 'dashed', 'width': 2
+            }
+        });
+        LINK_KIND_STYLE.push({
+            selector: 'edge[kind = "' + kind + '"].flip',
+            style: { 'source-arrow-color': colour }
+        });
+    });
+
+    var STYLE = [
             {
                 // The name sits inside the box. A circle with the label
                 // underneath cost roughly double the space and put the text
@@ -55,23 +73,26 @@
                 selector: 'edge',
                 style: {
                     'width': EDGE_WIDTH,
-                    'line-color': '#6b7785',
-                    'target-arrow-color': '#6b7785',
+                    'line-color': EDGE_COLOR,
+                    'target-arrow-color': EDGE_COLOR,
                     'target-arrow-shape': 'triangle',
                     'arrow-scale': 0.9,
                     'curve-style': 'bezier'
                 }
             },
-            { selector: 'edge[kind = "Inherits"]', style: { 'line-color': '#f2c14e', 'target-arrow-color': '#f2c14e', 'line-style': 'dashed', 'width': 2 } },
-            { selector: 'edge[kind = "Unresolved"]', style: { 'line-color': '#ff7043', 'target-arrow-color': '#ff7043', 'line-style': 'dotted' } },
+            // 'Unresolved' is this renderer's own word for an edge it
+            // invented; no producer sends it. See elements.js.
+            { selector: 'edge[kind = "Unresolved"]', style: { 'line-color': UNRESOLVED_COLOR, 'target-arrow-color': UNRESOLVED_COLOR, 'line-style': 'dotted' } },
             // Test order ranks right-to-left so the page reads left-to-right in
             // the order to test. The arrowhead has to follow: pointing at the
             // callee would point backwards through that reading order. Flipped
             // to the source end, an arrow means "test this one first, then the
             // one it points at". Call flow keeps the arrow on the callee.
-            { selector: 'edge.flip', style: { 'target-arrow-shape': 'none', 'source-arrow-shape': 'triangle', 'source-arrow-color': '#6b7785' } },
-            { selector: 'edge[kind = "Inherits"].flip', style: { 'source-arrow-color': '#f2c14e' } },
-            { selector: 'edge[kind = "Unresolved"].flip', style: { 'source-arrow-color': '#ff7043' } },
+            { selector: 'edge.flip', style: { 'target-arrow-shape': 'none', 'source-arrow-shape': 'triangle', 'source-arrow-color': EDGE_COLOR } },
+            { selector: 'edge[kind = "Unresolved"].flip', style: { 'source-arrow-color': UNRESOLVED_COLOR } },
+            // LINK_KIND_STYLE is spliced in here, after the base edge rules and
+            // before .dimmed - see above.
+            ].concat(LINK_KIND_STYLE).concat([
             // Out-of-focus nodes stay readable. Hiding them, or fading the
             // label to nothing, loses the context that makes a focused
             // neighbourhood mean anything - you cannot see what it sits among.
@@ -125,7 +146,13 @@
             },
             { selector: 'node.selected-node', style: { 'border-color': '#4da3ff' } },
             { selector: '.hidden', style: { 'display': 'none' } }
-        ]
+    ]);
+
+    var cy = cytoscape({
+        container: document.getElementById('cy'),
+        elements: els,
+        wheelSensitivity: ZOOM_SPEED_DEFAULT,
+        style: STYLE
     });
 
     // Gravity. Edges point caller -> callee, and dagre gives a target a higher

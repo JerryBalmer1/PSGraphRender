@@ -6,7 +6,7 @@ function Invoke-RenderConfigurationConstraint {
         Single-key validation cannot catch a pair that is individually valid and
         jointly nonsense - a slider whose value sits outside its own range, or a
         panel that starts narrower than it can be dragged. The rules are data;
-        see docs/html-architecture.md.
+        see docs/render-architecture.md.
     .PARAMETER Configuration
         The resolved configuration, modified in place.
     .PARAMETER Constraints

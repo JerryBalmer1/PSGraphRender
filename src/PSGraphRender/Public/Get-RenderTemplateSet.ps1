@@ -3,7 +3,7 @@ function Get-RenderTemplateSet {
     .SYNOPSIS
         Assembles a template set into a single document with slots substituted.
     .DESCRIPTION
-        See docs/html-architecture.md. Knows nothing about what the document
+        See docs/render-architecture.md. Knows nothing about what the document
         describes.
     .PARAMETER Path
         Directory holding templateset.psd1 and the files it names. A caller

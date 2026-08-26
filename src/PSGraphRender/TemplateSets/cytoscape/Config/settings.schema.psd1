@@ -1,6 +1,6 @@
 @{
     # Schema for the report renderer's configuration. Data only - see
-    # docs/html-architecture.md. Adding a setting means adding an entry here and
+    # docs/render-architecture.md. Adding a setting means adding an entry here and
     # a value in settings.psd1 or theme.psd1, and nothing else.
     #
     # Entry fields:
@@ -64,6 +64,34 @@
             Default = @('#6e7d8c', '#a8756e', '#d1665a', '#f05340', '#ff3b2f')
             In = 'Theme'; Group = 'Appearance'
             Description = 'Node fill from coldest to hottest when ColorBy names a metric. Any number of stops from two up.'
+        }
+
+        KindColor        = @{
+            Type = 'ColorMap'
+            Default = @{}
+            In = 'Theme'; Group = 'Appearance'
+            Description = 'One colour per classification when ColorBy is structure. The keys are whatever the payload carries; the renderer does not know them and must not.'
+        }
+        KindColorFallback = @{
+            Type = 'Color'; Default = '#8895a7'
+            In = 'Theme'; Group = 'Appearance'
+            Description = 'Fill for a classification KindColor does not name. A producer may send anything, so there is always an unlisted case.'
+        }
+        LinkColor        = @{
+            Type = 'ColorMap'
+            Default = @{}
+            In = 'Theme'; Group = 'Appearance'
+            Description = 'One colour per link classification. A kind named here is drawn dashed in its colour; anything else is solid in EdgeColor.'
+        }
+        EdgeColor        = @{
+            Type = 'Color'; Default = '#6b7785'
+            In = 'Theme'; Group = 'Appearance'
+            Description = 'Line and arrowhead for a link whose classification LinkColor does not name.'
+        }
+        UnresolvedColor  = @{
+            Type = 'Color'; Default = '#ff7043'
+            In = 'Theme'; Group = 'Appearance'
+            Description = 'Fill for a node the renderer invented for a target the payload names but does not contain. Not a classification: no producer sends it.'
         }
 
         FoundationLayerCapacity = @{

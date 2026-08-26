@@ -1,6 +1,6 @@
 ﻿@{
     # Every user-visible string in the template scripts. Behaviour lives in
-    # settings.psd1, appearance in theme.psd1. See docs/html-architecture.md.
+    # settings.psd1, appearance in theme.psd1. See docs/render-architecture.md.
     #
     # This file is DATA, read with Import-PowerShellDataFile and never executed.
     # Expressions, variables and commands will not run here.
@@ -65,7 +65,12 @@
     LegendHeatScale               = '{metric}: {low} to {high}'
     LegendHeatRank                = 'shaded by rank, not by size - the number is in Details'
     LegendCalls                   = 'calls'
-    LegendInherits                = 'inherits'
+    # 'LegendLink' + the link classification. The key names a producer's word
+    # because this file is DATA - a producer describing Terraform ships its own
+    # strings.psd1 with LegendLinkReferences instead. sidebar.js falls back to
+    # the classification itself when no key matches, so a producer that ships
+    # neither still gets a legend that says something true.
+    LegendLinkInherits            = 'inherits'
     LegendUnresolved              = 'unresolved'
 
     # -- Focus and details -------------------------------------------------

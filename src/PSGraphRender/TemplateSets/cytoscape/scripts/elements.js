@@ -56,7 +56,7 @@
 
     function fillFor(node, colorBy) {
         if (METRIC_IDS.indexOf(colorBy) === -1) {
-            return KIND_HEX[node.kind] || '#8895a7';
+            return KIND_HEX[node.kind] || KIND_FALLBACK;
         }
         var scale = heatScale[colorBy] || {};
         return rampColor(scale[metricValue(node, colorBy)] || 0);
@@ -107,11 +107,22 @@
         els.push({
             data: {
                 id: 'e' + i, source: l.source, target: l.target,
-                kind: l.kind || 'CommandReference'
+                // No default. A link with no classification is unclassified,
+                // and the style rules fall through to the base edge rule, which
+                // is what unclassified should look like. The default used to be
+                // 'CommandReference' - one producer's word for one kind of
+                // link, applied to every producer's unlabelled edges.
+                kind: l.kind || ''
             }
         });
     });
 
+    // 'External' is THIS RENDERER'S word, not a producer's, and no producer
+    // emits it - the nodes below are invented here for targets the payload
+    // names but does not contain. That is why the comparisons against it
+    // elsewhere in these scripts are not the hardcoded-kind-list problem that
+    // KIND_HEX was: the renderer is recognising something it made itself.
+    //
     // Unresolved targets become External nodes. Edges whose origin is not a real
     // node (module:manifest, using:module) are shown as isolated nodes rather
     // than dropped, matching the "report, never discard" rule.
@@ -130,7 +141,7 @@
                     // here was measured about it. Zero is honest: it is not a
                     // cold node, it is an unmeasured one, and the dashed border
                     // is what says so.
-                    metrics: {}, color: KIND_HEX.External, border: 2, level: null,
+                    metrics: {}, color: UNRESOLVED_COLOR, border: 2, level: null,
                     dependents: 0, dependencies: 0, focusBlacken: 0
                 },
                 classes: 'unresolved'

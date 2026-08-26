@@ -1,7 +1,7 @@
 @{
     # Current values for behaviour settings: what the report does.
     # Appearance lives in theme.psd1. Types, ranges and descriptions live in
-    # settings.schema.psd1. See docs/html-architecture.md.
+    # settings.schema.psd1. See docs/render-architecture.md.
     #
     # This file is DATA, read with Import-PowerShellDataFile and never executed.
     # Expressions, variables and commands will not run here.

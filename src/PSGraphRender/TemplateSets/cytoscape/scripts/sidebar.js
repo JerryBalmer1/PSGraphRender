@@ -54,7 +54,7 @@
         label.className = 'check';
         label.innerHTML =
             '<input type="checkbox" id="' + id + '" data-kind="' + k + '" checked>' +
-            '<span class="swatch" style="background:' + (KIND_HEX[k] || '#8895a7') + '"></span>' +
+            '<span class="swatch" style="background:' + (KIND_HEX[k] || KIND_FALLBACK) + '"></span>' +
             '<span>' + k + '</span><span class="count">' + kindCounts[k] + '</span>';
         kindBox.appendChild(label);
         label.querySelector('input').addEventListener('change', applyFilters);
@@ -143,7 +143,7 @@
         var legendRows;
         if (METRIC_IDS.indexOf(COLOR_BY) === -1) {
             legendRows = kinds.map(function (k) {
-                return '<div class="row"><span class="chip" style="background:' + (KIND_HEX[k] || '#8895a7') + '"></span>' + k + '</div>';
+                return '<div class="row"><span class="chip" style="background:' + (KIND_HEX[k] || KIND_FALLBACK) + '"></span>' + k + '</div>';
             });
         }
         else {
@@ -151,10 +151,21 @@
         }
         legendRows.push('<div class="row"><span class="chip" style="background:#4da3ff;border:2px solid #fff"></span>' + escapeHtml(str('LegendExported')) + '</div>');
         legendRows.push('<div class="row"><span class="chip" style="background:#4da3ff;border:5px solid #0b0f14"></span>' + escapeHtml(str('LegendBorderWidth')) + '</div>');
-        legendRows.push('<div class="row"><span class="line" style="border-top:2px solid #6b7785"></span>' + escapeHtml(str('LegendCalls')) + '</div>');
-        legendRows.push('<div class="row"><span class="line" style="border-top:2px dashed #f2c14e"></span>' + escapeHtml(str('LegendInherits')) + '</div>');
+        legendRows.push('<div class="row"><span class="line" style="border-top:2px solid ' + EDGE_COLOR + '"></span>' + escapeHtml(str('LegendCalls')) + '</div>');
+
+        // One row per link classification the theme names, in the theme's
+        // order. The label comes from strings.psd1 under 'LegendLink' + kind
+        // and falls back to the kind itself, so a producer that ships neither
+        // still gets a legend that says something true.
+        Object.keys(LINK_HEX).forEach(function (kind) {
+            var key = 'LegendLink' + kind;
+            var label = hasStr(key) ? str(key) : kind;
+            legendRows.push('<div class="row"><span class="line" style="border-top:2px dashed ' +
+                LINK_HEX[kind] + '"></span>' + escapeHtml(label) + '</div>');
+        });
+
         if (unresolved.length > 0) {
-            legendRows.push('<div class="row"><span class="line" style="border-top:2px dotted #ff7043"></span>' + escapeHtml(str('LegendUnresolved')) + '</div>');
+            legendRows.push('<div class="row"><span class="line" style="border-top:2px dotted ' + UNRESOLVED_COLOR + '"></span>' + escapeHtml(str('LegendUnresolved')) + '</div>');
         }
         legend.innerHTML = legendRows.join('');
     }

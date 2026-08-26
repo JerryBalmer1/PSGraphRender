@@ -4,7 +4,7 @@ function Test-RenderSettingValue {
         Validates one configuration value against its schema entry.
     .DESCRIPTION
         One validator per type, dispatched from the entry's Type. See
-        docs/html-architecture.md.
+        docs/render-architecture.md.
     .PARAMETER Value
         The value as read from the data file.
     .PARAMETER Entry
@@ -75,7 +75,7 @@ function Test-RenderSettingValue {
             # A ramp is one decision, not five, so it is one entry. Adding a
             # TYPE is a schema extension and needs a validator here; adding a
             # SETTING must not, and still does not. The distinction matters:
-            # the rule in docs/html-architecture.md is that a new value is a
+            # the rule in docs/render-architecture.md is that a new value is a
             # data change, and every type in this switch was added the same way.
             #
             # MinCount rather than an exact length: a two-stop ramp and a
@@ -92,6 +92,31 @@ function Test-RenderSettingValue {
                 }
             }
             return New-Result $true ([string[]]$items) ''
+        }
+
+        'ColorMap' {
+            # An arbitrary key to hex colour map. Added as a TYPE because a
+            # backend colouring by classification cannot know the
+            # classifications: they come from whatever produced the payload, so
+            # neither the keys nor their number can live in a schema entry.
+            #
+            # This exists because bootstrap.js held
+            #   KIND_HEX = { Function: ..., Class: ..., Enum: ..., Script: ... }
+            # which is a hardcoded list of one producer's node kinds inside a
+            # renderer that must not have one. No key is validated - validating
+            # them would put the list back.
+            if (-not ($Value -is [System.Collections.IDictionary])) {
+                return New-Result $false $null 'expected a map of name to colour'
+            }
+            $map = [ordered]@{}
+            foreach ($key in ($Value.Keys | Sort-Object)) {
+                $colour = $Value[$key]
+                if (-not ($colour -is [string] -and $colour -match '^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$')) {
+                    return New-Result $false $null "'$key' is '$colour', not a hex colour such as #4da3ff"
+                }
+                $map[[string]$key] = [string]$colour
+            }
+            return New-Result $true $map ''
         }
 
         'Enum' {

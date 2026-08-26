@@ -3,7 +3,7 @@ function Resolve-RenderConfiguration {
     .SYNOPSIS
         Merges and validates the report renderer's configuration.
     .DESCRIPTION
-        See docs/html-architecture.md. Reads settings.schema.psd1 for types,
+        See docs/render-architecture.md. Reads settings.schema.psd1 for types,
         defaults and constraints, then settings.psd1 and theme.psd1 for values.
         Validation is dispatched from each entry's Type, so adding a setting is
         a data change.

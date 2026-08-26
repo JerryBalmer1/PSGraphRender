@@ -49,7 +49,7 @@ function Show-RenderDocument {
         may therefore be blocked. Supplied by the caller rather than known here:
         it is vocabulary belonging to whatever program generated the report,
         which is the same reason the renderer is handed editorLinkHelpCommand
-        instead of holding it. See docs/html-architecture.md.
+        instead of holding it. See docs/render-architecture.md.
     #>
     [CmdletBinding(SupportsShouldProcess)]
     param(

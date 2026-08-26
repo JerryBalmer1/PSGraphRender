@@ -16,7 +16,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
 
     document.getElementById('app').hidden = false;
 
-    // Starting values come from Assets/Html/Config, substituted above.
+    // Starting values come from this template set's Config/, substituted above.
     // PowerShell validates and fills every key before it gets here, so the
     // fallbacks below are only ever reached by someone opening the raw
     // template - which bails out earlier anyway. They exist so a missing key
@@ -42,7 +42,7 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
         return (Object.prototype.toString.call(v) === '[object Array]' && v.length) ? v : fallback;
     }
 
-    // User-visible text comes from Assets/Html/Config/strings.psd1, substituted
+    // User-visible text comes from this set's Config/strings.psd1, substituted
     // above. A missing key renders as its own name in brackets rather than as
     // nothing: a silently blank label is the one failure mode nobody notices.
     function str(key) {
@@ -67,12 +67,35 @@ const GRAPH_STRINGS = /*__STRINGS__*/ null;
         });
     }
 
+    // Same reason again for a map setting: a classification-to-colour map is
+    // one decision and one entry, and a reader that handles only scalars
+    // cannot see it.
+    function cfgMap(key) {
+        var v = CONFIG ? CONFIG[key] : null;
+        return (v && typeof v === 'object' && Object.prototype.toString.call(v) !== '[object Array]') ? v : {};
+    }
+
     var NODE_LIMIT = cfg('NodeLimit', 400);
     var ZOOM_SPEED_DEFAULT = cfg('ZoomSpeed', 1.25);
-    var KIND_HEX = {
-        Function: '#4da3ff', Class: '#f2c14e', Enum: '#6ddf6d',
-        Script: '#9b8cff', External: '#ff7043'
-    };
+
+    // From theme.psd1. This was a literal here until v0.3.0 -
+    //   KIND_HEX = { Function: ..., Class: ..., Enum: ..., Script: ... }
+    // which is a hardcoded list of one producer's node kinds inside a renderer
+    // that must not have one. There is no fallback map: an empty one and the
+    // fallback colour render every node in KIND_FALLBACK, which is visibly
+    // wrong rather than quietly PowerShell-shaped.
+    var KIND_HEX = cfgMap('KindColor');
+    var KIND_FALLBACK = cfgText('KindColorFallback', '#8895a7');
+
+    // The colour of a node this renderer invented, which is not a
+    // classification anything sent. See theme.psd1.
+    var UNRESOLVED_COLOR = cfgText('UnresolvedColor', '#ff7043');
+
+    // Link classifications, same story. render.js used to carry
+    //   edge[kind = "Inherits"]  with a literal colour
+    // which is a producer's word in a renderer that must not have one.
+    var LINK_HEX = cfgMap('LinkColor');
+    var EDGE_COLOR = cfgText('EdgeColor', '#6b7785');
 
     var meta = GRAPH_META || {};
     var data = GRAPH_DATA;

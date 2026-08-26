@@ -3,7 +3,7 @@ function Resolve-RenderString {
     .SYNOPSIS
         Loads the renderer's user-visible strings and fills caller-supplied tokens.
     .DESCRIPTION
-        See docs/html-architecture.md. strings.psd1 is the fourth data file and
+        See docs/render-architecture.md. strings.psd1 is the fourth data file and
         is deliberately outside settings.schema.psd1: the schema exists to type
         and range-check values, and a schema entry per string would hold a
         Default that is a second copy of the string itself.
