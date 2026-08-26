@@ -1,6 +1,6 @@
 @{
     RootModule           = 'PSGraphRender.psm1'
-    ModuleVersion        = '0.1.0'
+    ModuleVersion        = '0.2.0'
     GUID                 = '3f9b1c47-58ad-4c2e-b0d6-9e14a7c82f35'
     Author               = 'Jerry Balmer'
     CompanyName          = 'Community'
@@ -13,12 +13,9 @@
     # file that is not added here builds clean and is unavailable at runtime,
     # which is the failure this list exists to make loud.
     FunctionsToExport    = @(
-        'ConvertTo-EscapedHtmlJson'
-        'ConvertTo-EscapedHtmlText'
         'Get-RenderTemplateSet'
+        'New-RenderDocument'
         'New-RenderDocumentPath'
-        'Resolve-RenderConfiguration'
-        'Resolve-RenderString'
         'Show-RenderDocument'
     )
     CmdletsToExport      = @()
@@ -29,7 +26,7 @@
             Tags         = @('Html', 'Report', 'Graph', 'Visualisation', 'Renderer', 'PowerShell')
             LicenseUri   = 'https://opensource.org/licenses/MIT'
             ProjectUri   = 'https://github.com/JerryBalmer1/PSGraphRender'
-            ReleaseNotes = 'Extracted from PSModuleGraph. Names are unchanged from the move; renaming is the next iteration.'
+            ReleaseNotes = 'New-RenderDocument is the seam: one call takes a view model and returns a document. A backend is a directory and the default is data.'
         }
     }
 }

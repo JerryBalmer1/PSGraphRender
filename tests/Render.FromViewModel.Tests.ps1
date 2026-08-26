@@ -28,26 +28,19 @@ Describe 'Rendering a view model with no producer installed' {
     }
 
     It 'resolves a configuration without being told anything about the payload' {
-        $config = Resolve-RenderConfiguration
+        $config = InModuleScope PSGraphRender { Resolve-RenderConfiguration }
 
         $config | Should-NotBeNull
         $config.Keys.Count | Should-BeGreaterThan 0
     }
 
-    It 'renders the fixture into a document with every token substituted' {
+    It 'renders the fixture with one call and no knowledge of the contract' {
         # This is the first evidence the extraction actually worked, and the
-        # test that stops it silently un-working later. Everything here is what
-        # a producer in any language would do: hand over a payload, a meta
-        # block, a configuration and a set of strings.
-        $template = Get-RenderTemplateSet
-        $config = Resolve-RenderConfiguration
-        $strings = Resolve-RenderString -Value @{}
-
-        $document = $template.Replace('/*__DATA__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.data))
-        $document = $document.Replace('/*__META__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.meta))
-        $document = $document.Replace('/*__CONFIG__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $config))
-        $document = $document.Replace('/*__STRINGS__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $strings))
-        $document = $document.Replace('__PAGE_TITLE__', (ConvertTo-EscapedHtmlText -Text 'A fixture'))
+        # test that stops it silently un-working later. It is also the shape of
+        # the whole claim: a producer hands over a payload, a meta block, some
+        # strings and a title. It does not escape anything, does not know a
+        # marker name, and does not know where a backend keeps its settings.
+        $document = New-RenderDocument -ViewModel $script:ViewModel.data -Meta $script:ViewModel.meta -Title 'A fixture'
 
         $document | Should-NotMatchString '__PAGE_TITLE__'
         $document | Should-NotMatchString '/\*__[A-Z]+__\*/ null'
@@ -55,22 +48,49 @@ Describe 'Rendering a view model with no producer installed' {
         $document | Should-MatchString 'A fixture'
     }
 
+    It 'escapes the title as markup rather than as JSON' {
+        # & < > and " only. An apostrophe is left alone deliberately: the title
+        # lands in element text and in no attribute, where ' is not special, and
+        # escaping it would put &#39; in front of every reader with a possessive
+        # in their module name.
+        $document = New-RenderDocument -ViewModel $script:ViewModel.data -Title 'Bob''s <report> & "quotes"'
+
+        $document | Should-MatchString ([regex]::Escape("Bob's &lt;report&gt; &amp; &quot;quotes&quot;"))
+        $document | Should-NotMatchString ([regex]::Escape('<report>'))
+    }
+
+    It 'interpolates a caller string without learning what it means' {
+        # The seam, paid for. A producer hands down the name of its own command
+        # and the renderer treats it as text.
+        $document = New-RenderDocument -ViewModel $script:ViewModel.data -Strings @{
+            editorLinkHelpCommand = 'Invoke-SomethingFromAnotherLanguage'
+        }
+
+        $document | Should-MatchString 'Invoke-SomethingFromAnotherLanguage'
+    }
+
     It 'escapes a closing script sequence out of the payload' {
         # A label or a path containing </script> would otherwise terminate the
         # block the payload lives in. See CLAUDE.md, "Traps that survived the
-        # move".
+        # move". Asserted through the seam, because that is now the only way a
+        # producer can reach the escaper - which is the point of moving it.
         $hostile = [pscustomobject]@{ label = '</script><script>alert(1)</script>' }
 
-        ConvertTo-EscapedHtmlJson -InputObject $hostile | Should-NotMatchString '</script>'
+        $document = New-RenderDocument -ViewModel $hostile -Title 'Hostile'
+
+        ($document -split '</script>').Count | Should-Be (
+            ($document -split '<script').Count)
     }
 
     It 'leaves a token nobody filled as written rather than collapsing it' {
         # A gap that shows up beats a gap that reads as a finished sentence.
         # The renderer ships no default for editorLinkHelpCommand, because a
         # default would be the renderer knowing a producer's vocabulary.
-        $strings = Resolve-RenderString -Value @{}
+        $document = New-RenderDocument -ViewModel $script:ViewModel.data
 
-        $withToken = @($strings.Values | Where-Object { $_ -is [string] -and $_ -match '\{[a-zA-Z]+\}' })
-        $withToken.Count | Should-BeGreaterThan 0
+        # {origin} is a display-time token: only the browser knows what origin
+        # the report ended up on, so it survives into the document for the page
+        # to fill. A renderer that collapsed it would hide the gap.
+        $document | Should-MatchString '\{origin\}'
     }
 }

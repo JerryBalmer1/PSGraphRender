@@ -85,26 +85,28 @@ Describe 'Built module layout' {
         Import-PowerShellDataFile -LiteralPath $script:BuiltManifest | Should-NotBeNull
     }
 
-    It 'exports exactly the seven functions the manifest declares' {
+    It 'exports exactly the four functions the manifest declares' {
         # Public/ is not enumerated recursively and this list is explicit, so a
         # new file that nobody added to the manifest is unavailable at runtime.
         # This is the test that makes that loud rather than mysterious.
+        #
+        # Four, not seven. The escapers and the two resolvers were public only
+        # because a producer had to call them to render anything; that work is
+        # behind New-RenderDocument now, so the surface is the four things a
+        # caller actually has business with.
         Remove-Module -Name PSGraphRender -Force -ErrorAction SilentlyContinue
         Import-Module -Name $script:BuiltManifest -Force -ErrorAction Stop
 
         $expected = @(
-            'ConvertTo-EscapedHtmlJson'
-            'ConvertTo-EscapedHtmlText'
             'Get-RenderTemplateSet'
+            'New-RenderDocument'
             'New-RenderDocumentPath'
-            'Resolve-RenderConfiguration'
-            'Resolve-RenderString'
             'Show-RenderDocument'
         )
 
         $actual = @(Get-Command -Module PSGraphRender | Select-Object -ExpandProperty Name | Sort-Object)
 
-        $actual.Count | Should-Be 7
+        $actual.Count | Should-Be 4
         $actual | Should-BeCollection $expected
     }
 
