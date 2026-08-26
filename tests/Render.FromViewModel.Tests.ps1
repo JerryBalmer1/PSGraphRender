@@ -7,6 +7,15 @@ BeforeAll {
     # that reaches for a real dependency graph to get something to render has
     # re-coupled the two repositories at the only place the coupling was
     # removed. The payload is JSON on disk.
+    #
+    # Unload any producer FIRST, then assert it stayed unloaded. Asserting on
+    # whatever the session happens to hold makes this red when a developer ran
+    # something else in the same shell, which is a false alarm that teaches
+    # people to ignore it. Creating the condition tests the claim instead: this
+    # module renders with no producer present, and if importing it drags one in
+    # the assertion below still catches that.
+    Remove-Module -Name PSModuleGraph -Force -ErrorAction SilentlyContinue
+
     Import-PSGraphRenderUnderTest
 
     $script:ViewModel = Get-Content -LiteralPath (Get-ViewModelFixturePath -Name 'sample-module.json') -Raw |
@@ -15,6 +24,8 @@ BeforeAll {
 
 Describe 'Rendering a view model with no producer installed' {
     It 'has no producer module loaded while it runs' {
+        # Unloaded in BeforeAll. This catches importing the renderer pulling one
+        # back in, which is the failure that would matter.
         # The assertion the whole file rests on. Without it the rest could pass
         # because something else in the session happened to import a producer.
         @(Get-Module -Name PSModuleGraph).Count | Should-Be 0

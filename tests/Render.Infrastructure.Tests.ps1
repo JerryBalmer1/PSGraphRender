@@ -2,6 +2,14 @@
 
 BeforeAll {
     . (Join-Path $PSScriptRoot 'TestHelpers.ps1')
+    # Unload any producer FIRST, then assert it stayed unloaded. Asserting on
+    # whatever the session happens to hold makes this red when a developer ran
+    # something else in the same shell, which is a false alarm that teaches
+    # people to ignore it. Creating the condition tests the claim instead: this
+    # module renders with no producer present, and if importing it drags one in
+    # the assertion below still catches that.
+    Remove-Module -Name PSModuleGraph -Force -ErrorAction SilentlyContinue
+
     Import-PSGraphRenderUnderTest
 
     # THE CHARTER'S TARGET, CHECKED.
@@ -28,6 +36,8 @@ BeforeAll {
 
 Describe 'A view model of something that is not code' {
     It 'has no producer module loaded while it runs' {
+        # Unloaded in BeforeAll. This catches importing the renderer pulling one
+        # back in, which is the failure that would matter.
         @(Get-Module -Name PSModuleGraph).Count | Should-Be 0
     }
 
