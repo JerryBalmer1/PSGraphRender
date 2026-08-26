@@ -24,9 +24,9 @@ thought about yet.
 
 ### The default backend is hardcoded in two places — **medium**
 
-`Get-HtmlTemplateSet` resolves `TemplateSets/cytoscape` and
-`Resolve-HtmlConfiguration` resolves `TemplateSets/cytoscape/Config`, each
-independently, and nothing makes the two agree. `Resolve-HtmlString` hardcodes
+`Get-RenderTemplateSet` resolves `TemplateSets/cytoscape` and
+`Resolve-RenderConfiguration` resolves `TemplateSets/cytoscape/Config`, each
+independently, and nothing makes the two agree. `Resolve-RenderString` hardcodes
 the same config path a third time.
 
 **This is the rule that pays for the config split, failing.** Adding a second
@@ -44,7 +44,7 @@ Whether the config path is derived from the template set path or declared in
 ### A producer has to escape and substitute for itself — **large**
 
 `ConvertTo-GraphHtml` calls `ConvertTo-EscapedHtmlJson`,
-`ConvertTo-EscapedHtmlText` and `Resolve-HtmlString`, then does its own
+`ConvertTo-EscapedHtmlText` and `Resolve-RenderString`, then does its own
 `[string]::Replace` against the assembled template. Those three functions are
 public only because of that.
 
@@ -76,8 +76,8 @@ Iteration 2's work:
   and the old names have to survive as aliases.
 - `meta.moduleName`, `meta.moduleVersion`, `meta.moduleBase`, `meta.moduleRoot`
   — producer vocabulary in the payload. Also a contract change.
-- `Get-HtmlTemplateSet`, `Resolve-HtmlConfiguration`, `New-GraphReportPath`,
-  `Show-GraphDocument` — public names carrying `Html` or `Graph` where the
+- `Get-RenderTemplateSet`, `Resolve-RenderConfiguration`, `New-RenderDocumentPath`,
+  `Show-RenderDocument` — public names carrying `Html` or `Graph` where the
   charter names `Get-RenderTemplateSet`, `New-RenderDocument` and friends.
 
 ### The view model fixture is derived, not hand-written — **medium**

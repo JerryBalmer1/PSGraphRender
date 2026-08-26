@@ -1,4 +1,4 @@
-function Resolve-HtmlConfiguration {
+function Resolve-RenderConfiguration {
     <#
     .SYNOPSIS
         Merges and validates the report renderer's configuration.

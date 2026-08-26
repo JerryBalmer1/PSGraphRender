@@ -1,4 +1,4 @@
-function Get-HtmlTemplateSet {
+function Get-RenderTemplateSet {
     <#
     .SYNOPSIS
         Assembles a template set into a single document with slots substituted.

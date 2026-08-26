@@ -1,4 +1,4 @@
-function Show-GraphDocument {
+function Show-RenderDocument {
     <#
     .SYNOPSIS
         Opens a generated document with the OS default handler, which for .html is

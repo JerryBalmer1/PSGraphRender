@@ -1,4 +1,4 @@
-function New-GraphReportPath {
+function New-RenderDocumentPath {
     <#
     .SYNOPSIS
         Returns the default path for a generated report, under output/reports.
@@ -47,7 +47,7 @@ function New-GraphReportPath {
     # it declines to create the directory while the write that follows, which
     # has no ShouldProcess of its own, goes ahead anyway and fails on a missing
     # path. Gating half of a two-step operation turns a preview into a hard
-    # error. The open IS gated, in Show-GraphDocument, which is the step a
+    # error. The open IS gated, in Show-RenderDocument, which is the step a
     # -WhatIf is actually asking about.
     $root = Join-Path (Join-Path $BasePath 'output') 'reports'
     [System.IO.Directory]::CreateDirectory($root) | Out-Null

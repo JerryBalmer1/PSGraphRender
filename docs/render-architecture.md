@@ -242,7 +242,7 @@ rejected twice. What must not survive is *domain* vocabulary — `Module`, `Ast`
 `PSModuleGraph`, and any hardcoded list of node kinds.
 
 **2026-08-26 — A template set directory is a rendering backend, and the seam
-already existed.** `Get-HtmlTemplateSet -Path` was written to take a
+already existed.** `Get-RenderTemplateSet -Path` was written to take a
 caller-supplied directory before there was a second caller. Moving the shipped
 set under `TemplateSets/cytoscape/` makes a second backend a directory rather
 than a code change, which is the same test as `NODE_ACTIONS` and `FLOW_LAYOUT`.

@@ -45,11 +45,11 @@ new setting and may legitimately need a validator in
 
 ## Adding a backend
 
-A directory under `TemplateSets/`. `Get-HtmlTemplateSet -Path` takes a
+A directory under `TemplateSets/`. `Get-RenderTemplateSet -Path` takes a
 caller-supplied directory, so a second backend is data.
 
-**This is not yet true of the default.** `Get-HtmlTemplateSet` and
-`Resolve-HtmlConfiguration` each hardcode `TemplateSets/cytoscape` separately,
+**This is not yet true of the default.** `Get-RenderTemplateSet` and
+`Resolve-RenderConfiguration` each hardcode `TemplateSets/cytoscape` separately,
 and nothing makes the two agree. See `docs/improvements.md`.
 
 ## The build

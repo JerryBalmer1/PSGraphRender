@@ -5,10 +5,10 @@ BeforeAll {
     Import-PSGraphRenderUnderTest
 }
 
-Describe 'Get-HtmlTemplateSet' {
+Describe 'Get-RenderTemplateSet' {
     It 'assembles a document with no slots left unresolved' {
         InModuleScope PSGraphRender {
-            $doc = Get-HtmlTemplateSet
+            $doc = Get-RenderTemplateSet
             $doc | Should-HaveType ([string])
             $doc | Should-MatchString '<!DOCTYPE html>'
             # An unresolved slot would ship a visible marker into the report.
@@ -28,7 +28,7 @@ Describe 'Get-HtmlTemplateSet' {
 
         InModuleScope PSGraphRender -Parameters @{ Set = $set } {
             param($Set)
-            Get-HtmlTemplateSet -Path $Set | Should-Be '<p>hello</p>'
+            Get-RenderTemplateSet -Path $Set | Should-Be '<p>hello</p>'
         }
     }
 
@@ -45,7 +45,7 @@ Describe 'Get-HtmlTemplateSet' {
 
         InModuleScope PSGraphRender -Parameters @{ Set = $set } {
             param($Set)
-            Get-HtmlTemplateSet -Path $Set | Should-Be '[(x)]'
+            Get-RenderTemplateSet -Path $Set | Should-Be '[(x)]'
         }
     }
 
@@ -60,7 +60,7 @@ Describe 'Get-HtmlTemplateSet' {
 
         InModuleScope PSGraphRender -Parameters @{ Set = $set } {
             param($Set)
-            Get-HtmlTemplateSet -Path $Set | Should-Be "A`nB"
+            Get-RenderTemplateSet -Path $Set | Should-Be "A`nB"
         }
     }
 
@@ -73,14 +73,14 @@ Describe 'Get-HtmlTemplateSet' {
 
         InModuleScope PSGraphRender -Parameters @{ Set = $set } {
             param($Set)
-            { Get-HtmlTemplateSet -Path $Set } | Should-Throw -ExceptionMessage '*gone.html*'
+            { Get-RenderTemplateSet -Path $Set } | Should-Throw -ExceptionMessage '*gone.html*'
         }
     }
 
     It 'keeps no graph vocabulary in the assembler' {
         # Extraction checklist: nothing below the seam may name the domain.
         $source = Get-Content -LiteralPath (
-            Join-Path $PSScriptRoot '..\..\src\PSGraphRender\Public\Get-HtmlTemplateSet.ps1') -Raw
+            Join-Path $PSScriptRoot '..\..\src\PSGraphRender\Public\Get-RenderTemplateSet.ps1') -Raw
         $source | Should-NotMatchString '(?i)\b(node|edge|dependency|ast)\b'
     }
 }

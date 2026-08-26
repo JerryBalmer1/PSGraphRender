@@ -95,11 +95,11 @@ Describe 'Built module layout' {
         $expected = @(
             'ConvertTo-EscapedHtmlJson'
             'ConvertTo-EscapedHtmlText'
-            'Get-HtmlTemplateSet'
-            'New-GraphReportPath'
-            'Resolve-HtmlConfiguration'
-            'Resolve-HtmlString'
-            'Show-GraphDocument'
+            'Get-RenderTemplateSet'
+            'New-RenderDocumentPath'
+            'Resolve-RenderConfiguration'
+            'Resolve-RenderString'
+            'Show-RenderDocument'
         )
 
         $actual = @(Get-Command -Module PSGraphRender | Select-Object -ExpandProperty Name | Sort-Object)

@@ -1,4 +1,4 @@
-function Resolve-HtmlString {
+function Resolve-RenderString {
     <#
     .SYNOPSIS
         Loads the renderer's user-visible strings and fills caller-supplied tokens.

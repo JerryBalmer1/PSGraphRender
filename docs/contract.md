@@ -86,7 +86,7 @@ message that does not mention a command.
 
 More than it should. `ConvertTo-GraphHtml` in PSModuleGraph calls
 `ConvertTo-EscapedHtmlJson`, `ConvertTo-EscapedHtmlText` and
-`Resolve-HtmlString` directly, and does its own token substitution against the
+`Resolve-RenderString` directly, and does its own token substitution against the
 assembled template. Those three are public here only because a producer needs
 them.
 

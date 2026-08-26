@@ -21,14 +21,14 @@ Describe 'Rendering a view model with no producer installed' {
     }
 
     It 'assembles the reference template set and leaves no slot unresolved' {
-        $template = Get-HtmlTemplateSet
+        $template = Get-RenderTemplateSet
 
         $template.Length | Should-BeGreaterThan 0
         $template | Should-NotMatchString '__SLOT_[A-Z0-9_]+__'
     }
 
     It 'resolves a configuration without being told anything about the payload' {
-        $config = Resolve-HtmlConfiguration
+        $config = Resolve-RenderConfiguration
 
         $config | Should-NotBeNull
         $config.Keys.Count | Should-BeGreaterThan 0
@@ -39,9 +39,9 @@ Describe 'Rendering a view model with no producer installed' {
         # test that stops it silently un-working later. Everything here is what
         # a producer in any language would do: hand over a payload, a meta
         # block, a configuration and a set of strings.
-        $template = Get-HtmlTemplateSet
-        $config = Resolve-HtmlConfiguration
-        $strings = Resolve-HtmlString -Value @{}
+        $template = Get-RenderTemplateSet
+        $config = Resolve-RenderConfiguration
+        $strings = Resolve-RenderString -Value @{}
 
         $document = $template.Replace('/*__GRAPH_DATA__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.data))
         $document = $document.Replace('/*__GRAPH_META__*/ null', (ConvertTo-EscapedHtmlJson -InputObject $script:ViewModel.meta))
@@ -68,7 +68,7 @@ Describe 'Rendering a view model with no producer installed' {
         # A gap that shows up beats a gap that reads as a finished sentence.
         # The renderer ships no default for editorLinkHelpCommand, because a
         # default would be the renderer knowing a producer's vocabulary.
-        $strings = Resolve-HtmlString -Value @{}
+        $strings = Resolve-RenderString -Value @{}
 
         $withToken = @($strings.Values | Where-Object { $_ -is [string] -and $_ -match '\{[a-zA-Z]+\}' })
         $withToken.Count | Should-BeGreaterThan 0

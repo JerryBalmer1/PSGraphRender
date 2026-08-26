@@ -16,7 +16,7 @@ function Get-VSCodeLauncher {
 
         Note the VS Code CLI has no --command or --uri flag, so nothing here can
         open a rendered preview pane; only the file itself can be opened. See
-        Show-GraphDocument.
+        Show-RenderDocument.
     #>
     [CmdletBinding()]
     [OutputType([string])]

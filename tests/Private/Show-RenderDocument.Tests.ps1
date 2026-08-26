@@ -5,7 +5,7 @@ BeforeAll {
     Import-PSGraphRenderUnderTest
 }
 
-Describe 'Show-GraphDocument' {
+Describe 'Show-RenderDocument' {
     # Nothing here may launch a browser or an editor. Every exit path runs
     # through Start-Process, which is mocked throughout; a real launch hangs CI.
     It 'opens the OS handler even when running inside VS Code' {
@@ -22,7 +22,7 @@ Describe 'Show-GraphDocument' {
             Mock Start-Process { }
             Mock Resolve-LoopbackDocumentUrl { }
 
-            Show-GraphDocument -Path $Probe
+            Show-RenderDocument -Path $Probe
 
             Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter {
                 $FilePath -eq $Probe
@@ -45,7 +45,7 @@ Describe 'Show-GraphDocument' {
             Mock Resolve-LoopbackDocumentUrl { }
 
             # The hint names the command rather than running it.
-            $output = Show-GraphDocument -Path $Probe -Verbose 4>&1
+            $output = Show-RenderDocument -Path $Probe -Verbose 4>&1
             ($output | Out-String) | Should-MatchString 'code'
         }
     }
@@ -62,7 +62,7 @@ Describe 'Show-GraphDocument' {
             Mock Resolve-LoopbackDocumentUrl { }
 
             # Nothing to suggest: the user is not in an editor to open it in.
-            $output = Show-GraphDocument -Path $Probe -Verbose 4>&1
+            $output = Show-RenderDocument -Path $Probe -Verbose 4>&1
             ($output | Out-String) | Should-NotMatchString 'reuse-window'
         }
     }
@@ -78,7 +78,7 @@ Describe 'Show-GraphDocument' {
             Mock Start-Process { }
             Mock Resolve-LoopbackDocumentUrl { }
 
-            Show-GraphDocument -Path $Probe
+            Show-RenderDocument -Path $Probe
 
             # The OS handler is invoked with the file itself and no editor flags.
             Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter {
@@ -98,7 +98,7 @@ Describe 'Show-GraphDocument' {
             Mock Start-Process { }
             Mock Resolve-LoopbackDocumentUrl { }
 
-            Show-GraphDocument -Path $Probe -WhatIf
+            Show-RenderDocument -Path $Probe -WhatIf
 
             Should-NotInvoke Start-Process
         }
@@ -108,7 +108,7 @@ Describe 'Show-GraphDocument' {
         InModuleScope PSGraphRender {
             Mock Start-Process { }
             Mock Resolve-LoopbackDocumentUrl { }
-            { Show-GraphDocument -Path 'TestDrive:\definitely-missing.html' } | Should-Throw
+            { Show-RenderDocument -Path 'TestDrive:\definitely-missing.html' } | Should-Throw
         }
     }
 }
@@ -141,7 +141,7 @@ Describe 'Get-VSCodeLauncher' {
     }
 }
 
-Describe 'Show-GraphDocument routing' {
+Describe 'Show-RenderDocument routing' {
     BeforeEach {
         $script:Probe = Join-Path $TestDrive 'routed.html'
         Set-Content -LiteralPath $script:Probe -Value '<!DOCTYPE html><html></html>'
@@ -161,7 +161,7 @@ Describe 'Show-GraphDocument routing' {
                 }
             }
 
-            Show-GraphDocument -Path $Probe
+            Show-RenderDocument -Path $Probe
 
             # The document, never the directory - and on an origin a browser
             # policy can match, which is what lets the page's own links work.
@@ -184,7 +184,7 @@ Describe 'Show-GraphDocument routing' {
                 }
             }
 
-            $served = @(Show-GraphDocument -Path $Probe -Verbose 4>&1 |
+            $served = @(Show-RenderDocument -Path $Probe -Verbose 4>&1 |
                     Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
             ($served -join ' ') | Should-MatchString 'served over http://127\.0\.0\.1:5500'
             ($served -join ' ') | Should-MatchString 'editor links will work'
@@ -197,7 +197,7 @@ Describe 'Show-GraphDocument routing' {
             Mock Start-Process { }
             Mock Resolve-LoopbackDocumentUrl { }
 
-            $disk = @(Show-GraphDocument -Path $Probe -EditorLinkHelpCommand 'Test-Thing' -Verbose 4>&1 |
+            $disk = @(Show-RenderDocument -Path $Probe -EditorLinkHelpCommand 'Test-Thing' -Verbose 4>&1 |
                     Where-Object { $_ -is [System.Management.Automation.VerboseRecord] })
             ($disk -join ' ') | Should-MatchString 'from disk'
             # The command is supplied by the caller, not known here. See the
@@ -214,7 +214,7 @@ Describe 'Show-GraphDocument routing' {
             Mock Start-Process { }
             Mock Resolve-LoopbackDocumentUrl { throw 'the probe must not run under -NoServe' }
 
-            Show-GraphDocument -Path $Probe -NoServe
+            Show-RenderDocument -Path $Probe -NoServe
 
             Should-NotInvoke Resolve-LoopbackDocumentUrl
             Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter { $FilePath -eq $Probe }
@@ -229,7 +229,7 @@ Describe 'Show-GraphDocument routing' {
             Mock Start-Process { }
             Mock Resolve-LoopbackDocumentUrl { }
 
-            Show-GraphDocument -Path $Probe -BaseUrl 'http://127.0.0.1:9999'
+            Show-RenderDocument -Path $Probe -BaseUrl 'http://127.0.0.1:9999'
 
             Should-Invoke Resolve-LoopbackDocumentUrl -Times 1 -Exactly -ParameterFilter {
                 $BaseUrl -eq 'http://127.0.0.1:9999'
@@ -250,7 +250,7 @@ Describe 'Show-GraphDocument routing' {
                 }
             }
 
-            Show-GraphDocument -Path $Probe -WhatIf
+            Show-RenderDocument -Path $Probe -WhatIf
             Should-NotInvoke Start-Process
         }
     }
