@@ -206,11 +206,12 @@ needs to be true before it starts. The rule stayed up there, because it is
 violated from outside this file: **do not resolve one of these unilaterally as
 part of an unrelated change - raise it first.**
 
-- **Should library code be vendored instead of loaded from a CDN?** The page
-  claims to be self-contained and is not: Cytoscape and dagre come from
-  jsdelivr with SRI hashes, guarded by `partials/cdn-guard.html`. A second
-  backend adds more. Vendoring makes the page genuinely offline-capable and
-  makes it large.
+- ~~**Should library code be vendored instead of loaded from a CDN?**~~
+  **Answered at v0.5.0 and struck at v0.9.0.** They are vendored, the page
+  makes zero external requests measured headless, and
+  `partials/cdn-guard.html` - which the question pointed at - was deleted in
+  the same iteration. It stayed in the always-loaded tier as a live question
+  for four versions. Prune proposal `0009-t1`, applied.
 - **Should a backend be able to declare required contract fields?** Today every
   backend must cope with every payload. A declaration would let a 3D backend
   demand coordinates, at the cost of a payload that renders in one backend and
