@@ -107,11 +107,16 @@ function Show-RenderDocument {
     # Chained so the hint below runs once, after a successful open. The two
     # warning branches return without reaching it: nothing was opened, so there
     # is nothing to add a footnote to.
+    # Start-Process on every platform, rather than the call operator on two of
+    # them. One seam is one thing a test can intercept: the macOS and Linux
+    # branches used `& $opener` and so could not be mocked, and the suite
+    # LAUNCHED xdg-open on the CI runner - a unit test starting a real process,
+    # discovered the first time these tests ran anywhere but Windows.
     if ($onWindows) {
         Start-Process -FilePath $target
     }
     elseif ($onMacOS) {
-        & '/usr/bin/open' $target
+        Start-Process -FilePath '/usr/bin/open' -ArgumentList $target
     }
     elseif ($onLinux) {
         $opener = Get-Command -Name 'xdg-open' -ErrorAction SilentlyContinue
@@ -120,7 +125,7 @@ function Show-RenderDocument {
                 "The report is at: $Path")
             return
         }
-        & $opener.Source $target
+        Start-Process -FilePath $opener.Source -ArgumentList $target
     }
     else {
         Write-Warning "Unrecognised platform; could not open automatically. The report is at: $Path"

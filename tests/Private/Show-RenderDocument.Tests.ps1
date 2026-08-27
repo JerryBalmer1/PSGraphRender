@@ -25,7 +25,7 @@ Describe 'Show-RenderDocument' {
             Show-RenderDocument -Path $Probe
 
             Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter {
-                $FilePath -eq $Probe
+                $FilePath -eq $Probe -or $ArgumentList -contains $Probe
             }
             Should-NotInvoke Start-Process -ParameterFilter {
                 $FilePath -eq 'C:\fake\code.cmd'
@@ -82,7 +82,7 @@ Describe 'Show-RenderDocument' {
 
             # The OS handler is invoked with the file itself and no editor flags.
             Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter {
-                $FilePath -eq $Probe
+                $FilePath -eq $Probe -or $ArgumentList -contains $Probe
             }
         }
     }
@@ -166,7 +166,7 @@ Describe 'Show-RenderDocument routing' {
             # The document, never the directory - and on an origin a browser
             # policy can match, which is what lets the page's own links work.
             Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter {
-                $FilePath -eq 'http://127.0.0.1:5500/output/reports/routed.html'
+                $FilePath -eq 'http://127.0.0.1:5500/output/reports/routed.html' -or $ArgumentList -contains 'http://127.0.0.1:5500/output/reports/routed.html'
             }
         }
     }
@@ -217,7 +217,7 @@ Describe 'Show-RenderDocument routing' {
             Show-RenderDocument -Path $Probe -NoServe
 
             Should-NotInvoke Resolve-LoopbackDocumentUrl
-            Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter { $FilePath -eq $Probe }
+            Should-Invoke Start-Process -Times 1 -Exactly -ParameterFilter { $FilePath -eq $Probe -or $ArgumentList -contains $Probe }
         }
     }
 
