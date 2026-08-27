@@ -13,6 +13,16 @@
     # Markup does not belong here. Where a message needs emphasis the page wraps
     # it, so a string can never inject an element.
 
+    # -- Fatal ---------------------------------------------------------------
+    # Shown when the embedded library is not there after the document loaded.
+    # Before v0.5.0 this was a CDN guard telling the reader to reconnect; the
+    # library ships in the file now, so the remaining causes are a truncated
+    # document or a content policy blocking scripts. A blank page with no
+    # explanation is the failure this exists to prevent, and that has not
+    # changed.
+    LibraryMissingHeading         = 'The graph library did not load'
+    LibraryMissingBody            = 'This report has the library it needs embedded in it, so this is not a network problem. The file may be truncated, or a content security policy may be blocking scripts inside the page. Generating the report again is the first thing to try.'
+
     # -- Banner ------------------------------------------------------------
     # editorLinkHelpCommand is deliberately absent: it is vocabulary belonging
     # to whatever program generated the report, and the renderer is handed it

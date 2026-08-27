@@ -87,14 +87,32 @@ Describe 'A backend is a directory' {
         $default | Should-Be $named
     }
 
-    It 'reaches no host at all from the plain backend' {
-        # Half of the vendoring decision in CLAUDE.md, answered by
-        # demonstration rather than by argument: this one is genuinely
-        # offline-capable. The reference backend is not, and still pulls
-        # Cytoscape and dagre from jsdelivr.
-        $document = New-RenderDocument -ViewModel $script:ViewModel.data -Title 'Offline' -TemplateSet plain
+    It 'fetches nothing from anywhere, in every backend' {
+        # The vendoring decision, made in 0.5.0 and asserted here. Every
+        # backend now, not just the one that never needed a library.
+        #
+        # Matching the string https:// would be wrong and would fail: the
+        # vendored libraries carry MIT licence headers with URLs in them, and a
+        # URL in a comment is not a fetch. What matters is whether the DOCUMENT
+        # asks a browser to go anywhere, so this looks for the attributes that
+        # make it do so. The stronger claim - zero requests actually made - is
+        # asserted by the headless harness with the network blocked.
+        $fetching = @(
+            '<script[^>]+\bsrc\s*=\s*["'']?https?:'
+            '<link[^>]+\bhref\s*=\s*["'']?https?:'
+            '<img[^>]+\bsrc\s*=\s*["'']?https?:'
+            '<iframe[^>]+\bsrc\s*=\s*["'']?https?:'
+            '@import\s+(url\()?["'']?https?:'
+        )
 
-        [regex]::Matches($document, 'https?://').Count | Should-Be 0
+        foreach ($backend in $script:Backends) {
+            $document = New-RenderDocument -ViewModel $script:ViewModel.data -Title 'Offline' -TemplateSet $backend
+
+            foreach ($pattern in $fetching) {
+                [regex]::Matches($document, $pattern).Count |
+                    Should-Be 0 -Because "$backend asks the browser to fetch something"
+            }
+        }
     }
 
     It 'names what is available when asked for a backend that does not exist' {

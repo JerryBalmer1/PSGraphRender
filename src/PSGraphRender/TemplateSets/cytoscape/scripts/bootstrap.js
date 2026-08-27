@@ -6,7 +6,22 @@ const STRINGS = /*__STRINGS__*/ null;
 (function () {
     'use strict';
 
-    if (typeof cytoscape === 'undefined') { return; }
+    // The library is embedded in this document, so this is no longer a network
+    // failure and the CDN guard that used to say so is gone. What survives is
+    // the half of that message still capable of being true: the page went
+    // blank and here is why, rather than the page went blank.
+    if (typeof cytoscape === 'undefined') {
+        var fatal = document.createElement('div');
+        fatal.className = 'fatal';
+        var heading = document.createElement('h2');
+        heading.textContent = str('LibraryMissingHeading');
+        var body = document.createElement('p');
+        body.textContent = str('LibraryMissingBody');
+        fatal.appendChild(heading);
+        fatal.appendChild(body);
+        document.body.appendChild(fatal);
+        return;
+    }
 
     // Opened as a raw template rather than a generated report.
     if (!DATA) {

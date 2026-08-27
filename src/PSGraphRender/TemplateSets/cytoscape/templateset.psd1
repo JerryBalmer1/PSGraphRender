@@ -17,7 +17,13 @@
         CONTEXT_MENU     = @('partials/context-menu.html')
         INFO_PANEL       = @('partials/info-panel.html')
         TEMPLATE_NOTICE  = @('partials/template-notice.html')
-        CDN_GUARD        = @('partials/cdn-guard.html')
+
+        # Third-party libraries, inlined so the page is one file that needs
+        # nothing. They are assets of THIS backend, not of the module: a
+        # backend needing a different library brings its own vendor/ and
+        # nothing above this file has to know. See vendor/vendor.psd1 for where
+        # each came from and the hash it was verified against.
+        VENDOR           = @('vendor/cytoscape.min.js', 'vendor/cytoscape-dagre.min.js')
 
         SCRIPT           = @('scripts/bootstrap.js')
         SCRIPT_ORDER     = @('scripts/order.js')
