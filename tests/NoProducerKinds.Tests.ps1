@@ -51,7 +51,7 @@ Describe 'A renderer that does not know what the nodes are' {
         # in a fixture. See the test below for the half that does not depend on
         # knowing the words.
         $offenders = foreach ($backend in $script:Backends) {
-            foreach ($file in Get-ChildItem -LiteralPath $backend.FullName -Include *.js, *.css, *.html -File -Recurse) {
+            foreach ($file in Get-BackendSourceFile -Backend $backend.FullName -Include *.js, *.css, *.html) {
                 # Comments stripped first, and deliberately: the comment above
                 # KIND_HEX in bootstrap.js quotes the literal it replaced, and
                 # deleting the explanation to satisfy the check would be the

@@ -109,7 +109,7 @@ Describe 'Built module layout' {
             'ConvertTo|ConvertFrom|Resolve|Write|Read|Start|Stop|Update|Find|Select|Measure)-[A-Z][A-Za-z]+\b'
 
         foreach ($set in $script:Backends) {
-            $offenders = foreach ($file in Get-ChildItem -LiteralPath $set -File -Recurse) {
+            $offenders = foreach ($file in Get-BackendSourceFile -Backend $set) {
                 $text = Get-Content -LiteralPath $file.FullName -Raw
                 foreach ($match in [regex]::Matches($text, $verbNoun)) {
                     $name = $match.Value
@@ -133,7 +133,7 @@ Describe 'Built module layout' {
         # name is just a word, so this one has to be a list - and being a list is
         # exactly why it cannot be the whole check.
         foreach ($set in $script:Backends) {
-            $offenders = @(Get-ChildItem -LiteralPath $set -File -Recurse |
+            $offenders = @(Get-BackendSourceFile -Backend $set |
                     Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match 'PSModuleGraph' })
 
             @($offenders | ForEach-Object Name) -join '; ' | Should-Be '' -Because "$(Split-Path $set -Leaf) names a producer"

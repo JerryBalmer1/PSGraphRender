@@ -104,7 +104,17 @@ task LintJavaScript {
     $node = Resolve-BuildTool -Name Node -Command node -Purpose 'backend scripts cannot be syntax-checked without it'
 
     $templateSets = Join-Path $SrcRoot 'TemplateSets'
-    $scripts = @(Get-ChildItem -LiteralPath $templateSets -Filter *.js -File -Recurse)
+
+    # vendor/ is excluded, by a path segment named exactly that and nothing
+    # wider. A 435 KB minified bundle parses fine and takes a second to say so,
+    # and it is not this repository's syntax to check. tests/Vendor.Tests.ps1
+    # asserts the exclusion matches what the backend manifests declare as
+    # vendored - an exclusion nobody bounds is how the vocabulary check missed
+    # four things for three tags.
+    $scripts = @(
+        Get-ChildItem -LiteralPath $templateSets -Filter *.js -File -Recurse |
+            Where-Object { $_.FullName.Split([char]92, [char]47) -notcontains 'vendor' }
+    )
     if ($scripts.Count -eq 0) {
         throw "No .js found under $templateSets. The check found nothing to check, which is not the same as passing."
     }

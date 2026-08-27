@@ -82,3 +82,60 @@ function Get-BackendDirectory {
     Get-ChildItem -LiteralPath (Join-Path $script:RepoRoot 'src/PSGraphRender/TemplateSets') -Directory |
         Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'templateset.psd1') }
 }
+
+function Test-VendorPath {
+    <#
+    .SYNOPSIS
+        Whether a path is a third-party file a check must not read.
+    .DESCRIPTION
+        THE exclusion rule, stated once. A directory named exactly `vendor`
+        anywhere in the path, and nothing else - not a file whose name contains
+        the word, not a directory that starts with it.
+
+        Every scan over backend files needs this, because none of the things
+        they look for mean anything in code this repository did not write:
+        minified output is full of Verb-Noun-shaped identifiers, and a library
+        that happens to read `.data` is not reading the payload.
+
+        An exclusion that quietly grows is how the producer-vocabulary check
+        missed four things for three tags, so tests/Vendor.Tests.ps1 asserts
+        that what this excludes is exactly what a backend manifest declares as
+        vendored - no wider.
+    #>
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Path
+    )
+
+    # Split on both separators by CODE POINT. Written as a regex class the
+    # backslash is an escape and '[\/]' silently means 'slash only', which on
+    # Windows excludes nothing at all.
+    $segments = $Path.Split([char]92, [char]47)
+    return [bool]($segments -contains 'vendor')
+}
+
+function Get-BackendSourceFile {
+    <#
+    .SYNOPSIS
+        The files in a backend that this repository wrote.
+    .PARAMETER Backend
+        A backend directory.
+    .PARAMETER Include
+        Extension filters, as Get-ChildItem -Include takes them. Omit for all.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string] $Backend,
+
+        [Parameter()]
+        [string[]] $Include
+    )
+
+    $params = @{ LiteralPath = $Backend; File = $true; Recurse = $true }
+    if ($Include) { $params['Include'] = $Include }
+
+    Get-ChildItem @params | Where-Object { -not (Test-VendorPath -Path $_.FullName) }
+}
