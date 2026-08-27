@@ -18,6 +18,67 @@ a change was made, and for what could not be verified about it,
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-08-27
+
+### Fixed
+
+- **A node revealed after the first paint is laid out.** The layout places the
+  visible set, so anything hidden when it last ran had no position at all and
+  sat at the origin, under the top-left node of the drawing. Ticking *Show
+  unresolved* dropped every invented node on the same spot; unchecking *Exported
+  only* on a 532-node payload put 371 nodes in one corner and left the camera
+  where it was. Filter, lay out, fit is one act now, and every control that
+  changes the visible set by decision calls it.
+- **A name shared by more than one node is told apart.** The test-order steps
+  and the cycle box printed labels, so `restart` in one step and `restart` in
+  the next read as one node listed twice. A shared name now carries the shortest
+  trailing run of path segments that separates it, elided in the middle past
+  three, and a name only one node has is untouched.
+- **The scale banner no longer names the producer's domain or promises a view
+  the page will not give.** It said *"This module has {count} nodes"* and
+  offered to *"see everything"*; past `MinReadableZoom` the drawing stops
+  shrinking and the reader pans.
+- **The legend's unclassified-edge row stopped calling every unlabelled edge a
+  call**, and the border-width row counts dependents rather than callers.
+
+### Added
+
+- **The colour encoding is stated under the COLOUR BY radios.** The legend has
+  said colour is rank rather than magnitude since before v0.1.0 - as the last
+  block of a sidebar that scrolls, eight blocks below the choice that needs it.
+- **`tools/threads.ps1` reports a path flip**: a thread names a path, and
+  whether that path exists is not what it was when the thread was raised. Two
+  booleans and the direction between them. No score and no ordering, which is
+  the only reason it belongs in a tool that refused to rank on carry count.
+- **A gate reads the values in `strings.psd1`** against the six words the
+  charter forbids. Nothing had ever read a value in that file.
+- **Five before-and-after screenshot pairs** in `docs/samples/`, every before
+  rendered from a worktree at v0.11.0.
+
+*Ledger `0013`.*
+
+## [0.11.0] - 2026-08-27
+
+### Added
+
+- **`docs/constraints.md`** - twelve limitations this repository has decided to
+  have, each with the argument that retired it, out of the thread list.
+  **Accepted is not closed**: closed means the question is answered, accepted
+  means it is not and never will be. `accepts_threads` is a third retiring verb
+  in the ledger and `tools/threads.ps1` refuses to fold it into `closed`.
+
+### Changed
+
+- **No document here can publish by being followed.** `git push` left the
+  `iteration-close` skill and `CLAUDE.md`, and `tests/Instructions.Tests.ps1`
+  fails by file and line if it returns. Publishing is the operator's.
+- **The heat-ramp comment says what was measured rather than what was
+  intended.** Rank over distinct values puts 87% of a 532-node payload in the
+  coldest quarter; the comment said it *"spreads the ramp across the values
+  that actually occur"* and stopped.
+
+*Ledger `0012`.*
+
 ## [0.10.0] - 2026-08-27
 
 ### Added

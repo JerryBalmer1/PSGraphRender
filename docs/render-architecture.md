@@ -138,6 +138,16 @@ should.
 - **Nothing may leave the starting view to the markup.** The radios carry no
   `checked` attribute; `controls.js` sets it from config. A `checked` in the
   partial would make editing the `.psd1` silently do nothing.
+- **The visible set is an INPUT to the layout, so changing it deliberately
+  re-runs the layout.** `foundationPositions()` places what is not hidden,
+  because a hidden node would otherwise reserve width it does not occupy. The
+  consequence is that a node revealed later has no position at all and sits at
+  the origin, on top of whatever the drawing put in its top-left corner. Filter,
+  lay out, fit is therefore one act — `applyStructuralFilters()` — and it is
+  what the checkboxes, the flow radios, `#fit` and the first paint all call.
+  The search box is the exception and calls `applyFilters()` alone: it fires per
+  keystroke, and a graph that rearranges itself mid-word is worse than the
+  problem. That exception has a residual, and it is open as `0013-t1`.
 
 ## Facets and metrics
 
@@ -394,3 +404,20 @@ PowerShell produced it, so three installs buy nothing; every gate that does vary
 runs everywhere. The two legs without it run `WithoutBrowser`, which prints by
 name that it did not run. Both chains are generated from one task list, so a
 gate added to the default cannot go missing from the other.
+
+**2026-08-27 — The colour encoding is stated at the control, not only in the
+legend.** The legend has said colour is rank rather than magnitude since before
+v0.1.0, as the last block of a sidebar that scrolls, eight blocks below the
+radios that create the confusion. `0012-t1` was raised as "the legend does not
+say this" and the legend does. A caveat a reader has to scroll to is a caveat
+that has not been made; the sentence sits under the choice now, and the legend
+keeps its own copy for the reader who reaches it.
+
+**2026-08-27 — A shared label is qualified by the shortest path suffix that
+separates it, and only where it is shared.** Ids are unique and unreadable; full
+paths are 148 characters of shared prefix for one distinguishing segment. What
+the sidebar lists is a name, so the qualifier is the smallest thing that makes
+two names different — the file name where that is enough, more when it is not,
+elided in the middle past three segments, and the id when no depth of path
+separates them. Qualifying every name would cost the 298 unambiguous nodes to
+serve the 234 ambiguous ones.
