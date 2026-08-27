@@ -134,8 +134,16 @@ function Get-BackendSourceFile {
         [string[]] $Include
     )
 
-    $params = @{ LiteralPath = $Backend; File = $true; Recurse = $true }
-    if ($Include) { $params['Include'] = $Include }
+    # Extensions matched HERE rather than with -Include. Get-ChildItem -Include
+    # alongside -LiteralPath does not filter on Windows PowerShell 5.1, so the
+    # same call read every .psd1 in the tree there and the classification check
+    # reported 'module' out of a comment and 'Enum' out of a schema type - a
+    # scan whose SCOPE depended on which PowerShell was running it. Found by CI,
+    # on the leg that exists to find exactly this.
+    $extensions = @()
+    if ($Include) { $extensions = @($Include | ForEach-Object { $_.TrimStart('*') }) }
 
-    Get-ChildItem @params | Where-Object { -not (Test-VendorPath -Path $_.FullName) }
+    Get-ChildItem -LiteralPath $Backend -File -Recurse |
+        Where-Object { -not (Test-VendorPath -Path $_.FullName) } |
+        Where-Object { -not $extensions -or $extensions -contains $_.Extension }
 }
