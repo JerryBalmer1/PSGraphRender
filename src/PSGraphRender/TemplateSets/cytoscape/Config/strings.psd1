@@ -95,6 +95,11 @@
     DetailDependencies            = 'Dependencies'
     DetailBlastRadius             = 'Blast radius'
     DetailReach                   = 'Reach'
+    # Shown only when at least one link touching the selection carries a
+    # resolution the theme draws differently - so a payload that states nothing
+    # never shows an empty row saying zero.
+    DetailUncertainLinks          = 'Uncertain links'
+    DetailUncertainLinksValue     = '{count} of {total}'
     DetailLine                    = 'Line'
     DetailPath                    = 'Path'
     ValueNotApplicable            = 'n/a'

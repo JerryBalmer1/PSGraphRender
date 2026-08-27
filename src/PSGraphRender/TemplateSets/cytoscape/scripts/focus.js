@@ -137,6 +137,23 @@
                 rows.push([str('DetailReach'), String(m.reach)]);
             }
         }
+        // How many of this node's links the payload declined to tie to one
+        // target. Counted from links[].resolution alone: the number of
+        // CANDIDATES an ambiguous link has is a fact the producer holds and the
+        // contract does not carry, so it is not shown rather than guessed.
+        //
+        // The row is absent when nothing is styled, which is the same rule as
+        // the metrics above - a payload that states nothing says nothing here.
+        var touching = n.connectedEdges();
+        var uncertain = touching.filter(function (e) {
+            var r = e.data('resolution');
+            return r && Object.prototype.hasOwnProperty.call(EDGE_RESOLUTION_STYLE, r);
+        });
+        if (uncertain.length) {
+            rows.push([str('DetailUncertainLinks'),
+                fmt('DetailUncertainLinksValue', { count: uncertain.length, total: touching.length })]);
+        }
+
         if (n.data('startLine')) { rows.push([str('DetailLine'), String(n.data('startLine'))]); }
 
         var html = rows.map(function (r) {
