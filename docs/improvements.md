@@ -40,7 +40,7 @@ and a test in that file records the gap by asserting the scan finds nothing in a
 computed access — the limitation is executable rather than a comment. A nested
 read (`node.severity`) is also outside it: the scan reaches one level.
 
-### Nothing runs the page — **medium, and blocked**
+### Nothing runs the page — **closed in 0.5.0**
 
 Closed in part. `LintJavaScript` runs `node --check` over every backend script
 and `LintDocument` runs it over the inline blocks of a rendered document, which
@@ -55,9 +55,16 @@ console errors and three painted canvases in about 3.5 seconds; `cytoscape`
 offline shows the CDN guard and produces two console errors and no node count —
 the same signature a genuinely broken script produces.
 
-That last line is the block. It cannot be finished until the vendoring question
-under "Open decisions" in `CLAUDE.md` is answered, and it is not this
-repository's to answer.
+That last line was the block and the vendoring decision removed it: the
+libraries ship inside the backend, so an offline `cytoscape` page is a working
+page and a red harness means one thing. `TestBrowser` runs both backends against
+both fixtures with the network blocked, and it was proved able to fail before it
+was trusted — see `knowledge/ledger/0005`.
+
+What it still does not do is judge. It says the page loaded, the counts match
+and something was drawn. It says nothing about whether the foundation layout is
+correct, whether the heat ramp ranks properly, or whether focus mode does what
+it claims.
 
 ### The stronger no-producer-kinds check is weak in practice — **small**
 
@@ -96,13 +103,9 @@ before resolving it.
 
 ## Noticed, not logged as work
 
-- The renderer claims to be self-contained and is not - but only in one
-  backend. `cytoscape` still pulls Cytoscape and dagre from jsdelivr; `plain`
-  reaches no host at all and a test asserts it. Half the vendoring decision in
-  `CLAUDE.md` is now answered by demonstration: an offline reader has a view.
-  Measured, for whoever decides it: the two libraries are 481 KB minified, and
-  a report is 126 KB, so vendoring makes every report roughly five times its
-  present size.
+- A report is 607 KB, up from 126 KB, and every reader pays it. That was the
+  price of vendoring and it was accepted deliberately; it is recorded here
+  because nobody has asked a reader whether they noticed.
 - A user-visible string still lives in markup rather than `strings.psd1`, and
   for once it has a reason. `partials/template-notice.html` is shown only when
   the template was never filled in - the case where `STRINGS` is the literal

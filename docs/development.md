@@ -67,12 +67,51 @@ Node 18 or later yourself, from <https://nodejs.org> or `winget install
 OpenJS.NodeJS.LTS`, and the floor is pinned under `Tools` in
 `Requirements.psd1`.
 
-Two tasks use it, and neither skips when it is absent. `LintJavaScript` runs
-`node --check` over every `.js` in every backend. `LintDocument` renders a
-fixture through every backend and runs `node --check` over the inline `<script>`
-blocks of the result, which is what the browser actually receives. Each catches
-what the other cannot: the first covers files no `templateset.psd1` names, the
-second covers the splice.
+Three tasks use it, and none skips when it is absent. `LintJavaScript` runs
+`node --check` over every `.js` in every backend except `vendor/`.
+`LintDocument` renders a fixture through every backend and runs `node --check`
+over the inline `<script>` blocks of the result, which is what the browser
+actually receives. Each catches what the other cannot: the first covers files no
+`templateset.psd1` names, the second covers the splice.
+
+`TestBrowser` loads every backend's render of every fixture in headless
+Chromium with `http` and `https` blocked, and fails on a console error, a count
+that does not match the payload, or a view that drew nothing. It needs a browser
+and the install is explicit:
+
+```powershell
+./build.ps1 -Task BootstrapBrowser   # npm install, then Chromium (~500 MB)
+```
+
+Parsing is not running: a script can parse perfectly and throw on its first
+line. `node --check` cannot see that and this can.
+
+What "alive" means is declared per backend, as data, in `templateset.psd1` under
+`Smoke` — the harness names no selector and knows no backend. A backend with no
+`Smoke` block fails the task rather than being skipped. Cytoscape draws into a
+canvas, so a DOM assertion cannot tell a graph from a blank rectangle; its
+`MinScreenshotBytes` compares a PNG of `#cy` against a floor measured between a
+drawn view and an empty one.
+
+## Vendored libraries
+
+`TemplateSets/<name>/vendor/` holds third-party files, named in
+`templateset.psd1` like any other asset and inlined into the document, so a
+report needs no network. They belong to the backend, not the module: a backend
+needing a different library brings its own and nothing above it knows.
+
+`vendor/vendor.psd1` records each file's source URL, version, licence and the
+SRI hash it was verified against. `tests/Vendor.Tests.ps1` recomputes every hash
+on every run, so replacing a file without updating the manifest fails the build.
+To update one, fetch the URL, compare the hash **before** replacing the file,
+and change file, version and hash in one commit. Never edit a vendored file:
+the hash is the only thing that makes a re-download checkable.
+
+Four scans over backend files skip `vendor/` — the two `node --check` tasks, the
+producer-vocabulary checks and the classification check. The rule is one path
+segment named exactly `vendor`, in `Test-VendorPath`, and
+`tests/Vendor.Tests.ps1` asserts what is skipped equals what the manifests
+declare, so the exclusion cannot quietly widen.
 
 `Build` concatenates `Private/**` (sorted by full path) then `Public/*` into a
 generated `.psm1`, copies the manifest and `TemplateSets/`, and sets

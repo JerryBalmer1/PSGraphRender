@@ -226,7 +226,10 @@ then making the result producer-neutral rather than merely relocated.
       0.1.0, 11,301 at 0.2.0, 11,223 at 0.4.0 — the ratchet works, the target
       is not reached)
 - [x] Every backend script parses, and the assembled document parses  (0.4.0)
-- [ ] Something runs the page  (blocked on the vendoring decision)
+- [x] Something runs the page  (0.5.0, headless, network blocked, both
+      backends, both fixtures — proved able to fail before it was trusted)
+- [x] The page is genuinely self-contained  (0.5.0; the libraries live under
+      the backend, not the module)
 - [x] The settings schema is data — `settings.schema.psd1`, not a hashtable
       in a `.ps1`
 - [x] The view model contract is data — `contract/viewmodel.schema.json`, not
@@ -351,3 +354,26 @@ named a producer's module, two of its commands and one of its source paths. The
 fix in both this case and `KIND_HEX` was to look for the SHAPE — Verb-Noun for a
 command, an object literal's keys for a classification list — rather than for
 the word last found.
+
+**2026-08-26 — The libraries are vendored, under the backend rather than the
+module.** The deciding number was not size: an offline `cytoscape` page and a
+broken `render.js` produced the same signature, so allowing the network would
+have made the harness's red ambiguous on the day it shipped — the same defect as
+a pre-tag gate that passes on zero tests. A report goes from 126 KB to 607 KB,
+which is a large multiplier on a small absolute for something read one at a time
+off local disk, and "self-contained" stops being false for anyone behind a
+proxy. Not a setting: two code paths and two test matrices to let a reader
+receive a report they cannot identify.
+
+**2026-08-26 — A vendored file carries its provenance or it does not ship.**
+`vendor/vendor.psd1` records source URL, version, licence and the SRI hash each
+file was verified against, and a test recomputes every hash on every run. A blob
+with no provenance is worse than a CDN link, which at least says where it came
+from. Vendored files are never edited: the hash is the only thing that makes a
+re-download checkable.
+
+**2026-08-26 — What "the page came alive" means is declared by the backend.**
+The headless harness reads a `Smoke` block out of `templateset.psd1` and names
+no selector of its own, because a harness that knew `#c-nodes` would be a second
+place a backend's shape is written down. A backend with no `Smoke` block fails
+the task rather than being quietly skipped.
