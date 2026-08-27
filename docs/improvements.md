@@ -103,6 +103,12 @@ before resolving it.
 
 ## Noticed, not logged as work
 
+- CI had never executed a single step before v0.6.0. `shell: ${{ matrix.powershell }}`
+  on a step is not valid - `matrix` is not a recognised named-value there - so
+  every run since v0.2.0 failed as "workflow file issue" before any job started.
+  Six red badges nobody read, and every "CI is wired" note in the ledgers
+  described a file that could not run. What made it findable was
+  `gh workflow run`, whose 422 names the line; nothing in the runs API does.
 - A report is 607 KB, up from 126 KB, and every reader pays it. That was the
   price of vendoring and it was accepted deliberately; it is recorded here
   because nobody has asked a reader whether they noticed.

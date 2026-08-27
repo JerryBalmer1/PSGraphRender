@@ -228,6 +228,8 @@ then making the result producer-neutral rather than merely relocated.
 - [x] Every backend script parses, and the assembled document parses  (0.4.0)
 - [x] Something runs the page  (0.5.0, headless, network blocked, both
       backends, both fixtures — proved able to fail before it was trusted)
+- [x] CI executes at all  (0.6.0. It never had: `shell: ${{ matrix.powershell }}`
+      on a step made every run since 0.2.0 fail before any job started)
 - [x] The page is genuinely self-contained  (0.5.0; the libraries live under
       the backend, not the module)
 - [x] The settings schema is data — `settings.schema.psd1`, not a hashtable
@@ -377,3 +379,18 @@ The headless harness reads a `Smoke` block out of `templateset.psd1` and names
 no selector of its own, because a harness that knew `#c-nodes` would be a second
 place a backend's shape is written down. A backend with no `Smoke` block fails
 the task rather than being quietly skipped.
+
+**2026-08-27 — A threshold a check cannot re-derive belongs to the machine that
+wrote it.** `MinScreenshotBytes = 15000` measured one laptop's viewport, device
+pixel ratio, fonts and Chromium build. `CanvasGrowth` compares a drawn view
+against the same backend rendering an empty payload, measured in the same run,
+so the floor comes from wherever the check is executing. The requirement has
+daylight in it — four against a measured twelve — because a ratio that needs
+precision is a constant wearing a disguise.
+
+**2026-08-27 — The browser harness runs on one CI leg, and that is configured
+rather than omitted.** What a browser does with the page does not vary by which
+PowerShell produced it, so three installs buy nothing; every gate that does vary
+runs everywhere. The two legs without it run `WithoutBrowser`, which prints by
+name that it did not run. Both chains are generated from one task list, so a
+gate added to the default cannot go missing from the other.

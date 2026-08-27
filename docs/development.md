@@ -90,8 +90,27 @@ What "alive" means is declared per backend, as data, in `templateset.psd1` under
 `Smoke` — the harness names no selector and knows no backend. A backend with no
 `Smoke` block fails the task rather than being skipped. Cytoscape draws into a
 canvas, so a DOM assertion cannot tell a graph from a blank rectangle; its
-`MinScreenshotBytes` compares a PNG of `#cy` against a floor measured between a
-drawn view and an empty one.
+`CanvasGrowth` requires a PNG of `#cy` to be N times larger than the same
+selector in that backend's render of an **empty payload**, rendered and measured
+in the same run. A byte constant cannot survive the move to another machine —
+viewport, device pixel ratio, fonts and Chromium version all change it — so the
+floor is measured where the check runs. Viewport and `deviceScaleFactor` are
+pinned in the harness and echoed into its report; two runs that cannot be
+compared cannot bisect.
+
+## What runs where in CI
+
+Three legs: `windows-latest` on both `pwsh` and Windows PowerShell 5.1, and
+`ubuntu-latest` on `pwsh`. **The browser harness runs on Ubuntu only.** What a
+browser does with the page does not vary by which PowerShell produced it, so
+installing a browser three times buys nothing; Ubuntu is the cheapest runner and
+the only place `playwright install --with-deps` is a real question.
+
+The other two legs run `-Task WithoutBrowser`, which runs every other gate and
+then prints, by name, that the browser harness did not run. Both chains are
+built from `$script:CoreTasks`, so a gate added to the default cannot go missing
+from the other, and `tests/PreTag.Tests.ps1` asserts exactly one leg carries the
+browser.
 
 ## Vendored libraries
 
