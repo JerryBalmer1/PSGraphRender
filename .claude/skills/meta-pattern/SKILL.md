@@ -35,8 +35,18 @@ reads and writes files and calls nothing.
 
 ## Output
 
-`knowledge/patterns/NNNN-<slug>.md`, where `NNNN` is the ledger id of the
-iteration recording it.
+**`PSModuleGraph`'s `knowledge/patterns/NNNN-<slug>.md`, not this repository's
+`knowledge/`.** The charter here says `knowledge/` holds only `ledger/`, and it
+means it: the facets, subjects and assignments classify PowerShell code, which
+is the thing this renderer must not know about, and a pattern store beside them
+would be the first file over that line.
+
+Patterns observed here are therefore recorded in the sibling repository, with
+every scale named by repository so a reader can find it. `0017` is the worked
+example - five instances, three of them from this repository.
+
+`NNNN` is the ledger id of the PSModuleGraph iteration recording it, which is
+not the id of the iteration here that noticed it. Name both.
 
 **Use the ledger id, not a date and not a version.** Two iterations can land on
 the same day and dates do not order them. The ledger id already exists, already
@@ -57,7 +67,10 @@ supersedes: []
 ---
 ```
 
-`scales` needs two entries minimum; the schema enforces it.
+`scales` needs two entries minimum, enforced by
+`knowledge/SCHEMA/pattern.schema.json` in `PSModuleGraph`. There is no schema
+here, so a pattern written from this repository is checked when it lands there
+and not before.
 `confidence` is required and **never defaults to 1** — the same rule the store
 applies to assignments. A shape you have seen twice and named once is not a law.
 `supersedes` names a pattern id this one subsumes or corrects; renaming never

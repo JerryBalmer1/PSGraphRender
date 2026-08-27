@@ -110,20 +110,35 @@ the tired session. It does mean **nothing here has been read under the
 conditions it was written for**, which is the same shape as a gate nobody has
 broken.
 
-**And this directory is a copy.** All five skills are byte-identical to
-`PSModuleGraph`'s, with nothing keeping them in sync, and the copy carries
-claims that are false here:
+**And this directory was a copy, until v0.9.0.** All five skills were
+byte-identical to `PSModuleGraph`'s, with nothing keeping them in sync, and the
+copy made claims that were false here - a charter test that does not exist, a
+`knowledge/NAMING.md` in a store that holds only `ledger/`, a
+`docs/html-architecture.md` under another name, a version rule about facets in a
+repository with none, and - worst, because it was an enforcement - a `PreTag`
+gate blocking deferred deletions that had never been written here.
 
-| The text says | Here |
-| --- | --- |
-| `tests/Private/SubsystemCharter.Tests.ps1` backs `subsystem-charter` | that file does not exist |
-| `knowledge/NAMING.md` is an on-demand destination | `knowledge/` holds only `ledger/` |
-| `docs/*-architecture.md` is where subsystem text goes | the file is `docs/render-architecture.md`, and there is one |
-| a facet is added or split, in the version rule | there are no facets in this repository |
+**The fork was taken, not a sync check.** The argument is short and it is
+evidence rather than preference: **four of the five were never the same
+document.** `subsystem-charter` opened by naming `Private/EditorLink/` and
+`Private/Knowledge/`, directories of a different repository. `meta-pattern`
+writes to `knowledge/patterns/`, which this repository's own charter forbids.
+`iteration-close` spent a third of its length on facets, personas and a
+reflection pass built for a knowledge store that exists in exactly one place.
+`instruction-prune` routed moved text to files that are not here. Only
+`gate-falsifiability` is genuinely shared, and only because it was written
+repo-neutral on purpose, with every cross-reference naming its repository. **A
+sync check would have enforced sameness on documents describing different
+repositories, and the first honest edit would have had to defeat it** - a gate
+whose correct state is red is a gate that gets deleted. What is kept instead is
+a rule, not a mechanism: **a skill copied between these repositories is reread
+against the destination before it lands, and anything that turns out to be about
+the other one is rewritten or dropped.** That rule is cheap, and it is the one
+thing a checker could not have told us.
 
-Logged, not fixed — a documentation pass that also rewrites five procedure
-bodies is a commit nobody reviews properly.
-
+The cost is real and is taken deliberately: five files now drift, and an
+improvement made to `iteration-close` in one repository will not reach the
+other. Watch for it in the ledger rather than in a test.
 ## Frontmatter, and three traps in it
 
 These follow the Claude Code skill frontmatter schema — every field is optional
@@ -139,9 +154,9 @@ there `name` does set the last segment.)
 skill listing, under a shared 1,536-character cap, and a model reads it and
 decides. Nothing fires it. Where a rule must actually hold, back it with a test:
 `instruction-prune` has `tests/Instructions.Tests.ps1`, and that is a mechanism.
-`subsystem-charter` cites one that exists only in `PSModuleGraph` - see the table
-above - so here it is a hint and nothing more, and so is every entry in the
-trigger column.
+`subsystem-charter` has none here and now says so in its own text, so its
+trigger is a hint and nothing more, and so is every other entry in the trigger
+column.
 
 **None of the five declares `allowed-tools`, deliberately.** A project skill's
 `allowed-tools` grant applies in any session that invokes it, including in a

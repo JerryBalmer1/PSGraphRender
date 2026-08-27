@@ -28,8 +28,9 @@ Two reasons, and the second is the real one:
 
 - **Always-loaded** — `CLAUDE.md`. Charged to every session, before the work is
   even known.
-- **On-demand** — `.claude/skills/*`, `docs/*.md`, `knowledge/NAMING.md`. Read
-  when the work touches them, free otherwise.
+- **On-demand** — `.claude/skills/*`, `docs/*.md`. Read when the work touches
+  them, free otherwise. (There is no `knowledge/NAMING.md` here; the store in
+  this repository holds only `ledger/`.)
 
 **The question is no longer "did anything become obsolete". It is: is anything
 here that an agent does not need before it starts?**
@@ -55,7 +56,7 @@ went.
 **Genuine deletion — text that is obsolete rather than misplaced — still
 proposes and waits.** It goes in the ledger as a thread, and its id goes in
 `prune_proposals`. If the next iteration neither applies nor explicitly rejects
-it, `tests/PreTag.Tests.ps1` blocks the annotated tag by name. Explicit
+it, `tests/LedgerPrune.Tests.ps1` blocks the annotated tag by name. Explicit
 rejection is a valid outcome and closes the thread: *"we considered this and it
 stays, because X"* is a decision. Silence is not.
 
@@ -90,12 +91,12 @@ Destinations, in order of preference:
 
 | Text about | Goes to |
 | --- | --- |
-| one subsystem | that subsystem's `docs/*-architecture.md` |
+| the renderer, a backend, or gravity | `docs/render-architecture.md` |
+| the view model | `docs/contract.md` |
 | how to close an iteration | `.claude/skills/iteration-close/SKILL.md` |
 | writing tests | `docs/testing.md` |
 | the module's shape, build, or tooling | `docs/development.md` |
-| the improvement loop's method | `docs/improvements.md` |
-| naming in the store | `knowledge/NAMING.md` |
+| the improvement loop's method, and open decisions | `docs/improvements.md` |
 
 **Leave a pointer, not a summary.** A pointer costs one line; a summary is a
 second copy that drifts. Where a moved rule is violated from *outside* the file
