@@ -6,38 +6,41 @@
     "powerShellEdition": "Core"
   },
   "run": {
-    "generatedUtc": "2026-08-27T05:32:51Z",
+    "generatedUtc": "2026-08-27T06:10:52Z",
     "sources": [
       {
         "repository": "PSGraphRender",
         "path": "C:\\__Code\\PSGraphRender\\knowledge\\ledger",
-        "entries": 11
+        "entries": 12
       },
       {
         "repository": "PSModuleGraph",
         "path": "C:\\__Code\\PSModuleGraph\\knowledge\\ledger",
-        "entries": 18
+        "entries": 19
       }
     ]
   },
   "counts": {
-    "raised": 100,
-    "open": 68,
-    "closed": 31,
+    "raised": 106,
+    "open": 39,
+    "closed": 42,
     "superseded": 1,
+    "accepted": 24,
     "perRepository": {
       "PSGraphRender": {
-        "raised": 44,
-        "open": 30,
-        "closed": 13,
+        "raised": 47,
+        "open": 17,
+        "closed": 17,
         "superseded": 1,
+        "accepted": 12,
         "recovered": 0
       },
       "PSModuleGraph": {
-        "raised": 56,
-        "open": 38,
-        "closed": 18,
+        "raised": 59,
+        "open": 22,
+        "closed": 25,
         "superseded": 0,
+        "accepted": 12,
         "recovered": 0
       }
     }
@@ -59,8 +62,8 @@
       "openedAt": "0001",
       "openedTag": "v0.1.0",
       "carries": 10,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0012",
       "summary": "The golden has never been compared on another machine."
     },
     {
@@ -89,8 +92,8 @@
       "openedAt": "0001",
       "openedTag": "v0.1.0",
       "carries": 10,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "`Get-HashtableValue` now exists in both repositories."
     },
     {
@@ -99,8 +102,8 @@
       "openedAt": "0002",
       "openedTag": "v0.2.0",
       "carries": 9,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "`plain` is trivial enough to prove less than it looks."
     },
     {
@@ -118,7 +121,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0002",
       "openedTag": "v0.2.0",
-      "carries": 9,
+      "carries": 10,
       "status": "open",
       "resolvedAt": null,
       "summary": "`Get-RenderTemplateSet` may not belong on the public surface."
@@ -140,8 +143,8 @@
       "openedAt": "0003",
       "openedTag": "v0.3.0",
       "carries": 8,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "Semantic equivalence only checks the dimensions I listed."
     },
     {
@@ -150,8 +153,8 @@
       "openedAt": "0003",
       "openedTag": "v0.3.0",
       "carries": 8,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0012",
       "summary": "Nothing checks a backend reads only what the contract promises."
     },
     {
@@ -170,8 +173,8 @@
       "openedAt": "0003",
       "openedTag": "v0.3.0",
       "carries": 8,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "Validation at the seam is one place, which cuts both ways."
     },
     {
@@ -190,8 +193,8 @@
       "openedAt": "0004",
       "openedTag": "v0.4.0",
       "carries": 7,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "The payload scan reaches one level and cannot see a computed access."
     },
     {
@@ -200,8 +203,8 @@
       "openedAt": "0004",
       "openedTag": "v0.4.0",
       "carries": 7,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0012",
       "summary": "The offline measurement is Chromium's failure, not a proxy's."
     },
     {
@@ -210,8 +213,8 @@
       "openedAt": "0004",
       "openedTag": "v0.4.0",
       "carries": 7,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "Playwright was measured; nothing else was."
     },
     {
@@ -219,7 +222,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0005",
       "openedTag": "v0.5.0",
-      "carries": 6,
+      "carries": 7,
       "status": "open",
       "resolvedAt": null,
       "summary": "The harness asserts that the page loaded, not that it is right."
@@ -250,8 +253,8 @@
       "openedAt": "0005",
       "openedTag": "v0.5.0",
       "carries": 6,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "A vendored file names a resource that is not vendored."
     },
     {
@@ -259,7 +262,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0006",
       "openedTag": "v0.6.0",
-      "carries": 5,
+      "carries": 6,
       "status": "open",
       "resolvedAt": null,
       "summary": "The harness has been proved able to fail on one machine."
@@ -269,7 +272,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0006",
       "openedTag": "v0.6.0",
-      "carries": 5,
+      "carries": 6,
       "status": "open",
       "resolvedAt": null,
       "summary": "The growth ratio has never met a legitimately sparse payload."
@@ -280,8 +283,8 @@
       "openedAt": "0006",
       "openedTag": "v0.6.0",
       "carries": 5,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "Two of five defects were 5.1-only, on a leg that has run four times."
     },
     {
@@ -289,7 +292,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0007",
       "openedTag": "v0.7.0",
-      "carries": 4,
+      "carries": 5,
       "status": "open",
       "resolvedAt": null,
       "summary": "The style is calibrated against one density."
@@ -310,8 +313,8 @@
       "openedAt": "0007",
       "openedTag": "v0.7.0",
       "carries": 4,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "The count says how many, never how many of what."
     },
     {
@@ -319,7 +322,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0008",
       "openedTag": "v0.8.0",
-      "carries": 3,
+      "carries": 4,
       "status": "open",
       "resolvedAt": null,
       "summary": "An invented node is drawn on top of a real one."
@@ -329,7 +332,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0008",
       "openedTag": "v0.8.0",
-      "carries": 3,
+      "carries": 4,
       "status": "open",
       "resolvedAt": null,
       "summary": "Two lists print a name twice and mean two different nodes."
@@ -340,8 +343,8 @@
       "openedAt": "0008",
       "openedTag": "v0.8.0",
       "carries": 3,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "The fill channel is dead on the payload that needs it most."
     },
     {
@@ -349,7 +352,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0008",
       "openedTag": "v0.8.0",
-      "carries": 3,
+      "carries": 4,
       "status": "open",
       "resolvedAt": null,
       "summary": "Nothing checks the README."
@@ -390,8 +393,8 @@
       "openedAt": "0009",
       "openedTag": "v0.8.1",
       "carries": 2,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0012",
       "summary": "There is no `CHANGELOG.md`."
     },
     {
@@ -400,8 +403,8 @@
       "openedAt": "0010",
       "openedTag": "v0.9.0",
       "carries": 1,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "The skills are forked and nothing watches the drift."
     },
     {
@@ -409,7 +412,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0010",
       "openedTag": "v0.9.0",
-      "carries": 1,
+      "carries": 2,
       "status": "open",
       "resolvedAt": null,
       "summary": "Lifting the node limit does not move the camera, and `#fit` does not fit."
@@ -419,7 +422,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0010",
       "openedTag": "v0.9.0",
-      "carries": 1,
+      "carries": 2,
       "status": "open",
       "resolvedAt": null,
       "summary": "Two unresolved targets with different names are drawn as one node."
@@ -440,8 +443,8 @@
       "openedAt": "0010",
       "openedTag": "v0.9.0",
       "carries": 1,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0012",
       "summary": "The heat ramp has no middle."
     },
     {
@@ -449,7 +452,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0010",
       "openedTag": "v0.9.0",
-      "carries": 1,
+      "carries": 2,
       "status": "open",
       "resolvedAt": null,
       "summary": "No page carries all three dashed treatments where they can be read."
@@ -459,7 +462,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0011",
       "openedTag": "v0.10.0",
-      "carries": 0,
+      "carries": 1,
       "status": "open",
       "resolvedAt": null,
       "summary": "Thirty-two verdicts were proposed in one pass by the author of most of the threads."
@@ -469,7 +472,7 @@
       "repository": "PSGraphRender",
       "openedAt": "0011",
       "openedTag": "v0.10.0",
-      "carries": 0,
+      "carries": 1,
       "status": "open",
       "resolvedAt": null,
       "summary": "The tool reports and the temptation to rank it will recur."
@@ -479,10 +482,40 @@
       "repository": "PSGraphRender",
       "openedAt": "0011",
       "openedTag": "v0.10.0",
-      "carries": 0,
+      "carries": 1,
       "status": "open",
       "resolvedAt": null,
       "summary": "A merge across repositories has no id grammar."
+    },
+    {
+      "id": "0012-t1",
+      "repository": "PSGraphRender",
+      "openedAt": "0012",
+      "openedTag": "v0.11.0",
+      "carries": 0,
+      "status": "open",
+      "resolvedAt": null,
+      "summary": "The legend does not say that colour is rank rather than magnitude."
+    },
+    {
+      "id": "0012-t2",
+      "repository": "PSGraphRender",
+      "openedAt": "0012",
+      "openedTag": "v0.11.0",
+      "carries": 0,
+      "status": "open",
+      "resolvedAt": null,
+      "summary": "`docs/constraints.md` is a document that only works if it is read first."
+    },
+    {
+      "id": "0012-t3",
+      "repository": "PSGraphRender",
+      "openedAt": "0012",
+      "openedTag": "v0.11.0",
+      "carries": 0,
+      "status": "open",
+      "resolvedAt": null,
+      "summary": "Twenty-eight verdicts were applied in one pass, and a Close applied without re-reading is indistinguishable, to every mechanism here, from a thread dropped."
     },
     {
       "id": "0001-t1",
@@ -520,8 +553,8 @@
       "openedAt": "0001",
       "openedTag": "v0.0.1",
       "carries": 2,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0019",
       "summary": "Make the store's write path real.",
       "recoveredAt": "0018"
     },
@@ -551,8 +584,8 @@
       "openedAt": "0001",
       "openedTag": "v0.0.1",
       "carries": 17,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0019",
       "summary": "The facet seam in the report, designed in `docs/html-architecture.md` and not built."
     },
     {
@@ -600,7 +633,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0003",
       "openedTag": "v0.2.0",
-      "carries": 15,
+      "carries": 16,
       "status": "open",
       "resolvedAt": null,
       "summary": "`facet-health` grades itself flatteringly."
@@ -610,7 +643,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0003",
       "openedTag": "v0.2.0",
-      "carries": 15,
+      "carries": 16,
       "status": "open",
       "resolvedAt": null,
       "summary": "Coverage conflates \"unassigned\" with \"inapplicable\"."
@@ -621,8 +654,8 @@
       "openedAt": "0003",
       "openedTag": "v0.2.0",
       "carries": 15,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "`structure:external` has no assignments and may not deserve to exist."
     },
     {
@@ -631,8 +664,8 @@
       "openedAt": "0004",
       "openedTag": "v0.3.0",
       "carries": 14,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "Should patterns be subjects with URNs? `pattern:0004-...` classified by facets, gradeable by `facet-health`, addressable in an assignment's evidence block."
     },
     {
@@ -661,8 +694,8 @@
       "openedAt": "0004",
       "openedTag": "v0.3.0",
       "carries": 14,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0019",
       "summary": "`iteration-close` is model-invocable and it pushes."
     },
     {
@@ -670,7 +703,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0005",
       "openedTag": "v0.4.0",
-      "carries": 13,
+      "carries": 14,
       "status": "open",
       "resolvedAt": null,
       "summary": "Skill descriptions are always-loaded and unbudgeted."
@@ -681,8 +714,8 @@
       "openedAt": "0005",
       "openedTag": "v0.4.0",
       "carries": 13,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "The ceiling's headroom is a guess."
     },
     {
@@ -691,8 +724,8 @@
       "openedAt": "0005",
       "openedTag": "v0.4.0",
       "carries": 13,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "Nothing measures whether an on-demand file is ever read."
     },
     {
@@ -700,7 +733,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0006",
       "openedTag": "v0.4.1",
-      "carries": 12,
+      "carries": 13,
       "status": "open",
       "resolvedAt": null,
       "summary": "The origin claim is unverified."
@@ -711,8 +744,8 @@
       "openedAt": "0007",
       "openedTag": "v0.5.0",
       "carries": 11,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0019",
       "summary": "Hot and external are nearly the same colour."
     },
     {
@@ -721,8 +754,8 @@
       "openedAt": "0007",
       "openedTag": "v0.5.0",
       "carries": 11,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "Should the store hold measurements as well as classifications? A facet classifies; a metric measures."
     },
     {
@@ -731,8 +764,8 @@
       "openedAt": "0008",
       "openedTag": "v0.6.0",
       "carries": 10,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "Nothing has been trained on this."
     },
     {
@@ -740,7 +773,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0008",
       "openedTag": "v0.6.0",
-      "carries": 10,
+      "carries": 11,
       "status": "open",
       "resolvedAt": null,
       "summary": "The section headings are hardcoded to this repository's five."
@@ -750,7 +783,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0008",
       "openedTag": "v0.6.0",
-      "carries": 10,
+      "carries": 11,
       "status": "open",
       "resolvedAt": null,
       "summary": "`corpus/` is outside both the lint task and the charter test."
@@ -761,8 +794,8 @@
       "openedAt": "0009",
       "openedTag": "v0.7.0",
       "carries": 9,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "One fixture proves the move."
     },
     {
@@ -780,7 +813,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0009",
       "openedTag": "v0.7.0",
-      "carries": 9,
+      "carries": 10,
       "status": "open",
       "resolvedAt": null,
       "summary": "Nothing proves the dependency is really required."
@@ -800,7 +833,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0010",
       "openedTag": "v0.8.0",
-      "carries": 8,
+      "carries": 9,
       "status": "open",
       "resolvedAt": null,
       "summary": "A test scoped to a module that no longer holds what it tests still passes."
@@ -811,8 +844,8 @@
       "openedAt": "0011",
       "openedTag": "v0.9.0",
       "carries": 7,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "Nobody has asked what a JSON consumer reads."
     },
     {
@@ -821,8 +854,8 @@
       "openedAt": "0011",
       "openedTag": "v0.9.0",
       "carries": 7,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "A golden that gets re-recorded when it fails only catches accidents."
     },
     {
@@ -831,8 +864,8 @@
       "openedAt": "0012",
       "openedTag": "v0.10.0",
       "carries": 6,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "The corpus is a hypothesis with eight instances."
     },
     {
@@ -840,7 +873,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0012",
       "openedTag": "v0.10.0",
-      "carries": 6,
+      "carries": 7,
       "status": "open",
       "resolvedAt": null,
       "summary": "Two of the three failure outcomes have never happened."
@@ -850,7 +883,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0012",
       "openedTag": "v0.10.0",
-      "carries": 6,
+      "carries": 7,
       "status": "open",
       "resolvedAt": null,
       "summary": "Nothing validates a result against the schema that describes it."
@@ -860,7 +893,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0012",
       "openedTag": "v0.10.0",
-      "carries": 6,
+      "carries": 7,
       "status": "open",
       "resolvedAt": null,
       "summary": "The lock has never been checked by anyone who did not write it."
@@ -890,7 +923,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0013",
       "openedTag": "v0.11.0",
-      "carries": 5,
+      "carries": 6,
       "status": "open",
       "resolvedAt": null,
       "summary": "The renderer requirement is a floor and the repository treats it as a pin."
@@ -910,7 +943,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0014",
       "openedTag": "v0.12.0",
-      "carries": 4,
+      "carries": 5,
       "status": "open",
       "resolvedAt": null,
       "summary": "The knowledge store gives 32 definitions one subject and one wrong path."
@@ -920,7 +953,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0014",
       "openedTag": "v0.12.0",
-      "carries": 4,
+      "carries": 5,
       "status": "open",
       "resolvedAt": null,
       "summary": "The golden's name and location claim a provenance it lost."
@@ -930,7 +963,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0014",
       "openedTag": "v0.12.0",
-      "carries": 4,
+      "carries": 5,
       "status": "open",
       "resolvedAt": null,
       "summary": "JSON and CSV now describe the same graph differently."
@@ -940,7 +973,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0015",
       "openedTag": "v0.13.0",
-      "carries": 3,
+      "carries": 4,
       "status": "open",
       "resolvedAt": null,
       "summary": "Three whole-document comparisons are skipped and need a decision."
@@ -951,8 +984,8 @@
       "openedAt": "0015",
       "openedTag": "v0.13.0",
       "carries": 3,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0019",
       "summary": "The page this whole sequence was for has not been looked at."
     },
     {
@@ -961,8 +994,8 @@
       "openedAt": "0016",
       "openedTag": "v0.13.1",
       "carries": 2,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0019",
       "summary": "`-Format Html -IncludeUnresolved` cannot render a module that declares a dependency."
     },
     {
@@ -971,8 +1004,8 @@
       "openedAt": "0016",
       "openedTag": "v0.13.1",
       "carries": 2,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "closed",
+      "resolvedAt": "0019",
       "summary": "An error message names a parameter the command does not have."
     },
     {
@@ -1001,8 +1034,8 @@
       "openedAt": "0017",
       "openedTag": "v0.13.2",
       "carries": 1,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "Seven skills are loaded into every session's listing and none has been invoked in five iterations."
     },
     {
@@ -1011,8 +1044,8 @@
       "openedAt": "0017",
       "openedTag": "v0.13.2",
       "carries": 1,
-      "status": "open",
-      "resolvedAt": null,
+      "status": "accepted",
+      "resolvedAt": "0019",
       "summary": "A procedure written from memory records what the author remembers doing."
     },
     {
@@ -1020,7 +1053,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0018",
       "openedTag": "v0.14.0",
-      "carries": 0,
+      "carries": 1,
       "status": "open",
       "resolvedAt": null,
       "summary": "Thirty-eight verdicts were proposed in one pass by the author of most of the threads."
@@ -1030,7 +1063,7 @@
       "repository": "PSModuleGraph",
       "openedAt": "0018",
       "openedTag": "v0.14.0",
-      "carries": 0,
+      "carries": 1,
       "status": "open",
       "resolvedAt": null,
       "summary": "A drop is judged over the whole chain, so an entry can drop a thread and a much later one can re-admit it without the record reading as unusual."
@@ -1040,10 +1073,40 @@
       "repository": "PSModuleGraph",
       "openedAt": "0018",
       "openedTag": "v0.14.0",
-      "carries": 0,
+      "carries": 1,
       "status": "open",
       "resolvedAt": null,
       "summary": "A merge across repositories has no id grammar."
+    },
+    {
+      "id": "0019-t1",
+      "repository": "PSModuleGraph",
+      "openedAt": "0019",
+      "openedTag": "v0.15.0",
+      "carries": 0,
+      "status": "open",
+      "resolvedAt": null,
+      "summary": "Thirty-eight verdicts were applied in one pass."
+    },
+    {
+      "id": "0019-t2",
+      "repository": "PSModuleGraph",
+      "openedAt": "0019",
+      "openedTag": "v0.15.0",
+      "carries": 0,
+      "status": "open",
+      "resolvedAt": null,
+      "summary": "The publishing gate exempts `knowledge/` and `CHANGELOG.md`."
+    },
+    {
+      "id": "0019-t3",
+      "repository": "PSModuleGraph",
+      "openedAt": "0019",
+      "openedTag": "v0.15.0",
+      "carries": 0,
+      "status": "open",
+      "resolvedAt": null,
+      "summary": "A thread cannot move to the repository that can act on it."
     }
   ]
 }
