@@ -57,12 +57,8 @@ Describe 'A renderer that does not know what the nodes are' {
                 # deleting the explanation to satisfy the check would be the
                 # check eating its own reason. Same lesson as the backend-name
                 # test, arriving in a different language.
-                $text = Get-Content -LiteralPath $file.FullName -Raw
-                $text = [regex]::Replace($text, '(?s)/\*.*?\*/', '')
+                $text = Remove-JavaScriptComment -Source (Get-Content -LiteralPath $file.FullName -Raw)
                 $text = [regex]::Replace($text, '(?s)<!--.*?-->', '')
-                $text = ($text -split "`n" | ForEach-Object {
-                        if ($_ -match '^\s*//') { '' } else { $_ }
-                    }) -join "`n"
                 foreach ($kind in $script:KnownKinds) {
                     # As an object key, a quoted string, or a property access.
                     # Bare-word matching would fire on English: two of the kinds
