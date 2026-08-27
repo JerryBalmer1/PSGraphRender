@@ -26,7 +26,7 @@ if (-not (Test-Path -LiteralPath $requirementsPath)) {
 # Requirements.psd1 is the single source of truth for build dependency versions.
 $requirements = Import-PowerShellDataFile -LiteralPath $requirementsPath
 $requiredModules = @(
-    foreach ($moduleName in ($requirements.Keys | Sort-Object)) {
+    foreach ($moduleName in ($requirements.Keys | Where-Object { $_ -ne 'Tools' } | Sort-Object)) {
         $entry = $requirements[$moduleName]
         $spec = @{ Name = $moduleName }
 

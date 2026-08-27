@@ -18,4 +18,15 @@
     # Floor-pinned. Needs to be recent enough for PSUseCompatibleSyntax to
     # understand the 7.4 target in PSScriptAnalyzerSettings.psd1.
     PSScriptAnalyzer = @{ MinimumVersion = '1.22.0' }
+
+    # NOT PowerShell modules. Tools are what the build shells out to, and they
+    # are pinned here for the same reason the modules above are: a gate is only
+    # as reproducible as the thing running it. build.ps1 skips this section when
+    # it installs and checks modules; the tasks that need a tool read it here.
+    Tools            = @{
+        # Floor-pinned. node --check is stable well below this, but 18 is the
+        # oldest release still receiving security fixes, and a syntax checker
+        # that accepts syntax the shipped page cannot use is not a checker.
+        Node = @{ MinimumVersion = '18.0.0' }
+    }
 }
