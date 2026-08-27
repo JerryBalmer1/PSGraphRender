@@ -88,9 +88,14 @@ jobs:
       # Explicit, and before the build rather than inside it. Nothing downloads
       # a browser as a side effect of running a build - TestBrowser fails by
       # name and points here instead.
+      # -Bootstrap here too, and not only on the step below. build.ps1
+      # pre-flights the pinned PowerShell modules before it runs ANY task, and
+      # BootstrapBrowser cannot run without InvokeBuild - so on a cold runner
+      # this step failed on a missing module before it reached npm. It passed
+      # locally because the modules were already installed.
       - name: Install the browser harness
         if: matrix.browser
-        run: ./build.ps1 -Task BootstrapBrowser
+        run: ./build.ps1 -Bootstrap -Task BootstrapBrowser
 
       # -Bootstrap installs any missing PowerShell module and then runs the
       # named task, so one invocation is enough. It does not install tools.
