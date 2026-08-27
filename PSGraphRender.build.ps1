@@ -364,11 +364,21 @@ task PreTag Build, {
     $config.Output.Verbosity = 'Detailed'
     $config.Should.DisableV5 = $true
     $config.Filter.Tag = 'PreTag'
+    $config.Run.PassThru = $true
 
     $env:PSModulePath = (Join-Path $BuildRoot 'output') + [System.IO.Path]::PathSeparator + $env:PSModulePath
 
-    Invoke-Pester -Configuration $config
-    Write-Build Green 'Pre-tag gates passed. Safe to tag.'
+    $result = Invoke-Pester -Configuration $config
+
+    # A filtered run that selects nothing succeeds. This task printed 'Pre-tag
+    # gates passed' against zero tests for four tags, which is the same failure
+    # as a lint gate that skips when its tool is missing: a green line for an
+    # environment where nothing was checked.
+    if ($result.TotalCount -eq 0) {
+        throw "No test carries the PreTag tag, so the pre-tag gates checked nothing. That is not the same as passing."
+    }
+
+    Write-Build Green "Pre-tag gates passed ($($result.PassedCount) test(s)). Safe to tag." 
 }
 
 task Import Build, {
