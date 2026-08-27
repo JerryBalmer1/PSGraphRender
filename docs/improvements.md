@@ -20,6 +20,13 @@ thought about yet.
 
 ---
 
+
+> **Before proposing to fix something, read [`constraints.md`](constraints.md).**
+> It lists what this repository has decided to live with and why. Those are
+> not backlog: they were raised as threads, ruled on, and retired as
+> accepted rather than deferred. Disagreeing with one is a proposal, not an
+> edit.
+
 ## Open
 
 ### The skills directory is a copy that makes false claims here - **medium**
