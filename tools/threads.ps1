@@ -295,6 +295,26 @@ foreach ($source in $sources) {
         foreach ($id in $entry.CarriesForward) {
             if ($state.Contains($id)) { $state[$id].carries++ }
         }
+        # A RECOVERY REOPENS, and it is applied BEFORE the retiring verbs so
+        # that an entry which recovers and retires the same id in one pass ends
+        # retired - which PSGraphRender 0011 did to `0002-t4`, recovering it so
+        # the gap was on the record and superseding it in the same breath. The
+        # continuity gate resolves them in exactly this order and the two must
+        # not disagree.
+        #
+        # It had been leaving the status alone, which was right for the only
+        # case it had ever seen - a thread dropped from carries_forward, still
+        # 'open' - and wrong for the one that arrived at PSModuleGraph 0020,
+        # where a thread was CLOSED for a reason that turned out to be false.
+        # That read as closed-and-recovered, which is not a state, and it cost
+        # the count one open thread.
+        foreach ($id in $entry.Recovers) {
+            if ($state.Contains($id)) {
+                $state[$id].recoveredAt = $entry.Id
+                $state[$id].status = 'open'
+                $state[$id].resolvedAt = $null
+            }
+        }
         foreach ($id in $entry.Closes) {
             if ($state.Contains($id)) { $state[$id].status = 'closed'; $state[$id].resolvedAt = $entry.Id }
         }
@@ -307,9 +327,6 @@ foreach ($source in $sources) {
         # it. Two facts, two words.
         foreach ($id in $entry.Accepts) {
             if ($state.Contains($id)) { $state[$id].status = 'accepted'; $state[$id].resolvedAt = $entry.Id }
-        }
-        foreach ($id in $entry.Recovers) {
-            if ($state.Contains($id)) { $state[$id].recoveredAt = $entry.Id }
         }
     }
 
@@ -330,7 +347,10 @@ foreach ($repository in ($sources | ForEach-Object { $_.repository })) {
         closed     = @($mine | Where-Object { $_.status -eq 'closed' }).Count
         superseded = @($mine | Where-Object { $_.status -eq 'superseded' }).Count
         accepted   = @($mine | Where-Object { $_.status -eq 'accepted' }).Count
-        recovered  = @($mine | Where-Object { $_.PSObject.Properties.Name -contains 'recoveredAt' }).Count
+        # `.Contains` on the dictionary, not `.PSObject.Properties`, which
+        # on an ordered hashtable enumerates Count/Keys/Values and reported
+        # zero recoveries for as long as there have been recoveries.
+        recovered  = @($mine | Where-Object { $_.Contains('recoveredAt') }).Count
     }
 }
 
