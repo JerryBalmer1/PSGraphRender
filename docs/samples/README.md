@@ -34,6 +34,29 @@ below - and `tools/shoot.cjs` with a job naming `clicks` for the controls:
 `#exported-only` then `#fit` for the 532 view, `#show-unresolved` for the
 orange one, and `input[name="colorby"][value="blastRadius"]` for the heat.
 
+## The five pairs
+
+**Every `-before.png` was rendered from a worktree at `v0.11.0`, not from the
+working tree**, per `.claude/skills/golden-recording`. A before-shot taken by
+reverting an edit is a picture of a reverted edit.
+
+`knowledge/ledger/0013` is what these settled. They are the first change in
+this repository verified primarily by eye.
+
+| Pair | Thread | Before | After |
+| --- | --- | --- | --- |
+| `unresolved-placement-*` | `0010-t3` | One orange node in the top-left corner carrying one of the two names, with two dotted edges leaving it, sitting on `environment`. | Two orange nodes, laid out, each with its own edge. They were always two nodes with two ids - they were never given a position. |
+| `occlusion-*` | `0008-t1` | `notify-oncall` covers all but three letters of `rollout` and hides the edge between them. | Both in the bottom row, edge visible. The page also now carries all three line treatments where they can be read. |
+| `nodelimit-camera-*` | `0010-t2` | Unchecking "Exported only" leaves the view exactly where it was and adds a single purple blob in the corner - 371 nodes stacked at the origin. | The layout re-runs and the camera moves. It is illegible at 532, which is the accepted constraint in `docs/constraints.md` and not this fix's business. |
+| `duplicate-labels-*` | `0008-t2` | Test order reads `drain, window` / `drain, restart` / `restart` - four entries, four different nodes, nothing saying so. | `drain ·api.yaml` / `drain ·web.yaml`, and only where a name is shared. |
+| `heat-legend-*` | `0012-t1` | Colour by is followed by nothing; the caveat is in the legend, eight blocks further down a sidebar that scrolls. | The encoding sits under the radios. The same shot carries SqlServerDsc's qualified labels, which is the dense case for the pair above. |
+
+Device pixel ratio differs per pair and is the same on both halves of each:
+3 for the two canvases and the small sidebar, 2 for the dense sidebar, 1 for
+the 532-node canvas. That is a size decision, not a measurement - and every
+judgement made from these inherits one browser, one viewport and this
+machine's fonts. `docs/constraints.md`, `0011-t1`.
+
 ## The one that is not in the repository
 
 `cytoscape-sqlserverdsc.png` was rendered from a payload PSModuleGraph produced
