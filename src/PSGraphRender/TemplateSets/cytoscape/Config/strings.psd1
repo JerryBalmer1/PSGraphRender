@@ -1,4 +1,4 @@
-@{
+﻿@{
     # Every user-visible string in the template scripts. Behaviour lives in
     # settings.psd1, appearance in theme.psd1. See docs/render-architecture.md.
     #
