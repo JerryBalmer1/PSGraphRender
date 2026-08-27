@@ -19,6 +19,16 @@ several 5.x versions are usually also installed - a bare `Invoke-Pester` will
 silently pick the wrong one and produce results that mean nothing. Dependency
 versions live in `Requirements.psd1`, not in `build.ps1`.
 
+**Node is required and the build fails by name without it** - see
+`docs/development.md`. **Fixtures are JSON files under
+`tests/fixtures/viewmodels/`**, hand-written and schema-valid.
+
+Both moved down from `CLAUDE.md` at v0.11.0. The *prohibition* on calling
+`Invoke-Pester` directly stayed up there, because it is violated from outside
+this file - which is the rule for what a move leaves behind: a pointer, never a
+summary. The pin's reasoning was already here, and duplicating it into this
+section was caught and undone in the same turn.
+
 ## The two gates in the default build
 
 **Coverage.** `CoveragePercentTarget` only *reports*; the `throw` in the `Test`

@@ -110,24 +110,16 @@ authority. Two rules are here because they are violated from outside it:
 
 ## Build and test
 
-```powershell
-./build.ps1                 # lint, build, test — the entry point
-./build.ps1 -Task PreTag    # the extra gates that seal a finished iteration
-```
-
-**Node is required and the build fails by name without it.** See
-`docs/development.md`.
-
-**Never call `Invoke-Pester` or `Invoke-Build` directly.** `build.ps1` pins
-Pester to exactly 6.1.0 and verifies it; several 5.x versions are usually also
-installed, and Pester 5 and 6 disagree on assertion syntax, discovery and
-mocking, so a bare `Invoke-Pester` produces results that mean nothing.
+**`./build.ps1` is the only entry point. Never call `Invoke-Pester` or
+`Invoke-Build` directly** — a bare `Invoke-Pester` runs whichever version the
+session happened to have and produces results that mean nothing.
 
 **No test in this repository may import PSModuleGraph, or any producer.** A
 suite that reaches for a real dependency graph to get something to render has
 re-coupled the two repositories at the only place the coupling was removed.
-Fixtures are JSON files under `tests/fixtures/viewmodels/`, hand-written and
-schema-valid. `docs/testing.md` holds the Pester 6 rules.
+
+Tasks, the Node requirement and the Pester 6 rules: `docs/development.md` and
+`docs/testing.md`.
 
 ## Commit
 
@@ -141,7 +133,9 @@ two commits.
 render when the payload declares an unknown contract major`, not `Add contract
 version check`.
 
-Every iteration ends pushed, with `--follow-tags`. The tag is annotated (`-a`)
+Every iteration ends **tagged**, annotated (`-a`), and **publishing is the
+operator''s**: no document here may cause a push by being followed, and
+`tests/Instructions.Tests.ps1` enforces it. The tag is annotated (`-a`)
 and is the last action, after the build is green.
 
 **No history rewriting on anything pushed.** No amend, no rebase, no force.
