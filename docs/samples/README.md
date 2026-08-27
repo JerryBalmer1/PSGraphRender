@@ -16,6 +16,24 @@ node tools/shoot.cjs <job.json>    # takes the pictures
 | `cytoscape-sqlserverdsc.png` | 532 nodes, 1,271 links | A real module, and the density case. Not reproducible from a clean checkout — see below. |
 | `plain-*.png` | the same four | The other backend. Same payload, a table, 1% of the bytes. |
 
+## The four taken to answer a question
+
+The table above is what the pages look like. These four were taken to settle
+a specific open thread, and each one settled it against the answer that was
+expected. `knowledge/ledger/0010` says what they showed.
+
+| Picture | The question | What it showed |
+| --- | --- | --- |
+| `sqlserverdsc-foundation-532.png` | Does the foundation layout hold at 532? It was measured at 62. | It does not break and it stops meaning anything. A lattice of full-width rows under a fog of edges; no line style survives, and only the kind colours still carry. |
+| `sqlserverdsc-heat-blastradius.png` | Is the heat ramp legible when the top of the range is far above what it was tuned against? | Yes, for finding the top. Blast radius runs 0 to 281 with half the nodes at 1, and the outliers are unmistakable - but there is no middle, and the 87% at the cold end are one colour. |
+| `infrastructure-unresolved.png` | What does an unresolved target actually look like? | Orange node, orange dotted edges, unmissable at 17 nodes. It is also the shot in which two different unresolved targets are drawn as one node. |
+| `ambiguous-occlusion.png` | Is `0008-t1` still there? | Yes. `notify-oncall` covers all but three letters of `rollout`, and hides the edge between them. Three device pixels per CSS pixel; not a resolution artefact. |
+
+Reproducing them needs the SqlServerDsc payload for two of the four - see
+below - and `tools/shoot.cjs` with a job naming `clicks` for the controls:
+`#exported-only` then `#fit` for the 532 view, `#show-unresolved` for the
+orange one, and `input[name="colorby"][value="blastRadius"]` for the heat.
+
 ## The one that is not in the repository
 
 `cytoscape-sqlserverdsc.png` was rendered from a payload PSModuleGraph produced
