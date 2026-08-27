@@ -1,12 +1,12 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "toolchain": {
     "tool": "tools/threads.ps1",
     "powerShellVersion": "7.6.5",
     "powerShellEdition": "Core"
   },
   "run": {
-    "generatedUtc": "2026-08-27T06:10:52Z",
+    "generatedUtc": "2026-08-27T17:23:34Z",
     "sources": [
       {
         "repository": "PSGraphRender",
@@ -26,6 +26,7 @@
     "closed": 42,
     "superseded": 1,
     "accepted": 24,
+    "pathFlips": 1,
     "perRepository": {
       "PSGraphRender": {
         "raised": 47,
@@ -45,6 +46,15 @@
       }
     }
   },
+  "pathFlips": [
+    {
+      "id": "0009-t4",
+      "repository": "PSGraphRender",
+      "status": "closed",
+      "path": "CHANGELOG.md",
+      "went": "appeared since it was raised"
+    }
+  ],
   "threads": [
     {
       "id": "0001-t1",
@@ -54,7 +64,8 @@
       "carries": 9,
       "status": "closed",
       "resolvedAt": "0011",
-      "summary": "One fixture, one shape."
+      "summary": "One fixture, one shape.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t2",
@@ -64,7 +75,8 @@
       "carries": 10,
       "status": "closed",
       "resolvedAt": "0012",
-      "summary": "The golden has never been compared on another machine."
+      "summary": "The golden has never been compared on another machine.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t3",
@@ -74,7 +86,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0002",
-      "summary": "The default backend is hardcoded in three places."
+      "summary": "The default backend is hardcoded in three places.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t4",
@@ -84,7 +97,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0002",
-      "summary": "A producer escapes and substitutes for itself."
+      "summary": "A producer escapes and substitutes for itself.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t5",
@@ -94,7 +108,8 @@
       "carries": 10,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "`Get-HashtableValue` now exists in both repositories."
+      "summary": "`Get-HashtableValue` now exists in both repositories.",
+      "pathsNamed": []
     },
     {
       "id": "0002-t1",
@@ -104,7 +119,8 @@
       "carries": 9,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "`plain` is trivial enough to prove less than it looks."
+      "summary": "`plain` is trivial enough to prove less than it looks.",
+      "pathsNamed": []
     },
     {
       "id": "0002-t2",
@@ -114,7 +130,15 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0003",
-      "summary": "A hand-written fixture is not a second producer."
+      "summary": "A hand-written fixture is not a second producer.",
+      "pathsNamed": [
+        {
+          "path": "infrastructure.json",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0002-t3",
@@ -124,7 +148,8 @@
       "carries": 10,
       "status": "open",
       "resolvedAt": null,
-      "summary": "`Get-RenderTemplateSet` may not belong on the public surface."
+      "summary": "`Get-RenderTemplateSet` may not belong on the public surface.",
+      "pathsNamed": []
     },
     {
       "id": "0002-t4",
@@ -135,6 +160,7 @@
       "status": "superseded",
       "resolvedAt": "0011",
       "summary": "Producer knowledge can be a shape, not a word.",
+      "pathsNamed": [],
       "recoveredAt": "0011"
     },
     {
@@ -145,7 +171,8 @@
       "carries": 8,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "Semantic equivalence only checks the dimensions I listed."
+      "summary": "Semantic equivalence only checks the dimensions I listed.",
+      "pathsNamed": []
     },
     {
       "id": "0003-t2",
@@ -155,7 +182,8 @@
       "carries": 8,
       "status": "closed",
       "resolvedAt": "0012",
-      "summary": "Nothing checks a backend reads only what the contract promises."
+      "summary": "Nothing checks a backend reads only what the contract promises.",
+      "pathsNamed": []
     },
     {
       "id": "0003-t3",
@@ -165,7 +193,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0004",
-      "summary": "Nothing syntax-checks the JavaScript."
+      "summary": "Nothing syntax-checks the JavaScript.",
+      "pathsNamed": []
     },
     {
       "id": "0003-t4",
@@ -175,7 +204,8 @@
       "carries": 8,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "Validation at the seam is one place, which cuts both ways."
+      "summary": "Validation at the seam is one place, which cuts both ways.",
+      "pathsNamed": []
     },
     {
       "id": "0004-t1",
@@ -185,7 +215,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0005",
-      "summary": "Parsing is not running."
+      "summary": "Parsing is not running.",
+      "pathsNamed": []
     },
     {
       "id": "0004-t2",
@@ -195,7 +226,8 @@
       "carries": 7,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "The payload scan reaches one level and cannot see a computed access."
+      "summary": "The payload scan reaches one level and cannot see a computed access.",
+      "pathsNamed": []
     },
     {
       "id": "0004-t3",
@@ -205,7 +237,8 @@
       "carries": 7,
       "status": "closed",
       "resolvedAt": "0012",
-      "summary": "The offline measurement is Chromium's failure, not a proxy's."
+      "summary": "The offline measurement is Chromium's failure, not a proxy's.",
+      "pathsNamed": []
     },
     {
       "id": "0004-t4",
@@ -215,7 +248,8 @@
       "carries": 7,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "Playwright was measured; nothing else was."
+      "summary": "Playwright was measured; nothing else was.",
+      "pathsNamed": []
     },
     {
       "id": "0005-t1",
@@ -225,7 +259,8 @@
       "carries": 7,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The harness asserts that the page loaded, not that it is right."
+      "summary": "The harness asserts that the page loaded, not that it is right.",
+      "pathsNamed": []
     },
     {
       "id": "0005-t2",
@@ -235,7 +270,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0006",
-      "summary": "The blank-canvas threshold is one measurement on one machine."
+      "summary": "The blank-canvas threshold is one measurement on one machine.",
+      "pathsNamed": []
     },
     {
       "id": "0005-t3",
@@ -245,7 +281,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0006",
-      "summary": "Nothing has run these gates outside this machine."
+      "summary": "Nothing has run these gates outside this machine.",
+      "pathsNamed": []
     },
     {
       "id": "0005-t4",
@@ -255,7 +292,15 @@
       "carries": 6,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "A vendored file names a resource that is not vendored."
+      "summary": "A vendored file names a resource that is not vendored.",
+      "pathsNamed": [
+        {
+          "path": "cytoscape-dagre.min.js",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0006-t1",
@@ -265,7 +310,8 @@
       "carries": 6,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The harness has been proved able to fail on one machine."
+      "summary": "The harness has been proved able to fail on one machine.",
+      "pathsNamed": []
     },
     {
       "id": "0006-t2",
@@ -275,7 +321,8 @@
       "carries": 6,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The growth ratio has never met a legitimately sparse payload."
+      "summary": "The growth ratio has never met a legitimately sparse payload.",
+      "pathsNamed": []
     },
     {
       "id": "0006-t3",
@@ -285,7 +332,8 @@
       "carries": 5,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "Two of five defects were 5.1-only, on a leg that has run four times."
+      "summary": "Two of five defects were 5.1-only, on a leg that has run four times.",
+      "pathsNamed": []
     },
     {
       "id": "0007-t1",
@@ -295,7 +343,8 @@
       "carries": 5,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The style is calibrated against one density."
+      "summary": "The style is calibrated against one density.",
+      "pathsNamed": []
     },
     {
       "id": "0007-t2",
@@ -305,7 +354,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0008",
-      "summary": "Three things in one drawing are dashed or dotted."
+      "summary": "Three things in one drawing are dashed or dotted.",
+      "pathsNamed": []
     },
     {
       "id": "0007-t3",
@@ -315,7 +365,8 @@
       "carries": 4,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "The count says how many, never how many of what."
+      "summary": "The count says how many, never how many of what.",
+      "pathsNamed": []
     },
     {
       "id": "0008-t1",
@@ -325,7 +376,8 @@
       "carries": 4,
       "status": "open",
       "resolvedAt": null,
-      "summary": "An invented node is drawn on top of a real one."
+      "summary": "An invented node is drawn on top of a real one.",
+      "pathsNamed": []
     },
     {
       "id": "0008-t2",
@@ -335,7 +387,8 @@
       "carries": 4,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Two lists print a name twice and mean two different nodes."
+      "summary": "Two lists print a name twice and mean two different nodes.",
+      "pathsNamed": []
     },
     {
       "id": "0008-t3",
@@ -345,7 +398,8 @@
       "carries": 3,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "The fill channel is dead on the payload that needs it most."
+      "summary": "The fill channel is dead on the payload that needs it most.",
+      "pathsNamed": []
     },
     {
       "id": "0008-t4",
@@ -355,7 +409,8 @@
       "carries": 4,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Nothing checks the README."
+      "summary": "Nothing checks the README.",
+      "pathsNamed": []
     },
     {
       "id": "0009-t1",
@@ -365,7 +420,15 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0010",
-      "summary": "An open decision that was answered at v0.5.0 is still written as open."
+      "summary": "An open decision that was answered at v0.5.0 is still written as open.",
+      "pathsNamed": [
+        {
+          "path": "partials/cdn-guard.html",
+          "existedWhenRaised": false,
+          "existsNow": false,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0009-t2",
@@ -375,7 +438,8 @@
       "carries": 1,
       "status": "closed",
       "resolvedAt": "0011",
-      "summary": "Five skills are a byte-identical copy of another repository's, four of their claims are false here, and none has ever been invoked."
+      "summary": "Five skills are a byte-identical copy of another repository's, four of their claims are false here, and none has ever been invoked.",
+      "pathsNamed": []
     },
     {
       "id": "0009-t3",
@@ -385,7 +449,8 @@
       "carries": 1,
       "status": "closed",
       "resolvedAt": "0011",
-      "summary": "A procedure written from memory records what the author remembers doing."
+      "summary": "A procedure written from memory records what the author remembers doing.",
+      "pathsNamed": []
     },
     {
       "id": "0009-t4",
@@ -395,7 +460,15 @@
       "carries": 2,
       "status": "closed",
       "resolvedAt": "0012",
-      "summary": "There is no `CHANGELOG.md`."
+      "summary": "There is no `CHANGELOG.md`.",
+      "pathsNamed": [
+        {
+          "path": "CHANGELOG.md",
+          "existedWhenRaised": false,
+          "existsNow": true,
+          "flipped": true
+        }
+      ]
     },
     {
       "id": "0010-t1",
@@ -405,7 +478,8 @@
       "carries": 1,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "The skills are forked and nothing watches the drift."
+      "summary": "The skills are forked and nothing watches the drift.",
+      "pathsNamed": []
     },
     {
       "id": "0010-t2",
@@ -415,7 +489,8 @@
       "carries": 2,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Lifting the node limit does not move the camera, and `#fit` does not fit."
+      "summary": "Lifting the node limit does not move the camera, and `#fit` does not fit.",
+      "pathsNamed": []
     },
     {
       "id": "0010-t3",
@@ -425,7 +500,15 @@
       "carries": 2,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Two unresolved targets with different names are drawn as one node."
+      "summary": "Two unresolved targets with different names are drawn as one node.",
+      "pathsNamed": [
+        {
+          "path": "infrastructure.json",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0010-t4",
@@ -435,7 +518,15 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0011",
-      "summary": "The continuity gate cannot see a thread dropped from `carries_forward`, and the survey that found it cannot be repeated."
+      "summary": "The continuity gate cannot see a thread dropped from `carries_forward`, and the survey that found it cannot be repeated.",
+      "pathsNamed": [
+        {
+          "path": "LedgerContinuity.Tests.ps1",
+          "existedWhenRaised": false,
+          "existsNow": false,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0010-t5",
@@ -445,7 +536,8 @@
       "carries": 1,
       "status": "accepted",
       "resolvedAt": "0012",
-      "summary": "The heat ramp has no middle."
+      "summary": "The heat ramp has no middle.",
+      "pathsNamed": []
     },
     {
       "id": "0010-t6",
@@ -455,7 +547,8 @@
       "carries": 2,
       "status": "open",
       "resolvedAt": null,
-      "summary": "No page carries all three dashed treatments where they can be read."
+      "summary": "No page carries all three dashed treatments where they can be read.",
+      "pathsNamed": []
     },
     {
       "id": "0011-t1",
@@ -465,7 +558,8 @@
       "carries": 1,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Thirty-two verdicts were proposed in one pass by the author of most of the threads."
+      "summary": "Thirty-two verdicts were proposed in one pass by the author of most of the threads.",
+      "pathsNamed": []
     },
     {
       "id": "0011-t2",
@@ -475,7 +569,8 @@
       "carries": 1,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The tool reports and the temptation to rank it will recur."
+      "summary": "The tool reports and the temptation to rank it will recur.",
+      "pathsNamed": []
     },
     {
       "id": "0011-t3",
@@ -485,7 +580,8 @@
       "carries": 1,
       "status": "open",
       "resolvedAt": null,
-      "summary": "A merge across repositories has no id grammar."
+      "summary": "A merge across repositories has no id grammar.",
+      "pathsNamed": []
     },
     {
       "id": "0012-t1",
@@ -495,7 +591,8 @@
       "carries": 0,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The legend does not say that colour is rank rather than magnitude."
+      "summary": "The legend does not say that colour is rank rather than magnitude.",
+      "pathsNamed": []
     },
     {
       "id": "0012-t2",
@@ -505,7 +602,15 @@
       "carries": 0,
       "status": "open",
       "resolvedAt": null,
-      "summary": "`docs/constraints.md` is a document that only works if it is read first."
+      "summary": "`docs/constraints.md` is a document that only works if it is read first.",
+      "pathsNamed": [
+        {
+          "path": "docs/constraints.md",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0012-t3",
@@ -515,7 +620,8 @@
       "carries": 0,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Twenty-eight verdicts were applied in one pass, and a Close applied without re-reading is indistinguishable, to every mechanism here, from a thread dropped."
+      "summary": "Twenty-eight verdicts were applied in one pass, and a Close applied without re-reading is indistinguishable, to every mechanism here, from a thread dropped.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t1",
@@ -525,7 +631,15 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0002",
-      "summary": "Create the `namespace` facet and make `NAMING.md` point at it rather than listing namespaces in prose."
+      "summary": "Create the `namespace` facet and make `NAMING.md` point at it rather than listing namespaces in prose.",
+      "pathsNamed": [
+        {
+          "path": "NAMING.md",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0001-t2",
@@ -535,7 +649,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0002",
-      "summary": "Decide whether `facet-health` splits into three."
+      "summary": "Decide whether `facet-health` splits into three.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t3",
@@ -545,7 +660,8 @@
       "carries": 1,
       "status": "closed",
       "resolvedAt": "0003",
-      "summary": "Assign `facet-health` to `facet:structure`, `facet:surface` and `facet:facet-health`, computed from the store rather than declared."
+      "summary": "Assign `facet-health` to `facet:structure`, `facet:surface` and `facet:facet-health`, computed from the store rather than declared.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t4",
@@ -556,6 +672,7 @@
       "status": "closed",
       "resolvedAt": "0019",
       "summary": "Make the store's write path real.",
+      "pathsNamed": [],
       "recoveredAt": "0018"
     },
     {
@@ -566,7 +683,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0002",
-      "summary": "Read subjects and assignments back, which needs the parser to handle nested lists inside list items."
+      "summary": "Read subjects and assignments back, which needs the parser to handle nested lists inside list items.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t6",
@@ -576,7 +694,8 @@
       "carries": 1,
       "status": "closed",
       "resolvedAt": "0003",
-      "summary": "Exercise the unexercised."
+      "summary": "Exercise the unexercised.",
+      "pathsNamed": []
     },
     {
       "id": "0001-t7",
@@ -586,7 +705,15 @@
       "carries": 17,
       "status": "closed",
       "resolvedAt": "0019",
-      "summary": "The facet seam in the report, designed in `docs/html-architecture.md` and not built."
+      "summary": "The facet seam in the report, designed in `docs/html-architecture.md` and not built.",
+      "pathsNamed": [
+        {
+          "path": "docs/html-architecture.md",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0002-t1",
@@ -596,7 +723,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0003",
-      "summary": "`facet-health` declares `kind: scalar` and should not."
+      "summary": "`facet-health` declares `kind: scalar` and should not.",
+      "pathsNamed": []
     },
     {
       "id": "0002-t2",
@@ -606,7 +734,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0003",
-      "summary": "Read the store from something that is not PowerShell."
+      "summary": "Read the store from something that is not PowerShell.",
+      "pathsNamed": []
     },
     {
       "id": "0002-t3",
@@ -616,7 +745,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0003",
-      "summary": "The store's contract lives in two places."
+      "summary": "The store's contract lives in two places.",
+      "pathsNamed": []
     },
     {
       "id": "0002-t4",
@@ -626,7 +756,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0003",
-      "summary": "The freshness test pins the store to the source tree."
+      "summary": "The freshness test pins the store to the source tree.",
+      "pathsNamed": []
     },
     {
       "id": "0003-t1",
@@ -636,7 +767,8 @@
       "carries": 16,
       "status": "open",
       "resolvedAt": null,
-      "summary": "`facet-health` grades itself flatteringly."
+      "summary": "`facet-health` grades itself flatteringly.",
+      "pathsNamed": []
     },
     {
       "id": "0003-t2",
@@ -646,7 +778,8 @@
       "carries": 16,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Coverage conflates \"unassigned\" with \"inapplicable\"."
+      "summary": "Coverage conflates \"unassigned\" with \"inapplicable\".",
+      "pathsNamed": []
     },
     {
       "id": "0003-t3",
@@ -656,7 +789,8 @@
       "carries": 15,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "`structure:external` has no assignments and may not deserve to exist."
+      "summary": "`structure:external` has no assignments and may not deserve to exist.",
+      "pathsNamed": []
     },
     {
       "id": "0004-t1",
@@ -666,7 +800,8 @@
       "carries": 14,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "Should patterns be subjects with URNs? `pattern:0004-...` classified by facets, gradeable by `facet-health`, addressable in an assignment's evidence block."
+      "summary": "Should patterns be subjects with URNs? `pattern:0004-...` classified by facets, gradeable by `facet-health`, addressable in an assignment's evidence block.",
+      "pathsNamed": []
     },
     {
       "id": "0004-t2",
@@ -676,7 +811,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0005",
-      "summary": "The two Kaizen sections."
+      "summary": "The two Kaizen sections.",
+      "pathsNamed": []
     },
     {
       "id": "0004-t3",
@@ -686,7 +822,15 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0005",
-      "summary": "The neutrality guard cannot distinguish data from prose about data."
+      "summary": "The neutrality guard cannot distinguish data from prose about data.",
+      "pathsNamed": [
+        {
+          "path": "NAMING.md",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0004-t4",
@@ -696,7 +840,8 @@
       "carries": 14,
       "status": "closed",
       "resolvedAt": "0019",
-      "summary": "`iteration-close` is model-invocable and it pushes."
+      "summary": "`iteration-close` is model-invocable and it pushes.",
+      "pathsNamed": []
     },
     {
       "id": "0005-t1",
@@ -706,7 +851,21 @@
       "carries": 14,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Skill descriptions are always-loaded and unbudgeted."
+      "summary": "Skill descriptions are always-loaded and unbudgeted.",
+      "pathsNamed": [
+        {
+          "path": "tests/Instructions.Tests.ps1",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        },
+        {
+          "path": "CLAUDE.md",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0005-t2",
@@ -716,7 +875,8 @@
       "carries": 13,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "The ceiling's headroom is a guess."
+      "summary": "The ceiling's headroom is a guess.",
+      "pathsNamed": []
     },
     {
       "id": "0005-t3",
@@ -726,7 +886,15 @@
       "carries": 13,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "Nothing measures whether an on-demand file is ever read."
+      "summary": "Nothing measures whether an on-demand file is ever read.",
+      "pathsNamed": [
+        {
+          "path": "docs/",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0006-t1",
@@ -736,7 +904,8 @@
       "carries": 13,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The origin claim is unverified."
+      "summary": "The origin claim is unverified.",
+      "pathsNamed": []
     },
     {
       "id": "0007-t1",
@@ -746,7 +915,8 @@
       "carries": 11,
       "status": "closed",
       "resolvedAt": "0019",
-      "summary": "Hot and external are nearly the same colour."
+      "summary": "Hot and external are nearly the same colour.",
+      "pathsNamed": []
     },
     {
       "id": "0007-t2",
@@ -756,7 +926,8 @@
       "carries": 11,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "Should the store hold measurements as well as classifications? A facet classifies; a metric measures."
+      "summary": "Should the store hold measurements as well as classifications? A facet classifies; a metric measures.",
+      "pathsNamed": []
     },
     {
       "id": "0008-t1",
@@ -766,7 +937,8 @@
       "carries": 10,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "Nothing has been trained on this."
+      "summary": "Nothing has been trained on this.",
+      "pathsNamed": []
     },
     {
       "id": "0008-t2",
@@ -776,7 +948,8 @@
       "carries": 11,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The section headings are hardcoded to this repository's five."
+      "summary": "The section headings are hardcoded to this repository's five.",
+      "pathsNamed": []
     },
     {
       "id": "0008-t3",
@@ -786,7 +959,33 @@
       "carries": 11,
       "status": "open",
       "resolvedAt": null,
-      "summary": "`corpus/` is outside both the lint task and the charter test."
+      "summary": "`corpus/` is outside both the lint task and the charter test.",
+      "pathsNamed": [
+        {
+          "path": "corpus/",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        },
+        {
+          "path": "src/PSModuleGraph",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        },
+        {
+          "path": "SubsystemCharter.Tests.ps1",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        },
+        {
+          "path": "Private/",
+          "existedWhenRaised": false,
+          "existsNow": false,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0009-t1",
@@ -796,7 +995,8 @@
       "carries": 9,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "One fixture proves the move."
+      "summary": "One fixture proves the move.",
+      "pathsNamed": []
     },
     {
       "id": "0009-t2",
@@ -806,7 +1006,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0010",
-      "summary": "CI builds two repositories and has never done so."
+      "summary": "CI builds two repositories and has never done so.",
+      "pathsNamed": []
     },
     {
       "id": "0009-t3",
@@ -816,7 +1017,8 @@
       "carries": 10,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Nothing proves the dependency is really required."
+      "summary": "Nothing proves the dependency is really required.",
+      "pathsNamed": []
     },
     {
       "id": "0010-t1",
@@ -826,7 +1028,15 @@
       "carries": 2,
       "status": "closed",
       "resolvedAt": "0013",
-      "summary": "Nothing tells this repository the renderer's surface moved."
+      "summary": "Nothing tells this repository the renderer's surface moved.",
+      "pathsNamed": [
+        {
+          "path": "ci.yml",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0010-t2",
@@ -836,7 +1046,8 @@
       "carries": 9,
       "status": "open",
       "resolvedAt": null,
-      "summary": "A test scoped to a module that no longer holds what it tests still passes."
+      "summary": "A test scoped to a module that no longer holds what it tests still passes.",
+      "pathsNamed": []
     },
     {
       "id": "0011-t1",
@@ -846,7 +1057,8 @@
       "carries": 7,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "Nobody has asked what a JSON consumer reads."
+      "summary": "Nobody has asked what a JSON consumer reads.",
+      "pathsNamed": []
     },
     {
       "id": "0011-t2",
@@ -856,7 +1068,8 @@
       "carries": 7,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "A golden that gets re-recorded when it fails only catches accidents."
+      "summary": "A golden that gets re-recorded when it fails only catches accidents.",
+      "pathsNamed": []
     },
     {
       "id": "0012-t1",
@@ -866,7 +1079,8 @@
       "carries": 6,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "The corpus is a hypothesis with eight instances."
+      "summary": "The corpus is a hypothesis with eight instances.",
+      "pathsNamed": []
     },
     {
       "id": "0012-t2",
@@ -876,7 +1090,8 @@
       "carries": 7,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Two of the three failure outcomes have never happened."
+      "summary": "Two of the three failure outcomes have never happened.",
+      "pathsNamed": []
     },
     {
       "id": "0012-t3",
@@ -886,7 +1101,8 @@
       "carries": 7,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Nothing validates a result against the schema that describes it."
+      "summary": "Nothing validates a result against the schema that describes it.",
+      "pathsNamed": []
     },
     {
       "id": "0012-t4",
@@ -896,7 +1112,8 @@
       "carries": 7,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The lock has never been checked by anyone who did not write it."
+      "summary": "The lock has never been checked by anyone who did not write it.",
+      "pathsNamed": []
     },
     {
       "id": "0012-t5",
@@ -906,7 +1123,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0013",
-      "summary": "A node's identity is its name, and that is a data shape."
+      "summary": "A node's identity is its name, and that is a data shape.",
+      "pathsNamed": []
     },
     {
       "id": "0013-t1",
@@ -916,7 +1134,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0014",
-      "summary": "The knowledge store still collapses what the graph stopped collapsing."
+      "summary": "The knowledge store still collapses what the graph stopped collapsing.",
+      "pathsNamed": []
     },
     {
       "id": "0013-t2",
@@ -926,7 +1145,8 @@
       "carries": 6,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The renderer requirement is a floor and the repository treats it as a pin."
+      "summary": "The renderer requirement is a floor and the repository treats it as a pin.",
+      "pathsNamed": []
     },
     {
       "id": "0013-t3",
@@ -936,7 +1156,8 @@
       "carries": 4,
       "status": "closed",
       "resolvedAt": "0018",
-      "summary": "An ambiguous edge is drawn like a certain one."
+      "summary": "An ambiguous edge is drawn like a certain one.",
+      "pathsNamed": []
     },
     {
       "id": "0014-t1",
@@ -946,7 +1167,8 @@
       "carries": 5,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The knowledge store gives 32 definitions one subject and one wrong path."
+      "summary": "The knowledge store gives 32 definitions one subject and one wrong path.",
+      "pathsNamed": []
     },
     {
       "id": "0014-t2",
@@ -956,7 +1178,8 @@
       "carries": 5,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The golden's name and location claim a provenance it lost."
+      "summary": "The golden's name and location claim a provenance it lost.",
+      "pathsNamed": []
     },
     {
       "id": "0014-t3",
@@ -966,7 +1189,8 @@
       "carries": 5,
       "status": "open",
       "resolvedAt": null,
-      "summary": "JSON and CSV now describe the same graph differently."
+      "summary": "JSON and CSV now describe the same graph differently.",
+      "pathsNamed": []
     },
     {
       "id": "0015-t1",
@@ -976,7 +1200,8 @@
       "carries": 4,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Three whole-document comparisons are skipped and need a decision."
+      "summary": "Three whole-document comparisons are skipped and need a decision.",
+      "pathsNamed": []
     },
     {
       "id": "0015-t2",
@@ -986,7 +1211,8 @@
       "carries": 3,
       "status": "closed",
       "resolvedAt": "0019",
-      "summary": "The page this whole sequence was for has not been looked at."
+      "summary": "The page this whole sequence was for has not been looked at.",
+      "pathsNamed": []
     },
     {
       "id": "0016-t1",
@@ -996,7 +1222,8 @@
       "carries": 2,
       "status": "closed",
       "resolvedAt": "0019",
-      "summary": "`-Format Html -IncludeUnresolved` cannot render a module that declares a dependency."
+      "summary": "`-Format Html -IncludeUnresolved` cannot render a module that declares a dependency.",
+      "pathsNamed": []
     },
     {
       "id": "0016-t2",
@@ -1006,7 +1233,8 @@
       "carries": 2,
       "status": "closed",
       "resolvedAt": "0019",
-      "summary": "An error message names a parameter the command does not have."
+      "summary": "An error message names a parameter the command does not have.",
+      "pathsNamed": []
     },
     {
       "id": "0016-t3",
@@ -1016,7 +1244,8 @@
       "carries": 1,
       "status": "closed",
       "resolvedAt": "0018",
-      "summary": "Nothing checks the README."
+      "summary": "Nothing checks the README.",
+      "pathsNamed": []
     },
     {
       "id": "0017-t1",
@@ -1026,7 +1255,8 @@
       "carries": 0,
       "status": "closed",
       "resolvedAt": "0018",
-      "summary": "The skills directory is duplicated across two repositories with nothing keeping the copies in sync, and the copy in `PSGraphRender` makes four claims that are false there."
+      "summary": "The skills directory is duplicated across two repositories with nothing keeping the copies in sync, and the copy in `PSGraphRender` makes four claims that are false there.",
+      "pathsNamed": []
     },
     {
       "id": "0017-t2",
@@ -1036,7 +1266,8 @@
       "carries": 1,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "Seven skills are loaded into every session's listing and none has been invoked in five iterations."
+      "summary": "Seven skills are loaded into every session's listing and none has been invoked in five iterations.",
+      "pathsNamed": []
     },
     {
       "id": "0017-t3",
@@ -1046,7 +1277,8 @@
       "carries": 1,
       "status": "accepted",
       "resolvedAt": "0019",
-      "summary": "A procedure written from memory records what the author remembers doing."
+      "summary": "A procedure written from memory records what the author remembers doing.",
+      "pathsNamed": []
     },
     {
       "id": "0018-t1",
@@ -1056,7 +1288,8 @@
       "carries": 1,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Thirty-eight verdicts were proposed in one pass by the author of most of the threads."
+      "summary": "Thirty-eight verdicts were proposed in one pass by the author of most of the threads.",
+      "pathsNamed": []
     },
     {
       "id": "0018-t2",
@@ -1066,7 +1299,8 @@
       "carries": 1,
       "status": "open",
       "resolvedAt": null,
-      "summary": "A drop is judged over the whole chain, so an entry can drop a thread and a much later one can re-admit it without the record reading as unusual."
+      "summary": "A drop is judged over the whole chain, so an entry can drop a thread and a much later one can re-admit it without the record reading as unusual.",
+      "pathsNamed": []
     },
     {
       "id": "0018-t3",
@@ -1076,7 +1310,8 @@
       "carries": 1,
       "status": "open",
       "resolvedAt": null,
-      "summary": "A merge across repositories has no id grammar."
+      "summary": "A merge across repositories has no id grammar.",
+      "pathsNamed": []
     },
     {
       "id": "0019-t1",
@@ -1086,7 +1321,8 @@
       "carries": 0,
       "status": "open",
       "resolvedAt": null,
-      "summary": "Thirty-eight verdicts were applied in one pass."
+      "summary": "Thirty-eight verdicts were applied in one pass.",
+      "pathsNamed": []
     },
     {
       "id": "0019-t2",
@@ -1096,7 +1332,21 @@
       "carries": 0,
       "status": "open",
       "resolvedAt": null,
-      "summary": "The publishing gate exempts `knowledge/` and `CHANGELOG.md`."
+      "summary": "The publishing gate exempts `knowledge/` and `CHANGELOG.md`.",
+      "pathsNamed": [
+        {
+          "path": "knowledge/",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        },
+        {
+          "path": "CHANGELOG.md",
+          "existedWhenRaised": true,
+          "existsNow": true,
+          "flipped": false
+        }
+      ]
     },
     {
       "id": "0019-t3",
@@ -1106,7 +1356,8 @@
       "carries": 0,
       "status": "open",
       "resolvedAt": null,
-      "summary": "A thread cannot move to the repository that can act on it."
+      "summary": "A thread cannot move to the repository that can act on it.",
+      "pathsNamed": []
     }
   ]
 }
