@@ -29,18 +29,11 @@ thought about yet.
 
 ## Open
 
-### The skills directory is a copy that makes false claims here - **medium**
+### The skills directory is a copy that makes false claims here — **closed in 0.9.0**
 
-All five skills in `.claude/skills/` are byte-identical to `PSModuleGraph`'s
-with nothing keeping them in sync. Four claims in them are false in this
-repository: `tests/Private/SubsystemCharter.Tests.ps1` does not exist,
-`knowledge/NAMING.md` does not exist, `docs/html-architecture.md` is named
-`docs/render-architecture.md`, and the version rule talks about facets in a
-repository with none. A fifth is worse - `instruction-prune` says a deferred
-deletion proposal is blocked by `tests/PreTag.Tests.ps1`, and this
-repository's `PreTag.Tests.ps1` has no such gate, so `prune_proposals` is
-unenforced here. A shared source, a sync test, or a deliberate fork with the
-differences stated - all three are decisions. *Ledger `0009-t2`.*
+Fixed, and the fork was made deliberate rather than synced: four of the five
+were never the same document. The missing `prune_proposals` gate was built.
+*Ledger `0009-t2`, struck at 0.10.0.*
 
 ### No skill here has ever been invoked - **small**
 
@@ -51,27 +44,44 @@ for deleting any of them - a procedure followed correctly from memory is the
 good case - but nothing here has been read under the conditions it was
 written for, and `0005-t1` still says the descriptions are unbudgeted.
 
-### There is no CHANGELOG - **small**
+### There is no CHANGELOG — **closed in 0.9.0**
 
-Eight annotated tags and no `CHANGELOG.md`. `PSModuleGraph` has one. The
-ledger carries everything, and a ledger entry is written for the next
-implementer rather than for a consumer of the module. *Ledger `0009-t4`.*
+`CHANGELOG.md` exists and says at the top that it was derived from the tags
+and the ledger rather than recorded at the time. *Ledger `0009-t4`.*
 
-### An invented node is drawn on top of a real one — **medium**
+### An invented node is drawn on top of a real one — **fixed in 0.12.0**
 
-With unresolved shown, the orange node the renderer invents lands on the node
-that referenced it. On the six-node `ambiguous` fixture `notify-oncall` occludes
-all but three letters of `rollout`, and hides its own dotted edge, which is why
-the fourth line treatment is still unseen. Not a density effect. *Ledger
-`0008-t1`, found by looking at a screenshot.*
+It had never been laid out. The layout places the visible set, so a node
+revealed afterwards had no position and sat at the origin. Two other threads
+were the same fact. *Ledger `0008-t1`, closed in `0013`.*
 
-### Two sidebar lists print a name twice and mean two nodes — **medium**
+### Two sidebar lists print a name twice and mean two nodes — **fixed in 0.12.0**
 
-The cycle list and the test order list read `Test-TargetResource,
-Test-TargetResource` on SqlServerDsc. Node ids have been distinct since the
-producer's v0.11.0; these lists show labels, and a label is a name. Whatever
-distinguishes them has to come from the payload, so it is not purely a script
-change. *Ledger `0008-t2`.*
+It did not need the payload after all: a shared name carries the shortest
+trailing run of path segments that separates it. *Ledger `0008-t2`, closed in
+`0013`.*
+
+### Nothing gates a defect a person can see — **large, logged not taken**
+
+Four visual defects were found by opening the page and five fixes were verified
+the same way. The browser harness says the page came alive; nothing it can
+assert would have gone red for any of them.
+
+The check that would catch the whole placement family is one sentence — *after
+clicking each selector this backend declares, no two visible nodes share a
+position* — and about sixty lines beside `tests/browser/smoke.cjs`, which must
+not acquire reasons to change. It cannot go in that file and it cannot name
+`#show-unresolved` in a shared harness, so it needs a declaration in
+`templateset.psd1`. **That is a data shape, which the charter says to log and
+stop on.** *Ledger `0013-t2`.*
+
+### The backlog was not swept when the threads were — **small**
+
+The v0.11.0 triage retired twenty-eight threads in the ledger and left this file
+describing seven of them as open work, including one closed two releases
+earlier. Nothing connects a thread's disposition to the backlog entry that
+describes it, and `docs/threads.json` now knows every disposition. *Ledger
+`0013-t5`.*
 
 ### The uncertain-edge style does not survive density — **large**
 
@@ -83,12 +93,11 @@ that size is the Details panel count. Changing it means choosing another channel
 which is a design decision about the report's mental model. *Ledger `0007-t1`,
 measured in `0008`.*
 
-### The fill channel is dead on the payload that needs it most — **medium**
+### The fill channel is dead on the payload that needs it most — **accepted at 0.11.0**
 
-All 469 SqlServerDsc functions are one kind, so `ColorBy = structure` paints one
-colour on the only real module anyone has rendered. A metric ramp is one click
-away and is not what the page opens in. Whether the default should depend on
-what the payload contains is a decision. *Ledger `0008-t3`.*
+That is the module, not the renderer: 469 of 532 nodes are one kind. Choosing
+a different channel at density would be the renderer deciding what the data
+means. The argument is in `docs/constraints.md`. *Ledger `0008-t3`.*
 
 ### Nothing checks the README — **small**
 
@@ -96,23 +105,15 @@ Seven code blocks, run once by hand before it shipped. Two byte counts in it
 drift the next time a library is vendored, and the whole thing is a claim about
 current behaviour written by whoever just changed it. *Ledger `0008-t4`.*
 
-### `Get-HashtableValue` exists in both repositories — **small**
+### `Get-HashtableValue` exists in both repositories — **accepted at 0.11.0**
 
-A twenty-line strict-mode-safe accessor. Four moved functions need it and ten
-functions in PSModuleGraph still do, so the extraction copied it rather than
-moving it. It carries no domain knowledge, so the duplication is safe today and
-will drift.
+Duplicating fifteen lines is cheaper than re-coupling two repositories. The
+argument is in `docs/constraints.md`. *Ledger `0001-t5`.*
 
-### A backend can still assume a shape the contract does not promise — **small**
+### A backend can still assume a shape the contract does not promise — **accepted at 0.11.0**
 
-Was medium. `tests/BackendContract.Tests.ps1` scans each backend's scripts for
-`DATA.<field>` and `META.<field>`, follows a direct alias of either, and fails
-naming the field and the file when the schema does not declare it.
-
-What is left is what a regex cannot see. `DATA[fieldName]` is invisible to it,
-and a test in that file records the gap by asserting the scan finds nothing in a
-computed access — the limitation is executable rather than a comment. A nested
-read (`node.severity`) is also outside it: the scan reaches one level.
+A static scan of dynamic access has a ceiling and this is where it is. The
+argument is in `docs/constraints.md`. *Ledger `0004-t2`.*
 
 ### Nothing runs the page — **closed in 0.5.0**
 
@@ -159,7 +160,7 @@ the specific assertions written for it.
 
 ### The instruction tier is still above its stated ceiling — **small**
 
-`CLAUDE.md` targets 10,000 bytes and weighs 10,644, down from 13,659 at v0.1.0.
+`CLAUDE.md` targets 10,000 bytes and weighs 10,410, down from 13,659 at v0.1.0.
 "Traps that survived the move" and gravity's reasoning moved down a tier in
 v0.2.0. What is left that could follow: "Build and test" belongs in
 `docs/testing.md` and "Commit" in `docs/development.md`, which is roughly the

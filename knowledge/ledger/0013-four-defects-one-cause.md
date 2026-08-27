@@ -4,7 +4,7 @@ tag: v0.12.0
 date: 2026-08-27
 prompt_intent: Fix the four visual defects as a set, take the legend with them, and build the path hint the last entry argued for.
 personas: [integrator, archivist, skeptic]
-open_threads: [0013-t1, 0013-t2, 0013-t3, 0013-t4]
+open_threads: [0013-t1, 0013-t2, 0013-t3, 0013-t4, 0013-t5]
 closes: [0008-t1, 0008-t2, 0010-t2, 0010-t3, 0012-t1]
 carries_forward: [0002-t3, 0005-t1, 0006-t1, 0006-t2, 0007-t1, 0008-t4, 0010-t6, 0011-t1, 0011-t2, 0011-t3, 0012-t2, 0012-t3]
 accepts_threads: []
@@ -115,6 +115,21 @@ against the repository root, reporting absent at both ends for a file that has
 never moved. Each was found by looking at all fifteen results rather than at the
 one flip.
 
+**Adding one field to the tool exposed two of its counts as wrong.** The
+per-repository `recovered` figure read `$_.PSObject.Properties.Name -contains
+'recoveredAt'` against an ordered hashtable, which enumerates `Count`, `Keys`
+and `Values` and never the entries — **it had reported zero recoveries for as
+long as there have been recoveries**, and zero is what a reader would expect
+most of the time. And a recovery left the status alone, which was right for the
+only case that had ever occurred and wrong the moment `PSModuleGraph` recovered
+a thread that had been *closed*: `[0001-t7]` read as closed-and-recovered, which
+is not a state. Recoveries are resolved before the retiring verbs now, matching
+the continuity gate exactly, so `[0002-t4]` — recovered and superseded in one
+entry — still ends superseded.
+
+Neither was found by reading the file. Both were found because the counts moved
+and the arithmetic did not add up.
+
 ## Dimensional impact
 
 Five questions, against this repository's own seams.
@@ -182,6 +197,15 @@ The Skeptic's section. It is never empty.
   pair. Two of the four defects are about legibility at a size, so they were
   verified in the exact conditions that would hide a regression at another one.
   `0011-t1`, accepted at v0.11.0, and this is the entry where it bites hardest.
+- **That the tool's other counts are right.** Two of them were not, and were
+  found by arithmetic rather than by review. `superseded`, `carries` and
+  `openedTag` have never been checked against anything, and nothing validates
+  `docs/threads.json` against a schema — which is `PSModuleGraph`'s `0012-t3`,
+  open there and true here.
+- **That the backlog is now clean.** Seven entries were retired by matching a
+  thread id against `docs/threads.json`; the five sections that cite no id were
+  left alone rather than guessed at, so the file is less stale and not
+  demonstrably current. `0013-t5`.
 - **That the label qualifier is legible rather than merely correct.** Step 1 of
   SqlServerDsc's test order now runs to three wrapped lines where it ran to one,
   because four of its first nine names are ambiguous. It was looked at and
@@ -206,6 +230,11 @@ The Skeptic's section. It is never empty.
 4. **[0013-t4] The label qualifier has never met a payload with duplicate names
    and no paths.** It falls through to the id, which on a real module is eighty
    characters in a 340px sidebar. No fixture produces the case.
+5. **[0013-t5] Retiring a thread does not retire the backlog entry describing
+   it.** The v0.11.0 triage struck or accepted twenty-eight threads and left
+   `docs/improvements.md` presenting seven of them as open work, one of them
+   closed two releases earlier. Swept by hand here, which is the same hand pass
+   `tools/threads.ps1` was built to stop repeating.
 
 Carried: **[0002-t3]** `Get-RenderTemplateSet` may not belong on the public
 surface; **[0005-t1]** the harness says the page loaded, not that it is right;
