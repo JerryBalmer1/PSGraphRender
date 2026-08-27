@@ -180,6 +180,9 @@ this order:
    set list — exist because the answer was no and became yes. New surfaces join
    them rather than sitting beside them as branches.
 4. **What does the checklist in the charter still say is open?**
+5. **Did I follow a procedure I have followed before, and is it written
+   down?** If not, log a proposal - do not write the skill in the same pass.
+   Reflection proposes, the next implementation disposes.
 
 **Large — anything that changes the contract, a data shape, or the user's mental
 model — is logged and stopped on, never taken unprompted.** That boundary is
@@ -217,19 +220,5 @@ These are **on-demand**: read the one the work touches, not all of them.
 
 ## Open decisions
 
-Not settled. Do not resolve one of these unilaterally as part of an unrelated
-change — raise it first.
-
-- **Should library code be vendored instead of loaded from a CDN?** The page
-  claims to be self-contained and is not: Cytoscape and dagre come from
-  jsdelivr with SRI hashes, guarded by `partials/cdn-guard.html`. A second
-  backend adds more. Vendoring makes the page genuinely offline-capable and
-  makes it large.
-- **Should a backend be able to declare required contract fields?** Today every
-  backend must cope with every payload. A declaration would let a 3D backend
-  demand coordinates, at the cost of a payload that renders in one backend and
-  not another.
-- **Should `Show-RenderDocument` stay in this repository?** It launches
-  browsers, probes loopback ports and reads user agents, none of which is
-  rendering. It moved here because the charter said so; that may have been the
-  wrong seam.
+Three, in `docs/improvements.md`. **Do not resolve one of them unilaterally
+as part of an unrelated change - raise it first.**

@@ -22,6 +22,34 @@ thought about yet.
 
 ## Open
 
+### The skills directory is a copy that makes false claims here - **medium**
+
+All five skills in `.claude/skills/` are byte-identical to `PSModuleGraph`'s
+with nothing keeping them in sync. Four claims in them are false in this
+repository: `tests/Private/SubsystemCharter.Tests.ps1` does not exist,
+`knowledge/NAMING.md` does not exist, `docs/html-architecture.md` is named
+`docs/render-architecture.md`, and the version rule talks about facets in a
+repository with none. A fifth is worse - `instruction-prune` says a deferred
+deletion proposal is blocked by `tests/PreTag.Tests.ps1`, and this
+repository's `PreTag.Tests.ps1` has no such gate, so `prune_proposals` is
+unenforced here. A shared source, a sync test, or a deliberate fork with the
+differences stated - all three are decisions. *Ledger `0009-t2`.*
+
+### No skill here has ever been invoked - **small**
+
+Measured across v0.5.0 to v0.8.0: every iteration closed correctly from
+`CLAUDE.md` and from memory, and no skill body was loaded.
+`instruction-prune` was invoked for the first time in `0009`. Not an argument
+for deleting any of them - a procedure followed correctly from memory is the
+good case - but nothing here has been read under the conditions it was
+written for, and `0005-t1` still says the descriptions are unbudgeted.
+
+### There is no CHANGELOG - **small**
+
+Eight annotated tags and no `CHANGELOG.md`. `PSModuleGraph` has one. The
+ledger carries everything, and a ledger entry is written for the next
+implementer rather than for a consumer of the module. *Ledger `0009-t4`.*
+
 ### An invented node is drawn on top of a real one — **medium**
 
 With unresolved shown, the orange node the renderer invents lands on the node
@@ -124,7 +152,7 @@ the specific assertions written for it.
 
 ### The instruction tier is still above its stated ceiling — **small**
 
-`CLAUDE.md` targets 10,000 bytes and weighs 11,223, down from 13,659 at v0.1.0.
+`CLAUDE.md` targets 10,000 bytes and weighs 10,644, down from 13,659 at v0.1.0.
 "Traps that survived the move" and gravity's reasoning moved down a tier in
 v0.2.0. What is left that could follow: "Build and test" belongs in
 `docs/testing.md` and "Commit" in `docs/development.md`, which is roughly the
@@ -136,7 +164,8 @@ which is the test.
 
 ### `Show-RenderDocument` may not belong here — **large, and already open**
 
-Listed under "Open decisions" in `CLAUDE.md`. It launches browsers, probes
+Listed under **Open decisions** at the foot of this file. It launches browsers,
+probes
 loopback ports and reads user agents, none of which is rendering. Raise it
 before resolving it.
 
@@ -169,3 +198,24 @@ before resolving it.
 - `PSModuleGraph`'s manifest sat at `ModuleVersion = '0.1.0'` through six
   annotated tags. Corrected to `0.7.0` during the extraction, but nothing
   enforces the agreement between the manifest and the tag.
+
+## Open decisions
+
+Moved out of `CLAUDE.md` at v0.8.1 - they are backlog, not something an agent
+needs to be true before it starts. The rule stayed up there, because it is
+violated from outside this file: **do not resolve one of these unilaterally as
+part of an unrelated change - raise it first.**
+
+- **Should library code be vendored instead of loaded from a CDN?** The page
+  claims to be self-contained and is not: Cytoscape and dagre come from
+  jsdelivr with SRI hashes, guarded by `partials/cdn-guard.html`. A second
+  backend adds more. Vendoring makes the page genuinely offline-capable and
+  makes it large.
+- **Should a backend be able to declare required contract fields?** Today every
+  backend must cope with every payload. A declaration would let a 3D backend
+  demand coordinates, at the cost of a payload that renders in one backend and
+  not another.
+- **Should `Show-RenderDocument` stay in this repository?** It launches
+  browsers, probes loopback ports and reads user agents, none of which is
+  rendering. It moved here because the charter said so; that may have been the
+  wrong seam.
