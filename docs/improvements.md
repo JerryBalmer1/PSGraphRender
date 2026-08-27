@@ -29,28 +29,35 @@ functions in PSModuleGraph still do, so the extraction copied it rather than
 moving it. It carries no domain knowledge, so the duplication is safe today and
 will drift.
 
-### A backend can still assume a shape the contract does not promise — **medium**
+### A backend can still assume a shape the contract does not promise — **small**
 
-`contract/viewmodel.schema.json` closes half of 0002-t4: `plain` reading
-`DATA.nodes` is now licensed, because the contract requires `nodes`.
+Was medium. `tests/BackendContract.Tests.ps1` scans each backend's scripts for
+`DATA.<field>` and `META.<field>`, follows a direct alias of either, and fails
+naming the field and the file when the schema does not declare it.
 
-The other half is open. Nothing checks that what a backend reads is what the
-contract guarantees. A backend reading `DATA.rows`, or `node.severity`, would
-render blank against every conforming payload and no test would notice. The
-shape of the check is: extract the payload accesses out of a backend's scripts
-and assert every one is a property the schema declares.
+What is left is what a regex cannot see. `DATA[fieldName]` is invisible to it,
+and a test in that file records the gap by asserting the scan finds nothing in a
+computed access — the limitation is executable rather than a comment. A nested
+read (`node.severity`) is also outside it: the scan reaches one level.
 
-### Nothing syntax-checks the JavaScript — **medium**
+### Nothing runs the page — **medium, and blocked**
 
-A malformed script fails only in a browser, and `render.js` was restructured by
-about a hundred lines in v0.3.0 with nothing able to say whether it still
-parses. A brace-balance check was written and thrown away: it cannot parse a
-regex literal, so it fired on the pre-change golden as well as the new output,
-and a check that reports a false positive on known-good output is worse than
-none.
+Closed in part. `LintJavaScript` runs `node --check` over every backend script
+and `LintDocument` runs it over the inline blocks of a rendered document, which
+is the form a browser receives. Neither skips when node is absent.
 
-The honest answers are a real parser (a dependency, on a build that currently
-needs only PowerShell) or a headless browser (much more). Neither is small.
+Parsing is not running. A page can parse perfectly and still throw on load, and
+the suite still asserts only on text PowerShell produced. A headless harness was
+built far enough to measure, in Playwright 1.49.1 against Chromium: `plain`
+comes alive with no network at all (0 external requests, 0 console errors, 17
+table rows for a 17-node payload); `cytoscape` online reports 17 nodes, 0
+console errors and three painted canvases in about 3.5 seconds; `cytoscape`
+offline shows the CDN guard and produces two console errors and no node count —
+the same signature a genuinely broken script produces.
+
+That last line is the block. It cannot be finished until the vendoring question
+under "Open decisions" in `CLAUDE.md` is answered, and it is not this
+repository's to answer.
 
 ### The stronger no-producer-kinds check is weak in practice — **small**
 
@@ -71,7 +78,7 @@ the specific assertions written for it.
 
 ### The instruction tier is still above its stated ceiling — **small**
 
-`CLAUDE.md` says 10,000 bytes and weighs 11,301, down from 13,659 at v0.1.0.
+`CLAUDE.md` targets 10,000 bytes and weighs 11,223, down from 13,659 at v0.1.0.
 "Traps that survived the move" and gravity's reasoning moved down a tier in
 v0.2.0. What is left that could follow: "Build and test" belongs in
 `docs/testing.md` and "Commit" in `docs/development.md`, which is roughly the
@@ -93,6 +100,14 @@ before resolving it.
   backend. `cytoscape` still pulls Cytoscape and dagre from jsdelivr; `plain`
   reaches no host at all and a test asserts it. Half the vendoring decision in
   `CLAUDE.md` is now answered by demonstration: an offline reader has a view.
+  Measured, for whoever decides it: the two libraries are 481 KB minified, and
+  a report is 126 KB, so vendoring makes every report roughly five times its
+  present size.
+- A user-visible string still lives in markup rather than `strings.psd1`, and
+  for once it has a reason. `partials/template-notice.html` is shown only when
+  the template was never filled in - the case where `STRINGS` is the literal
+  `null` the substitution left behind. A string cannot come from a file that
+  was not read. Checklist line 214 should say so rather than reading as debt.
   Whether the DEFAULT backend should be offline-capable is the half that is
   still open.
 - `PSMissingModuleManifestField` fires on the `.psd1` extension alone and cannot

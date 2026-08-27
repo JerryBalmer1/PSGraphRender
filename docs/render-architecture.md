@@ -209,15 +209,24 @@ checklist below tracks both halves: moving the subsystem across unchanged, and
 then making the result producer-neutral rather than merely relocated.
 
 - [x] No producer vocabulary anywhere  (`Module`, `Ast`, `PSModuleGraph`)
+      (ticked prematurely at 0.1.0; four producer command names and a producer
+      module name were still in shipped markup and comments until 0.4.0)
 - [x] Token contract named generically (not `__GRAPH_*__`)
 - [x] Public functions named without `Graph` or `PSModule`
-- [ ] All user-visible strings externalised to `strings.psd1`  (scripts done; partial markup still carries its own text)
+- [x] All user-visible strings externalised to `strings.psd1`  (scripts done;
+      `partials/template-notice.html` keeps its own text on purpose — it is
+      shown only when nothing was substituted, so `STRINGS` is `null` by
+      definition and a string cannot come from a file that was not read)
 - [x] All colours externalised to `theme.psd1`  (kind and link colours moved in 0.3.0; structural greys remain in `render.js`)
 - [x] `contract/viewmodel.schema.json` exists and every entry point validates against it
 - [x] Suite renders a hand-written fixture with no producer installed
 - [x] `TemplateSets/` holds the reference backend and code privileges none of them
 - [x] A second backend exists and proves the seam
-- [ ] CLAUDE.md pruned toward 10,000; ceiling ratcheted to match
+- [ ] CLAUDE.md pruned toward 10,000; ceiling ratcheted to match  (13,659 at
+      0.1.0, 11,301 at 0.2.0, 11,223 at 0.4.0 — the ratchet works, the target
+      is not reached)
+- [x] Every backend script parses, and the assembled document parses  (0.4.0)
+- [ ] Something runs the page  (blocked on the vendoring decision)
 - [x] The settings schema is data — `settings.schema.psd1`, not a hashtable
       in a `.ps1`
 - [x] The view model contract is data — `contract/viewmodel.schema.json`, not
@@ -327,3 +336,18 @@ instruments were tried and rejected: a positional line diff (an insertion
 shifts every following line, reporting 78% changed for three removed keys) and
 a JavaScript brace-balance check (it cannot parse a regex literal and fires on
 known-good output).
+
+**2026-08-26 — A gate whose tool is missing fails by name; it never skips.**
+`LintJavaScript` and `LintDocument` throw when `node` is absent rather than
+passing quietly, and `PreTag` throws when its filter selects no tests — it had
+printed "gates passed" against zero tests for four tags. A gate that reports
+success for the one environment where it checked nothing is worse than no gate,
+because it is believed.
+
+**2026-08-26 — A check written in the language of one known mistake finds only
+that mistake.** The producer-vocabulary check looked for the literal
+`PSModuleGraphEditorLink` and passed for three iterations while shipped markup
+named a producer's module, two of its commands and one of its source paths. The
+fix in both this case and `KIND_HEX` was to look for the SHAPE — Verb-Noun for a
+command, an object literal's keys for a classification list — rather than for
+the word last found.
