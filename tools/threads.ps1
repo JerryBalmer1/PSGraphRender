@@ -78,6 +78,7 @@ function Read-LedgerEntry {
         Closes         = Read-List -Source $front -Key 'closes'
         CarriesForward = Read-List -Source $front -Key 'carries_forward'
         Supersedes     = Read-List -Source $front -Key 'supersedes_threads'
+        Accepts        = Read-List -Source $front -Key 'accepts_threads'
         Recovers       = Read-List -Source $front -Key 'recovers_threads'
         Body           = $body
     }
@@ -142,6 +143,13 @@ foreach ($repository in ($sources | ForEach-Object { $_.repository })) {
         foreach ($id in $entry.Supersedes) {
             if ($state.Contains($id)) { $state[$id].status = 'superseded'; $state[$id].resolvedAt = $entry.Id }
         }
+        # ACCEPTED is not CLOSED and the tool refuses to conflate them. Closed
+        # means the question is answered; accepted means it is not and never
+        # will be, and the constraint is written down somewhere a reader meets
+        # it. Two facts, two words.
+        foreach ($id in $entry.Accepts) {
+            if ($state.Contains($id)) { $state[$id].status = 'accepted'; $state[$id].resolvedAt = $entry.Id }
+        }
         foreach ($id in $entry.Recovers) {
             if ($state.Contains($id)) { $state[$id].recoveredAt = $entry.Id }
         }
@@ -151,7 +159,7 @@ foreach ($repository in ($sources | ForEach-Object { $_.repository })) {
 }
 
 $byStatus = @{}
-foreach ($status in 'open', 'closed', 'superseded') {
+foreach ($status in 'open', 'closed', 'superseded', 'accepted') {
     $byStatus[$status] = @($threads | Where-Object { $_.status -eq $status }).Count
 }
 
@@ -163,6 +171,7 @@ foreach ($repository in ($sources | ForEach-Object { $_.repository })) {
         open       = @($mine | Where-Object { $_.status -eq 'open' }).Count
         closed     = @($mine | Where-Object { $_.status -eq 'closed' }).Count
         superseded = @($mine | Where-Object { $_.status -eq 'superseded' }).Count
+        accepted   = @($mine | Where-Object { $_.status -eq 'accepted' }).Count
         recovered  = @($mine | Where-Object { $_.PSObject.Properties.Name -contains 'recoveredAt' }).Count
     }
 }
@@ -186,6 +195,7 @@ $record = [ordered]@{
         open       = $byStatus['open']
         closed     = $byStatus['closed']
         superseded = $byStatus['superseded']
+        accepted   = $byStatus['accepted']
         perRepository = $perRepository
     }
     # Sorted by repository then id, and by nothing else. Ordering is the
@@ -199,5 +209,6 @@ if (-not $OutputPath) {
 $json = $record | ConvertTo-Json -Depth 8
 [System.IO.File]::WriteAllText($OutputPath, $json + "`n", (New-Object System.Text.UTF8Encoding $false))
 
-Write-Host ("{0} thread(s): {1} open, {2} closed, {3} superseded -> {4}" -f
-    $record.counts.raised, $record.counts.open, $record.counts.closed, $record.counts.superseded, $OutputPath)
+Write-Host ("{0} thread(s): {1} open, {2} closed, {3} accepted, {4} superseded -> {5}" -f
+    $record.counts.raised, $record.counts.open, $record.counts.closed, $record.counts.accepted,
+    $record.counts.superseded, $OutputPath)

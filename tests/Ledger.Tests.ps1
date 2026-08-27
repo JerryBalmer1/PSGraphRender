@@ -43,6 +43,7 @@ BeforeAll {
             CarriesForward = Read-List -Source $front -Key 'carries_forward'
             Closes         = Read-List -Source $front -Key 'closes'
             Supersedes     = Read-List -Source $front -Key 'supersedes_threads'
+            Accepts        = Read-List -Source $front -Key 'accepts_threads'
             Recovers       = Read-List -Source $front -Key 'recovers_threads'
             Body           = $match.Groups['body'].Value
         }
@@ -133,7 +134,7 @@ Describe 'The ledger accounts for its own threads' -Tag 'PreTag' {
                 if (-not $recoveredBy.ContainsKey($id)) { $recoveredBy[$id] = $current.Id }
                 [void]$open.Add($id)
             }
-            foreach ($id in @($current.Closes) + @($current.Supersedes)) { [void]$open.Remove($id) }
+            foreach ($id in @($current.Closes) + @($current.Supersedes) + @($current.Accepts)) { [void]$open.Remove($id) }
 
             $carried = @($current.CarriesForward)
             foreach ($id in @($open)) {
@@ -169,7 +170,7 @@ Describe 'The ledger accounts for its own threads' -Tag 'PreTag' {
             foreach ($id in $entry.OpenThreads) { $opened[$id] = $entry.Id }
         }
         foreach ($entry in $script:Entries) {
-            foreach ($id in (@($entry.Closes) + @($entry.CarriesForward) + @($entry.Supersedes) + @($entry.Recovers))) {
+            foreach ($id in (@($entry.Closes) + @($entry.CarriesForward) + @($entry.Supersedes) + @($entry.Recovers) + @($entry.Accepts))) {
                 $opened.ContainsKey($id) | Should-BeTrue -Because "entry $($entry.Id) references thread $id, which no entry ever opened"
             }
         }
@@ -180,8 +181,8 @@ Describe 'The ledger accounts for its own threads' -Tag 'PreTag' {
         # leaving the open set has to leave a sentence behind saying what
         # replaced it, or what the gap in its record was.
         foreach ($entry in $script:Entries) {
-            foreach ($id in @($entry.Supersedes) + @($entry.Recovers)) {
-                $entry.Body | Should-MatchString ([regex]::Escape("[$id]")) -Because "entry $($entry.Id) supersedes or recovers $id in its front matter and says nothing about it in its body"
+            foreach ($id in @($entry.Supersedes) + @($entry.Recovers) + @($entry.Accepts)) {
+                $entry.Body | Should-MatchString ([regex]::Escape("[$id]")) -Because "entry $($entry.Id) retires $id in its front matter and says nothing about it in its body"
             }
         }
     }
