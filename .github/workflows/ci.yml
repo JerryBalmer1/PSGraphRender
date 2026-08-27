@@ -14,6 +14,16 @@ jobs:
   test:
     name: Test (${{ matrix.os }} / ${{ matrix.powershell }}${{ matrix.browser && ' + browser' || '' }})
     runs-on: ${{ matrix.os }}
+
+    # The shell belongs HERE, not on the step. `matrix` is not a recognised
+    # named-value in `jobs.<id>.steps.shell`, so `shell: ${{ matrix.powershell }}`
+    # on a step made the whole file unparseable - which is why no job in this
+    # repository ever started between v0.2.0 and v0.6.0. `pwsh` and `powershell`
+    # are built-in shell names, so the custom `{0}` form is not needed either.
+    defaults:
+      run:
+        shell: ${{ matrix.powershell }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -80,13 +90,11 @@ jobs:
       # name and points here instead.
       - name: Install the browser harness
         if: matrix.browser
-        shell: ${{ matrix.powershell }} {0}
         run: ./build.ps1 -Task BootstrapBrowser
 
       # -Bootstrap installs any missing PowerShell module and then runs the
       # named task, so one invocation is enough. It does not install tools.
       - name: Bootstrap and test
-        shell: ${{ matrix.powershell }} {0}
         run: ./build.ps1 -Bootstrap -Task ${{ matrix.browser && '.' || 'WithoutBrowser' }}
 
       - name: Publish test results and coverage
