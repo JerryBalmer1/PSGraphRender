@@ -47,7 +47,7 @@ Describe 'The tools this repository is pinned to' -Tag 'PreTag' {
     It 'installs the browser harness in CI before the build that needs it' {
         # The default task includes TestBrowser and TestBrowser throws when the
         # harness is absent, so a browser leg without this step fails every run.
-        $script:Workflow | Should-MatchString 'build\.ps1 -Task BootstrapBrowser'
+        $script:Workflow | Should-MatchString 'build\.ps1 .*-Task BootstrapBrowser'
     }
 
     It 'runs the browser harness on exactly one CI leg' {
