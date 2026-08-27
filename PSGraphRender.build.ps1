@@ -203,9 +203,20 @@ task BootstrapBrowser {
     # and mangles its own arguments under some hosts - it reported
     # 'Unknown command: "pm"' here - and node running the CLI directly is the
     # same program without the wrapper.
-    $npmCli = Join-Path (Split-Path -Parent $node.Path) 'node_modules/npm/bin/npm-cli.js'
-    if (-not (Test-Path -LiteralPath $npmCli)) {
-        throw "npm was not found beside node at $($node.Path). Install a Node distribution that includes npm and re-run."
+    # Two layouts, because npm does not sit in the same place relative to node
+    # on every platform. Windows puts it beside the executable; Unix puts it a
+    # level up under lib/. Assuming the first cost the Ubuntu leg its first two
+    # runs - "npm was not found beside node at /opt/.../bin/node", which was
+    # true and was the wrong place to look.
+    $nodeDir = Split-Path -Parent $node.Path
+    $candidates = @(
+        Join-Path $nodeDir 'node_modules/npm/bin/npm-cli.js'
+        Join-Path (Split-Path -Parent $nodeDir) 'lib/node_modules/npm/bin/npm-cli.js'
+    )
+    $npmCli = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    if (-not $npmCli) {
+        throw ("npm was not found near node at $($node.Path). Looked in: " + ($candidates -join '; ') +
+            '. Install a Node distribution that includes npm and re-run.')
     }
 
     $harness = Join-Path $TestsRoot 'browser'
