@@ -1,7 +1,13 @@
 #Requires -Module @{ ModuleName = 'InvokeBuild'; ModuleVersion = '5.11.0' }
 
 [CmdletBinding()]
-param()
+param(
+    # Extra view model files for -Task Samples, beyond the fixtures. A real
+    # payload is megabytes and belongs in neither repository's history; this is
+    # how one gets rendered without being committed. See the Samples task.
+    [Parameter()]
+    [string[]] $ExtraPayload = @()
+)
 
 Set-StrictMode -Version Latest
 
@@ -555,6 +561,100 @@ task PreTag Build, {
     }
 
     Write-Build Green "Pre-tag gates passed ($($result.PassedCount) test(s)). Safe to tag." 
+}
+
+task Samples Build, {
+    # Every fixture through every backend, so there is something to LOOK at.
+    #
+    # This exists because four open threads all said the same thing: nobody has
+    # opened the page. The growth check measures a screenshot's compressed size
+    # and never shows it to anyone; a style calibrated against 702 dashed edges
+    # out of 1,271 was never seen at that density or at any other.
+    #
+    # The index is a build ARTEFACT, not a template set. Dumb static markup with
+    # a table in it, generated here, no config, no strings, no slots. If it ever
+    # grows a theme it has become a third backend and it should be deleted
+    # instead.
+    #
+    # The rendered pages are NOT committed - 600 KB each since vendoring, six of
+    # them, regenerated whenever the renderer moves. output/ is gitignored. The
+    # screenshots are committed, under docs/samples/.
+    Import-Module (Join-Path $OutRoot "$ModuleName.psd1") -Force -ErrorAction Stop
+
+    $sampleRoot = Join-Path (Join-Path $BuildRoot 'output') 'samples'
+    New-Item -ItemType Directory -Path $sampleRoot -Force | Out-Null
+
+    $backends = @(
+        Get-ChildItem -LiteralPath (Join-Path $OutRoot 'TemplateSets') -Directory |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'templateset.psd1') }
+    )
+
+    # The shipped fixtures, plus anything the caller points at. -ExtraPayload is
+    # how a payload too big to commit gets rendered: PSModuleGraph can write one
+    # for a real gallery module, and this renders it without either repository
+    # gaining a 1.4 MB file or a dependency on the other.
+    $payloads = @(Get-ChildItem -LiteralPath (Join-Path $TestsRoot 'fixtures/viewmodels') -Filter *.json -File)
+    foreach ($extra in @($ExtraPayload)) {
+        if (-not $extra) { continue }
+        if (-not (Test-Path -LiteralPath $extra)) { throw "No payload at '$extra'." }
+        $payloads += Get-Item -LiteralPath $extra
+    }
+
+    if ($backends.Count -eq 0 -or $payloads.Count -eq 0) {
+        throw 'No backend or no payload. Samples rendered nothing, which is not the same as succeeding.'
+    }
+
+    $rows = [System.Collections.Generic.List[object]]::new()
+    foreach ($payload in $payloads) {
+        $vm = Get-Content -LiteralPath $payload.FullName -Raw | ConvertFrom-Json
+        foreach ($backend in $backends) {
+            $name = "$($backend.Name)-$($payload.BaseName)"
+            $file = Join-Path $sampleRoot "$name.html"
+            $title = if ($vm.meta -and $vm.meta.title) { $vm.meta.title } else { $payload.BaseName }
+
+            $document = New-RenderDocument -ViewModel $vm.data -Meta $vm.meta -Title $title -TemplateSet $backend.Name
+            [System.IO.File]::WriteAllText($file, $document)
+
+            $rows.Add([pscustomobject]@{
+                    Id      = $name
+                    Backend = $backend.Name
+                    Payload = $payload.BaseName
+                    Title   = $title
+                    Nodes   = @($vm.data.nodes).Count
+                    Links   = @($vm.data.links).Count
+                    File    = "$name.html"
+                    Bytes   = $document.Length
+                })
+            Write-Build Gray ("  {0,-34} {1,5} nodes {2,5} links {3,9:N0} bytes" -f $name, @($vm.data.nodes).Count, @($vm.data.links).Count, $document.Length)
+        }
+    }
+
+    # Static markup, assembled here and nowhere else. Escaped by hand because
+    # this is a page about the renderer rather than a page the renderer made.
+    $esc = { param($t) [System.Net.WebUtility]::HtmlEncode([string]$t) }
+    $body = [System.Text.StringBuilder]::new()
+    [void]$body.AppendLine('<!DOCTYPE html>')
+    [void]$body.AppendLine('<html lang="en"><head><meta charset="utf-8">')
+    [void]$body.AppendLine('<title>PSGraphRender samples</title>')
+    [void]$body.AppendLine('<style>')
+    [void]$body.AppendLine('body{font:14px/1.5 system-ui,sans-serif;margin:2rem;max-width:60rem;color:#111}')
+    [void]$body.AppendLine('table{border-collapse:collapse;width:100%}')
+    [void]$body.AppendLine('th,td{text-align:left;padding:.4rem .6rem;border-bottom:1px solid #ddd}')
+    [void]$body.AppendLine('td.n{text-align:right;font-variant-numeric:tabular-nums}')
+    [void]$body.AppendLine('p.note{color:#555}')
+    [void]$body.AppendLine('</style></head><body>')
+    [void]$body.AppendLine('<h1>PSGraphRender samples</h1>')
+    [void]$body.AppendLine("<p class=`"note`">Every payload under <code>tests/fixtures/viewmodels/</code> rendered through every backend in <code>TemplateSets/</code>. Generated by <code>./build.ps1 -Task Samples</code>; not committed.</p>")
+    [void]$body.AppendLine("<p class=`"note`">None of these payloads was produced by PSModuleGraph. They are hand-written JSON describing tasks, hosts and services, which is the point: the renderer has no producer.</p>")
+    [void]$body.AppendLine('<table><thead><tr><th>Sample</th><th>Backend</th><th>Payload</th><th class="n">Nodes</th><th class="n">Links</th><th class="n">KB</th></tr></thead><tbody>')
+    foreach ($row in $rows) {
+        [void]$body.AppendLine(('<tr><td><a href="{0}">{1}</a></td><td>{2}</td><td>{3}</td><td class="n">{4}</td><td class="n">{5}</td><td class="n">{6:N0}</td></tr>' -f
+            (& $esc $row.File), (& $esc $row.Title), (& $esc $row.Backend), (& $esc $row.Payload), $row.Nodes, $row.Links, ($row.Bytes / 1KB)))
+    }
+    [void]$body.AppendLine('</tbody></table></body></html>')
+    [System.IO.File]::WriteAllText((Join-Path $sampleRoot 'index.html'), $body.ToString())
+
+    Write-Build Green "  $($rows.Count) sample(s) -> $(Join-Path $sampleRoot 'index.html')"
 }
 
 task Import Build, {

@@ -12,7 +12,12 @@ param(
     [Parameter(Position = 0)]
     [string[]] $Task = '.',
 
-    [switch] $Bootstrap
+    [switch] $Bootstrap,
+
+    # Passed through to the build script's own parameter of the same name, for
+    # -Task Samples. Nothing else reads it.
+    [Parameter()]
+    [string[]] $ExtraPayload = @()
 )
 
 Set-StrictMode -Version Latest
@@ -124,4 +129,4 @@ if (-not (Test-Path -LiteralPath $buildFile)) {
 }
 
 Import-Module InvokeBuild -ErrorAction Stop
-Invoke-Build -Task $Task -File $buildFile
+Invoke-Build -Task $Task -File $buildFile -ExtraPayload $ExtraPayload
