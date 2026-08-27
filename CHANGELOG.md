@@ -18,6 +18,24 @@ a change was made, and for what could not be verified about it,
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-27
+
+### Added
+
+- **`tools/threads.ps1`** reads any number of ledger directories and writes
+  `docs/threads.json` - id, repository, opened at, carries, status and one
+  line per thread, shaped like a corpus record and committed for the same
+  reason. **It reports and does not decide**: no score, no priority, no
+  staleness heuristic. Ledger `0010` measured what carry count predicts and
+  the answer was nothing.
+- **Thread continuity is checked here for the first time.**
+  `tests/Ledger.Tests.ps1` compares an entry against every thread still open
+  rather than against the ones the previous entry raised, and understands
+  `supersedes_threads` and `recovers_threads`. `0002-t4` was lost at entry
+  `0004` and is recovered.
+
+*Ledger `0011`.*
+
 ## [0.9.0] - 2026-08-27
 
 ### Added
@@ -28,7 +46,8 @@ a change was made, and for what could not be verified about it,
   counts and which backend produced each. `-ExtraPayload` renders a payload too
   large to commit. The pages are not committed; screenshots are, under
   `docs/samples/`.
-- **`tests/LedgerPrune.Tests.ps1`**, a pre-tag gate. A deferred deletion
+- **`tests/LedgerPrune.Tests.ps1`** (renamed `Ledger.Tests.ps1` at v0.10.0), a
+  pre-tag gate. A deferred deletion
   proposal that a second iteration neither applies nor rejects now blocks the
   annotated tag by name. `instruction-prune` had claimed this enforcement since
   v0.3.0 and it had never existed here.
