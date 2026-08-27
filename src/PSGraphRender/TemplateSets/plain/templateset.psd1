@@ -23,6 +23,6 @@
         Text               = @{}
         Elements           = @{ '#nodes tbody tr' = 'nodes'; '#links tbody tr' = 'links' }
         Present            = @('#nodes', '#links')
-        MinScreenshotBytes = @{}
+        CanvasGrowth       = @{}
     }
 }

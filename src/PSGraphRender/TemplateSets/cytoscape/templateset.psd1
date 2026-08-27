@@ -55,13 +55,21 @@
         # Selectors that must match at least one element.
         Present            = @('#cy canvas')
 
-        # Selector -> the smallest PNG a screenshot of it may be.
+        # Selector -> how many times larger a screenshot of it must be than the
+        # same selector in this backend's render of an EMPTY payload.
         #
         # This view draws into a canvas, so every DOM assertion above passes
         # just as happily over a blank rectangle - which is exactly the failure
-        # a smoke test exists to catch. Measured at v0.5.0 on the infrastructure
-        # fixture: 53,971 bytes drawn, 4,413 bytes for a payload with no nodes
-        # in it. 15,000 sits in that gap with room either side.
-        MinScreenshotBytes = @{ '#cy' = 15000 }
+        # a smoke test exists to catch.
+        #
+        # A ratio rather than a byte count, because a byte count cannot survive
+        # the move to another machine: viewport, device pixel ratio, available
+        # fonts and Chromium version all change how many bytes a drawn canvas
+        # compresses to. The harness measures the empty render itself, in the
+        # same run, so the floor comes from the machine doing the checking.
+        #
+        # Measured at v0.5.0: 53,971 bytes drawn against 4,413 empty, a ratio of
+        # 12.2. Four is not a marginal call.
+        CanvasGrowth       = @{ '#cy' = 4 }
     }
 }

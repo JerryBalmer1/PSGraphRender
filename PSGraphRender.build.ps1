@@ -281,6 +281,16 @@ task TestBrowser Build, {
                         'a live page looks like for it. A backend the harness cannot check is a backend the harness skips.')
                 }
 
+                # The same backend rendering nothing. This is the floor the
+                # harness compares a drawn view against, and it is rendered
+                # here rather than pinned as a number so the comparison is
+                # made on whatever machine is running - see CanvasGrowth in
+                # templateset.psd1.
+                $baseline = Join-Path $scratch "$($backend.Name)-EMPTY.html"
+                [System.IO.File]::WriteAllText($baseline, (New-RenderDocument `
+                            -ViewModel ([pscustomobject]@{ nodes = @(); links = @() }) `
+                            -Title 'empty' -TemplateSet $backend.Name))
+
                 foreach ($fixture in $fixtures) {
                     $payload = Get-Content -LiteralPath $fixture.FullName -Raw | ConvertFrom-Json
                     $document = New-RenderDocument -ViewModel $payload.data -Meta $payload.meta `
@@ -290,14 +300,15 @@ task TestBrowser Build, {
                     [System.IO.File]::WriteAllText($file, $document)
 
                     @{
-                        backend = $backend.Name
-                        fixture = $fixture.BaseName
-                        path    = $file
-                        counts  = @{
+                        backend  = $backend.Name
+                        fixture  = $fixture.BaseName
+                        path     = $file
+                        baseline = $baseline
+                        counts   = @{
                             nodes = @($payload.data.nodes).Count
                             links = @($payload.data.links).Count
                         }
-                        smoke   = $manifest.Smoke
+                        smoke    = $manifest.Smoke
                     }
                 }
             }
@@ -316,7 +327,13 @@ task TestBrowser Build, {
         }
 
         $report = $text | ConvertFrom-Json
-        Write-Build Green "Browser: $($report.cases) page(s) came alive, network blocked, across $($backends.Count) backend(s) and $($fixtures.Count) fixture(s)"
+        foreach ($m in $report.canvas) {
+            Write-Build Green ("  canvas $($m.case) $($m.selector): $($m.drawn) bytes drawn against $($m.empty) empty" +
+                " - ratio $($m.ratio), required $($m.required)")
+        }
+        Write-Build Green ("Browser: $($report.cases) page(s) came alive, network blocked, across " +
+            "$($backends.Count) backend(s) and $($fixtures.Count) fixture(s) at " +
+            "$($report.viewport.width)x$($report.viewport.height)@$($report.deviceScaleFactor)x")
     }
     finally {
         Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue

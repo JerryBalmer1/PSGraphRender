@@ -18,8 +18,60 @@ const { chromium } = require('playwright');
 const SETTLE_MS = 500;
 const READY_TIMEOUT_MS = 15000;
 
+// PINNED, not defaulted. Every one of these moves how much a canvas draws, and
+// all three differ between a laptop and a CI runner. Two runs that cannot be
+// compared are two runs that cannot bisect, so they are stated here and echoed
+// into the report rather than inherited from whatever Playwright felt like.
+const VIEWPORT = { width: 1280, height: 900 };
+const DEVICE_SCALE_FACTOR = 1;
+
 function fail(results, id, message) {
   results.push({ case: id, ok: false, message });
+}
+
+async function openPage(browser) {
+  const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: DEVICE_SCALE_FACTOR });
+
+  // By host, not context.setOffline: that kills file:// too, and the document
+  // under test IS a file.
+  const attempted = [];
+  await context.route('http://**', route => { attempted.push(route.request().url()); route.abort(); });
+  await context.route('https://**', route => { attempted.push(route.request().url()); route.abort(); });
+
+  const page = await context.newPage();
+  const errors = [];
+  page.on('console', m => { if (m.type() === 'error') { errors.push(m.text()); } });
+  page.on('pageerror', e => errors.push('uncaught: ' + e.message));
+  return { context, page, errors, attempted };
+}
+
+async function screenshotBytes(page, selector) {
+  const handle = await page.$(selector);
+  if (!handle) { return null; }
+  return (await handle.screenshot({ type: 'png' })).length;
+}
+
+// The floor for "this view drew something", measured on the machine running
+// the check rather than pinned to the one that wrote it.
+//
+// A constant cannot survive the move: viewport, device pixel ratio, font
+// availability and Chromium version all change how many bytes a drawn canvas
+// compresses to, and every one of them differs in CI. The same backend
+// rendering a payload with nothing in it is the same measurement taken here,
+// now, so the comparison calibrates itself.
+async function measureEmpty(browser, cache, backend, baselinePath, selector) {
+  const key = backend + '|' + selector;
+  if (Object.prototype.hasOwnProperty.call(cache, key)) { return cache[key]; }
+
+  const { context, page } = await openPage(browser);
+  try {
+    await page.goto('file:///' + baselinePath.replace(/\\/g, '/'));
+    await page.waitForTimeout(SETTLE_MS * 2);
+    cache[key] = await screenshotBytes(page, selector);
+  } finally {
+    await context.close();
+  }
+  return cache[key];
 }
 
 async function run() {
@@ -29,21 +81,12 @@ async function run() {
 
   const browser = await chromium.launch();
   const results = [];
+  const emptyCache = {};
+  const measured = [];
 
   for (const c of job.cases) {
     const id = c.backend + '/' + c.fixture;
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-
-    // By host, not context.setOffline: that kills file:// too, and the
-    // document under test IS a file.
-    const attempted = [];
-    await context.route('http://**', route => { attempted.push(route.request().url()); route.abort(); });
-    await context.route('https://**', route => { attempted.push(route.request().url()); route.abort(); });
-
-    const page = await context.newPage();
-    const errors = [];
-    page.on('console', m => { if (m.type() === 'error') { errors.push(m.text()); } });
-    page.on('pageerror', e => errors.push('uncaught: ' + e.message));
+    const { context, page, errors, attempted } = await openPage(browser);
 
     try {
       await page.goto('file:///' + c.path.replace(/\\/g, '/'));
@@ -100,18 +143,39 @@ async function run() {
         if (count < 1) { fail(results, id, 'nothing matched ' + selector); }
       }
 
-      // Canvas content cannot be read from the DOM: cytoscape draws into a
-      // canvas, so every DOM assertion above passes just as happily over a
-      // blank rectangle. A screenshot is the only thing that can tell them
-      // apart, and a PNG of a flat colour is tiny.
+      // Canvas content cannot be read from the DOM: a view that draws into a
+      // canvas passes every DOM assertion above just as happily over a blank
+      // rectangle. A screenshot is the only thing that can tell them apart,
+      // and a PNG of a flat colour is tiny.
+      //
+      // Against the SAME backend rendering an empty payload, measured in this
+      // run on this machine, so nothing is pinned to the hardware that wrote
+      // the check. Locally that ratio is about 12; the requirement has daylight
+      // in it rather than precision.
       await page.waitForTimeout(SETTLE_MS);
-      for (const [selector, minimum] of Object.entries(smoke.MinScreenshotBytes || {})) {
-        const handle = await page.$(selector);
-        if (!handle) { fail(results, id, 'nothing matched ' + selector + ' to screenshot'); continue; }
-        const bytes = (await handle.screenshot({ type: 'png' })).length;
-        if (bytes < minimum) {
-          fail(results, id, selector + ' rendered ' + bytes + ' bytes of PNG, below the ' + minimum
-            + ' a drawn view produces - the view is blank');
+      for (const [selector, required] of Object.entries(smoke.CanvasGrowth || {})) {
+        const drawn = await screenshotBytes(page, selector);
+        if (drawn === null) { fail(results, id, 'nothing matched ' + selector + ' to screenshot'); continue; }
+
+        const empty = await measureEmpty(browser, emptyCache, c.backend, c.baseline, selector);
+        if (empty === null) {
+          fail(results, id, 'nothing matched ' + selector + ' in the empty render, so there is no floor to compare against');
+          continue;
+        }
+        if (empty <= 0) {
+          fail(results, id, selector + ' screenshotted 0 bytes for an empty render, which is not a floor');
+          continue;
+        }
+
+        const ratio = drawn / empty;
+        measured.push({ case: id, selector, drawn, empty, ratio: Number(ratio.toFixed(2)), required });
+
+        // Both absolute numbers in the message. A ratio that fails tells you
+        // less than a ratio that fails and says which two numbers produced it.
+        if (ratio < required) {
+          fail(results, id, selector + ' drew ' + drawn + ' bytes of PNG against ' + empty
+            + ' for an empty payload of the same backend on this machine - ratio '
+            + ratio.toFixed(2) + ', and ' + required + ' is required. The view is blank.');
         }
       }
 
@@ -135,7 +199,14 @@ async function run() {
   await browser.close();
 
   const failed = results.filter(r => !r.ok);
-  console.log(JSON.stringify({ cases: results.length, failed: failed.length, results }, null, 2));
+  console.log(JSON.stringify({
+    viewport: VIEWPORT,
+    deviceScaleFactor: DEVICE_SCALE_FACTOR,
+    cases: results.length,
+    failed: failed.length,
+    canvas: measured,
+    results,
+  }, null, 2));
   process.exit(failed.length ? 1 : 0);
 }
 
