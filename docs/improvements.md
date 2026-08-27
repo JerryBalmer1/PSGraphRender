@@ -22,6 +22,45 @@ thought about yet.
 
 ## Open
 
+### An invented node is drawn on top of a real one — **medium**
+
+With unresolved shown, the orange node the renderer invents lands on the node
+that referenced it. On the six-node `ambiguous` fixture `notify-oncall` occludes
+all but three letters of `rollout`, and hides its own dotted edge, which is why
+the fourth line treatment is still unseen. Not a density effect. *Ledger
+`0008-t1`, found by looking at a screenshot.*
+
+### Two sidebar lists print a name twice and mean two nodes — **medium**
+
+The cycle list and the test order list read `Test-TargetResource,
+Test-TargetResource` on SqlServerDsc. Node ids have been distinct since the
+producer's v0.11.0; these lists show labels, and a label is a name. Whatever
+distinguishes them has to come from the payload, so it is not purely a script
+change. *Ledger `0008-t2`.*
+
+### The uncertain-edge style does not survive density — **large**
+
+Unmistakable at six nodes: two dashed faded arrows to two boxes with the same
+label read as "either of these" without explanation. At 532 nodes the edges are
+a grey crosshatch and 702 dashed out of 1,271 cannot be recovered from the
+drawing. The encoding is correct and the channel is saturated. What carries it at
+that size is the Details panel count. Changing it means choosing another channel,
+which is a design decision about the report's mental model. *Ledger `0007-t1`,
+measured in `0008`.*
+
+### The fill channel is dead on the payload that needs it most — **medium**
+
+All 469 SqlServerDsc functions are one kind, so `ColorBy = structure` paints one
+colour on the only real module anyone has rendered. A metric ramp is one click
+away and is not what the page opens in. Whether the default should depend on
+what the payload contains is a decision. *Ledger `0008-t3`.*
+
+### Nothing checks the README — **small**
+
+Seven code blocks, run once by hand before it shipped. Two byte counts in it
+drift the next time a library is vendored, and the whole thing is a claim about
+current behaviour written by whoever just changed it. *Ledger `0008-t4`.*
+
 ### `Get-HashtableValue` exists in both repositories — **small**
 
 A twenty-line strict-mode-safe accessor. Four moved functions need it and ten
