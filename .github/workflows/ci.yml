@@ -31,6 +31,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Two build tasks shell out to node --check and neither skips when it is
+      # missing, so this is not optional tooling. The version agrees with the
+      # Tools floor in Requirements.psd1; tests/PreTag.Tests.ps1 asserts it.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
       - name: Cache PowerShell modules
         uses: actions/cache@v4
         with:
@@ -42,8 +50,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.powershell }}-psmodules-
 
-      # -Bootstrap installs any missing dependency and then runs the default
-      # task (Clean, Lint, Build, Test), so one invocation is enough.
+      # -Bootstrap installs any missing PowerShell module and then runs the
+      # default task, so one invocation is enough. It does not install tools.
       - name: Bootstrap and test
         shell: ${{ matrix.powershell }} {0}
         run: ./build.ps1 -Bootstrap
