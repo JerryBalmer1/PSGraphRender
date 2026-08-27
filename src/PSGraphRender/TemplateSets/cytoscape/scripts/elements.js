@@ -1,12 +1,13 @@
     // ---- heat ------------------------------------------------------------
-    // A facet CLASSIFIES and a metric MEASURES. Kind gives a node one of five
-    // colours; a metric gives it a position on a scale. ColorBy takes either,
-    // so this is the same fill channel carrying a different kind of fact.
+    // A classification NAMES and a metric MEASURES. Kind gives a node a colour
+    // from theme data; a metric gives it a position on a scale. ColorBy takes
+    // either, so this is the same fill channel carrying a different kind of
+    // fact.
     //
     // METRIC_IDS comes from the payload, not from a list here. Adding a metric
-    // is a change in Get-GraphNodeMetric plus a value in the ColorBy enum, and
-    // no branch anywhere in this file - which is the test the registries in
-    // this subsystem are all held to.
+    // is a change in the producer plus a value in the ColorBy enum, and no
+    // branch anywhere in this file - which is the test the registries in this
+    // subsystem are all held to.
     var METRIC_IDS = (data.metrics && data.metrics.length) ? data.metrics : [];
     var HEAT_RAMP = cfgList('HeatRamp', ['#6e7d8c', '#a8756e', '#d1665a', '#f05340', '#ff3b2f']);
 

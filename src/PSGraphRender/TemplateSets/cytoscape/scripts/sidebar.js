@@ -66,8 +66,8 @@
 
     // ---- colour by -------------------------------------------------------
     // One radio per option, built from the metric ids the PAYLOAD carries plus
-    // 'structure'. Adding a metric is a change in Get-GraphNodeMetric, a value
-    // in the ColorBy enum, and two strings - no branch here. Same shape as
+    // 'structure'. Adding a metric is a change in the producer, a value in the
+    // ColorBy enum, and two strings - no branch here. Same shape as
     // NODE_ACTIONS and FLOW_LAYOUT, and for the same reason.
     //
     // Metric label and hint keys are mechanical: 'Metric' + the id, capitalised.

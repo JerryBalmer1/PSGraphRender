@@ -96,13 +96,47 @@ Describe 'Built module layout' {
 
     It 'keeps a producer command name out of every backend' {
         # Extraction checklist: no producer vocabulary anywhere below the seam.
-        # The rendered document may carry a name a producer handed down; the
-        # shipped backend must not know it.
+        # The rendered document may carry a name a producer handed down at
+        # render time; the shipped backend must not know it.
+        #
+        # This looked for the single literal 'PSModuleGraphEditorLink' until
+        # v0.4.0, which is a check written in the language of one known mistake.
+        # It passed while a partial named two producer commands, a producer's
+        # module, and a producer's source path - and while two script comments
+        # named a third command. Verb-Noun is the SHAPE of the thing, so it
+        # finds the ones nobody reported.
+        $verbNoun = '\b(?:Get|Set|New|Export|Import|Show|Enable|Disable|Invoke|Remove|Test|Add|' +
+            'ConvertTo|ConvertFrom|Resolve|Write|Read|Start|Stop|Update|Find|Select|Measure)-[A-Z][A-Za-z]+\b'
+
+        foreach ($set in $script:Backends) {
+            $offenders = foreach ($file in Get-ChildItem -LiteralPath $set -File -Recurse) {
+                $text = Get-Content -LiteralPath $file.FullName -Raw
+                foreach ($match in [regex]::Matches($text, $verbNoun)) {
+                    $name = $match.Value
+
+                    # A command PowerShell itself ships is not a producer's.
+                    # Import-PowerShellDataFile appears in every Config header,
+                    # describing how the file is read, and that is honest.
+                    $command = Get-Command -Name $name -ErrorAction SilentlyContinue
+                    if ($command -and $command.Source -like 'Microsoft.PowerShell.*') { continue }
+
+                    "$($file.Name) names $name"
+                }
+            }
+
+            @($offenders) -join '; ' | Should-Be '' -Because "$(Split-Path $set -Leaf) must not know a producer's vocabulary"
+        }
+    }
+
+    It 'keeps a producer module name out of every backend' {
+        # The other half. A command is Verb-Noun and findable by shape; a module
+        # name is just a word, so this one has to be a list - and being a list is
+        # exactly why it cannot be the whole check.
         foreach ($set in $script:Backends) {
             $offenders = @(Get-ChildItem -LiteralPath $set -File -Recurse |
-                    Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match 'PSModuleGraphEditorLink' })
+                    Where-Object { (Get-Content -LiteralPath $_.FullName -Raw) -match 'PSModuleGraph' })
 
-            $offenders.Count | Should-Be 0 -Because "$(Split-Path $set -Leaf) names a producer command"
+            @($offenders | ForEach-Object Name) -join '; ' | Should-Be '' -Because "$(Split-Path $set -Leaf) names a producer"
         }
     }
 
