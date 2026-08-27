@@ -380,13 +380,22 @@ task PreTag Build, {
 
     $result = Invoke-Pester -Configuration $config
 
-    # A filtered run that selects nothing succeeds. This task printed 'Pre-tag
+    # A filtered run that executes nothing succeeds. This task printed 'Pre-tag
     # gates passed' against zero tests for four tags, which is the same failure
     # as a lint gate that skips when its tool is missing: a green line for an
     # environment where nothing was checked.
-    if ($result.TotalCount -eq 0) {
-        throw "No test carries the PreTag tag, so the pre-tag gates checked nothing. That is not the same as passing."
+    #
+    # PassedCount + FailedCount, NOT TotalCount. TotalCount counts tests
+    # DISCOVERED, and discovery walks the whole tests/ path before the tag
+    # filter applies - so it is never zero and the guard written against it in
+    # v0.4.0 could not fire. Measured: one untagged test, filtered by a tag
+    # nothing carries, reports Total 1, Passed 0, NotRun 1, Result 'Passed'.
+    $executed = $result.PassedCount + $result.FailedCount
+    if ($executed -eq 0) {
+        throw ("No test carries the PreTag tag, so the pre-tag gates checked nothing " +
+            "($($result.TotalCount) discovered, $($result.NotRunCount) not run). That is not the same as passing.")
     }
+
 
     Write-Build Green "Pre-tag gates passed ($($result.PassedCount) test(s)). Safe to tag." 
 }
