@@ -6,15 +6,23 @@
     # in the design and belongs in docs/improvements.md rather than in a
     # workaround.
     #
-    # It also pays for itself twice. It is genuinely offline-capable - no CDN,
-    # no library, no layout engine - which is half of the vendoring decision in
-    # CLAUDE.md answered by demonstration. And it cannot have inherited a
-    # Cytoscape assumption, because it has never heard of Cytoscape.
+    # It also pays for itself twice. It has no library at all, so it is the one
+    # backend that never had a vendoring question to answer. And it cannot have
+    # inherited a Cytoscape assumption, because it has never heard of Cytoscape.
     Layout = 'layout.html'
 
     Slots  = @{
         STYLES = @('styles/base.css')
         TABLES = @('partials/tables.html')
         SCRIPT = @('scripts/bootstrap.js')
+    }
+    # What "alive" means here. No canvas: this backend puts everything in the
+    # DOM, so counting rows is the whole check and there is nothing a
+    # screenshot would add.
+    Smoke  = @{
+        Text               = @{}
+        Elements           = @{ '#nodes tbody tr' = 'nodes'; '#links tbody tr' = 'links' }
+        Present            = @('#nodes', '#links')
+        MinScreenshotBytes = @{}
     }
 }

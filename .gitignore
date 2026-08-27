@@ -39,3 +39,6 @@ Pester*.xml
 
 # Corpus build output (generated, not source).
 output/corpus/
+
+# Installed by ./build.ps1 -Task BootstrapBrowser, never committed.
+tests/browser/node_modules/

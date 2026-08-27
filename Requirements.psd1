@@ -28,5 +28,11 @@
         # oldest release still receiving security fixes, and a syntax checker
         # that accepts syntax the shipped page cannot use is not a checker.
         Node = @{ MinimumVersion = '18.0.0' }
+
+        # Pinned EXACTLY, for the reason Pester is: a browser harness measures
+        # a browser, and a different Playwright ships a different Chromium.
+        # tests/browser/package.json is what npm reads and must agree with
+        # this; tests/PreTag.Tests.ps1 asserts they do.
+        Playwright = @{ RequiredVersion = '1.49.1' }
     }
 }

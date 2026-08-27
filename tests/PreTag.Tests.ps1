@@ -32,6 +32,24 @@ Describe 'The tools this repository is pinned to' -Tag 'PreTag' {
         $ci | Should-BeGreaterThanOrEqual $floor -Because 'CI must not run a Node older than the build demands'
     }
 
+    It 'agrees between the Requirements pin and what npm installs' {
+        # Two files state the Playwright version: Requirements.psd1, where every
+        # other pin lives, and tests/browser/package.json, which is the one npm
+        # actually reads. A pin nothing compares is a pin in one place and a
+        # guess in the other.
+        $pinned = $script:Requirements.Tools.Playwright.RequiredVersion
+        $package = Get-Content -LiteralPath (Join-Path $script:Repo 'tests/browser/package.json') -Raw |
+            ConvertFrom-Json
+
+        $package.dependencies.playwright | Should-Be $pinned
+    }
+
+    It 'installs the browser harness in CI before the build that needs it' {
+        # The default task includes TestBrowser and TestBrowser throws when the
+        # harness is absent, so a CI leg without this step fails every run.
+        $script:Workflow | Should-MatchString 'build\.ps1 -Task BootstrapBrowser'
+    }
+
     It 'installs Node in CI at all' {
         # The floor above is satisfiable by a runner image that happens to carry
         # a new enough Node. That is luck, not a pin.
@@ -47,5 +65,58 @@ Describe 'The gates that are not allowed to skip' -Tag 'PreTag' {
 
         $build | Should-MatchString 'was not found on PATH'
         $build | Should-NotMatchString '(?m)^\s*if \(-not \$node\) \{\s*return'
+    }
+
+    It 'runs the browser harness from a task that fails when it is absent' {
+        $build = Get-Content -LiteralPath (Join-Path $script:Repo 'PSGraphRender.build.ps1') -Raw
+
+        $build | Should-MatchString 'The browser harness is not installed'
+        $build | Should-MatchString '(?m)^task \. .*TestBrowser'
+    }
+
+    It 'fails a filtered run that selects no test at all' {
+        # THE GUARD ON THE GUARD, and this file is what it guards.
+        #
+        # PreTag printed 'Pre-tag gates passed' against zero tests for four
+        # tags, because a filtered Pester run that selects nothing succeeds.
+        # v0.4.0 added the throw; without this, deleting the throw is invisible.
+        #
+        # Two halves, because either alone is weak. The first says the build
+        # still refuses; the second says the thing it refuses is real.
+        #
+        # PassedCount + FailedCount, and the check is written against that
+        # rather than TotalCount deliberately: TotalCount counts tests
+        # DISCOVERED, discovery walks the whole tests/ path before the tag
+        # filter applies, and the guard v0.4.0 wrote against it could never
+        # fire. Writing this test is what found that.
+        $build = Get-Content -LiteralPath (Join-Path $script:Repo 'PSGraphRender.build.ps1') -Raw
+        $build | Should-MatchString '(?s)\$executed = \$result\.PassedCount \+ \$result\.FailedCount.*?throw'
+        $build | Should-NotMatchString '\$result\.TotalCount -eq 0'
+        $build | Should-MatchString 'checked nothing'
+
+        # In a CHILD PROCESS. Invoke-Pester inside Invoke-Pester inherits the
+        # outer run's filter and reported 7 where 0 was the whole point - an
+        # instrument measuring its own environment, which is the mistake this
+        # repository has now made three times.
+        $probe = Join-Path ([System.IO.Path]::GetTempPath()) "psgr-emptyfilter-$PID.ps1"
+        $harness = Join-Path ([System.IO.Path]::GetTempPath()) "psgr-emptyfilter-run-$PID.ps1"
+        try {
+            Set-Content -LiteralPath $probe -Value "Describe 'p' { It 'a' { 1 | Should-Be 1 } }"
+            Set-Content -LiteralPath $harness -Value @"
+Import-Module '$((Get-Module Pester | Select-Object -First 1).Path)' -Force
+`$c = New-PesterConfiguration
+`$c.Run.Path = '$probe'
+`$c.Run.PassThru = `$true
+`$c.Output.Verbosity = 'None'
+`$c.Filter.Tag = 'NoTestCarriesThisTag'
+`$r = Invoke-Pester -Configuration `$c
+"Passed `$(`$r.PassedCount) Result `$(`$r.Result)"
+"@
+            $reported = "$(& (Get-Process -Id $PID).Path -NoProfile -File $harness | Select-Object -Last 1)".Trim()
+            $reported | Should-Be 'Passed 0 Result Passed' -Because 'a filtered run that executes nothing reports success, which is what the build must refuse to call a pass'
+        }
+        finally {
+            Remove-Item -LiteralPath $probe, $harness -Force -ErrorAction SilentlyContinue
+        }
     }
 }

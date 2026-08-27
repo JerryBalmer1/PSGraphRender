@@ -39,6 +39,16 @@ jobs:
         with:
           node-version: '22.x'
 
+      # Keyed on Requirements.psd1, which is where the Playwright pin lives, so
+      # changing the pin invalidates the browser cache with it.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/AppData/Local/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('Requirements.psd1') }}
+
       - name: Cache PowerShell modules
         uses: actions/cache@v4
         with:
@@ -49,6 +59,13 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.powershell }}-psmodules-${{ hashFiles('Requirements.psd1') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.powershell }}-psmodules-
+
+      # Explicit, and before the default task rather than inside it. Nothing
+      # downloads half a gigabyte of Chromium as a side effect of running a
+      # build - the default task fails by name and points here instead.
+      - name: Install the browser harness
+        shell: ${{ matrix.powershell }} {0}
+        run: ./build.ps1 -Task BootstrapBrowser
 
       # -Bootstrap installs any missing PowerShell module and then runs the
       # default task, so one invocation is enough. It does not install tools.

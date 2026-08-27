@@ -1,0 +1,8 @@
+{
+  "name": "psgraphrender-browser-harness",
+  "private": true,
+  "description": "Headless browser smoke harness. Installed by ./build.ps1 -Task BootstrapBrowser, never automatically.",
+  "dependencies": {
+    "playwright": "1.49.1"
+  }
+}

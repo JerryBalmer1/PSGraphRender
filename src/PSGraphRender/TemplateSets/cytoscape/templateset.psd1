@@ -39,4 +39,29 @@
         SCRIPT_MENU      = @('scripts/menu.js')
         SCRIPT_CONTROLS  = @('scripts/controls.js')
     }
+    # What "this page came alive" means for THIS backend, as data. The headless
+    # harness in tests/browser/ reads it and knows nothing else about any
+    # backend - a harness naming '#c-nodes' would be a second place this
+    # backend's shape is written down, somewhere other than this backend.
+    #
+    # A value names a payload collection, and the assertion is against its count.
+    Smoke  = @{
+        # Selector -> its text must be the count of that collection.
+        Text               = @{ '#c-nodes' = 'nodes'; '#c-edges' = 'links' }
+
+        # Selector -> the number of elements matching it must be that count.
+        Elements           = @{}
+
+        # Selectors that must match at least one element.
+        Present            = @('#cy canvas')
+
+        # Selector -> the smallest PNG a screenshot of it may be.
+        #
+        # This view draws into a canvas, so every DOM assertion above passes
+        # just as happily over a blank rectangle - which is exactly the failure
+        # a smoke test exists to catch. Measured at v0.5.0 on the infrastructure
+        # fixture: 53,971 bytes drawn, 4,413 bytes for a payload with no nodes
+        # in it. 15,000 sits in that gap with room either side.
+        MinScreenshotBytes = @{ '#cy' = 15000 }
+    }
 }

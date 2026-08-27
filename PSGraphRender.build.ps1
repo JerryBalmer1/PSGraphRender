@@ -193,6 +193,136 @@ task LintDocument Build, {
     }
 }
 
+task BootstrapBrowser {
+    # EXPLICIT. Nothing installs a browser as a side effect of running the
+    # build: 500 MB of Chromium arriving because someone typed ./build.ps1 is
+    # not a bootstrap, it is a surprise. TestBrowser fails by name and points
+    # here, the same way the node gates fail by name.
+    $node = Resolve-BuildTool -Name Node -Command node -Purpose 'the browser harness cannot be installed without it'
+    # npm-cli.js under node, not the npm shim. The shim is a .ps1 on Windows
+    # and mangles its own arguments under some hosts - it reported
+    # 'Unknown command: "pm"' here - and node running the CLI directly is the
+    # same program without the wrapper.
+    $npmCli = Join-Path (Split-Path -Parent $node.Path) 'node_modules/npm/bin/npm-cli.js'
+    if (-not (Test-Path -LiteralPath $npmCli)) {
+        throw "npm was not found beside node at $($node.Path). Install a Node distribution that includes npm and re-run."
+    }
+
+    $harness = Join-Path $TestsRoot 'browser'
+    Write-Build Green "Installing the browser harness into $harness ..."
+    Push-Location $harness
+    try {
+        exec { & $node.Path $npmCli install --no-audit --no-fund }
+
+        Write-Build Green 'Downloading Chromium ...'
+        $cli = Join-Path $harness 'node_modules/playwright/cli.js'
+
+        # Linux needs the shared libraries Chromium links against and they are
+        # not in a bare container image. On Windows and macOS the browser is
+        # self-contained and --with-deps has nothing to do.
+        $onWindows = $env:OS -eq 'Windows_NT' -or $PSVersionTable.PSEdition -eq 'Desktop'
+        if (-not $onWindows -and $IsLinux) {
+            exec { & $node.Path $cli install --with-deps chromium }
+        }
+        else {
+            exec { & $node.Path $cli install chromium }
+        }
+    }
+    finally { Pop-Location }
+
+    Write-Build Green 'Browser harness ready. ./build.ps1 -Task TestBrowser'
+}
+
+task TestBrowser Build, {
+    # THE GATE THIS REPOSITORY DID NOT HAVE. Everything else asserts on text
+    # PowerShell produced; this is the only thing that establishes a browser
+    # can run the page.
+    #
+    # Every backend, every fixture, network blocked. Not "network available and
+    # unused" - a harness that can reach a CDN has not tested what it thinks,
+    # which is the ambiguity that decided the vendoring question.
+    $node = Resolve-BuildTool -Name Node -Command node -Purpose 'the page cannot be run without it'
+
+    $harness = Join-Path $TestsRoot 'browser'
+    $playwright = Join-Path $harness 'node_modules/playwright'
+    if (-not (Test-Path -LiteralPath $playwright)) {
+        # By name, not by skipping. Same rule as node: a gate that quietly does
+        # nothing reports success for the environment where it checked nothing.
+        throw ('The browser harness is not installed. Run ./build.ps1 -Task BootstrapBrowser first. ' +
+            'This task fails rather than skipping, deliberately.')
+    }
+
+    $requirements = Import-PowerShellDataFile -LiteralPath (Join-Path $BuildRoot 'Requirements.psd1') -ErrorAction Stop
+    $pinned = $requirements.Tools.Playwright.RequiredVersion
+    $installed = (Get-Content -LiteralPath (Join-Path $playwright 'package.json') -Raw | ConvertFrom-Json).version
+    if ($installed -ne $pinned) {
+        throw "Playwright $installed is installed and Requirements.psd1 pins $pinned. Re-run ./build.ps1 -Task BootstrapBrowser."
+    }
+
+    Import-Module (Join-Path $OutRoot "$ModuleName.psd1") -Force -ErrorAction Stop
+
+    $backends = @(
+        Get-ChildItem -LiteralPath (Join-Path $OutRoot 'TemplateSets') -Directory |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'templateset.psd1') }
+    )
+    $fixtures = @(Get-ChildItem -LiteralPath (Join-Path $TestsRoot 'fixtures/viewmodels') -Filter *.json -File)
+    if ($backends.Count -eq 0 -or $fixtures.Count -eq 0) {
+        throw 'No backend or no fixture to run. The harness found nothing to check, which is not the same as passing.'
+    }
+
+    $scratch = Join-Path ([System.IO.Path]::GetTempPath()) "psgraphrender-browser-$PID"
+    New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+    try {
+        $cases = @(
+            foreach ($backend in $backends) {
+                $manifest = Import-PowerShellDataFile -LiteralPath (Join-Path $backend.FullName 'templateset.psd1')
+                if (-not $manifest.Contains('Smoke')) {
+                    throw ("$($backend.Name) declares no Smoke block in templateset.psd1, so nothing states what " +
+                        'a live page looks like for it. A backend the harness cannot check is a backend the harness skips.')
+                }
+
+                foreach ($fixture in $fixtures) {
+                    $payload = Get-Content -LiteralPath $fixture.FullName -Raw | ConvertFrom-Json
+                    $document = New-RenderDocument -ViewModel $payload.data -Meta $payload.meta `
+                        -Title 'smoke' -TemplateSet $backend.Name
+
+                    $file = Join-Path $scratch "$($backend.Name)-$($fixture.BaseName).html"
+                    [System.IO.File]::WriteAllText($file, $document)
+
+                    @{
+                        backend = $backend.Name
+                        fixture = $fixture.BaseName
+                        path    = $file
+                        counts  = @{
+                            nodes = @($payload.data.nodes).Count
+                            links = @($payload.data.links).Count
+                        }
+                        smoke   = $manifest.Smoke
+                    }
+                }
+            }
+        )
+
+        $jobFile = Join-Path $scratch 'job.json'
+        [System.IO.File]::WriteAllText($jobFile, (@{ cases = $cases } | ConvertTo-Json -Depth 12))
+
+        $output = & $node.Path (Join-Path $harness 'smoke.cjs') $jobFile 2>&1
+        $exit = $LASTEXITCODE
+        $text = ($output | Out-String)
+
+        if ($exit -ne 0) {
+            Write-Host $text
+            throw "The browser harness reported failures across $($cases.Count) case(s)."
+        }
+
+        $report = $text | ConvertFrom-Json
+        Write-Build Green "Browser: $($report.cases) page(s) came alive, network blocked, across $($backends.Count) backend(s) and $($fixtures.Count) fixture(s)"
+    }
+    finally {
+        Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 task Build Clean, {
     New-Item -ItemType Directory -Path $OutRoot -Force | Out-Null
 
@@ -396,7 +526,6 @@ task PreTag Build, {
             "($($result.TotalCount) discovered, $($result.NotRunCount) not run). That is not the same as passing.")
     }
 
-
     Write-Build Green "Pre-tag gates passed ($($result.PassedCount) test(s)). Safe to tag." 
 }
 
@@ -405,4 +534,4 @@ task Import Build, {
     Import-Module -Name $manifest -Force -Verbose
 }
 
-task . Clean, Lint, LintJavaScript, Build, LintDocument, Test
+task . Clean, Lint, LintJavaScript, Build, LintDocument, Test, TestBrowser
