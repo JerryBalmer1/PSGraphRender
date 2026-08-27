@@ -113,7 +113,19 @@ input[type="range"] { width: 100%; }
 .order-step .names { flex: 1 1 auto; font-size: 11px; word-break: break-word; }
 .order-step .names .exp { color: var(--fg); font-weight: 600; }
 .order-step .names .priv { color: var(--fg-dim); }
-.order-cycle { margin-top: 8px; padding: 7px 9px; background: #3a2016; border: 1px solid var(--danger); border-radius: 4px; font-size: 11px; }
+/* Shown only where a name is shared by more than one node - see 0008-t2 in
+   the ledger. Quieter and smaller than the name it follows: it is there to be
+   read when two entries look identical, not to be read first. */
+.order-step .names .qual {
+    color: var(--fg-dim);
+    font-weight: 400;
+    font-size: 10px;
+    opacity: 0.75;
+}
+.order-step .names .qual::before { content: ' \00b7 '; }
+/* break-word because the names in here can carry a path qualifier when two of
+   them are the same name, and an unbroken path ran off the right edge. */
+.order-cycle { margin-top: 8px; padding: 7px 9px; background: #3a2016; border: 1px solid var(--danger); border-radius: 4px; font-size: 11px; word-break: break-word; }
 
 #details { border-top: 1px solid var(--line); padding-top: 12px; }
 #details dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; }

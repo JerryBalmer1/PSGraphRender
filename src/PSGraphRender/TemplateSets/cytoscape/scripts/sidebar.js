@@ -1,3 +1,79 @@
+    // ---- telling two nodes with one label apart --------------------------
+    // A label is not an identity. Two nodes can carry the same name and mean
+    // different things - the `ambiguous` fixture has two definitions of
+    // `restart` in two files, and SqlServerDsc has 234 of its 532 nodes in a
+    // group that shares a name, one of them 32 deep. The lists below showed
+    // names, so `restart` in one test step and `restart` in the next read as
+    // one node listed twice rather than two nodes listed once each. 0008-t2.
+    //
+    // Only an ambiguous name is qualified. Qualifying all 532 would push the
+    // useful part of the list off the side of the sidebar to solve a problem
+    // 54 names have.
+    //
+    // The qualifier is the SHORTEST TRAILING RUN of path segments that
+    // separates one member of the group from the others - the file name alone
+    // where that is enough, more when it is not. A whole path would be up to
+    // 148 characters of shared prefix for one distinguishing segment, and the
+    // shared prefix is the part that says nothing. The id is the fallback: it
+    // is unique by contract, so it always terminates, which a path scheme
+    // alone cannot promise.
+    function pathSegments(value) {
+        return String(value || '').split(/[\\/]/).filter(function (s) { return s; });
+    }
+
+    // Two vendored copies of one file can agree for four segments and differ
+    // only at a version directory, which makes the shortest unique run five
+    // segments and sixty characters - three wrapped lines of qualifier under a
+    // one-line name. The middle of that run is the part that says nothing, so
+    // past three segments it is elided.
+    //
+    // Elision can collide where the full run did not, so the elided forms are
+    // checked and the full run kept when they do. A qualifier that no longer
+    // qualifies is worse than a long one.
+    var QUALIFIER_SEGMENT_LIMIT = 3;
+
+    function elideRun(segments) {
+        if (segments.length <= QUALIFIER_SEGMENT_LIMIT) { return segments.join('/'); }
+        return segments[0] + '/…/' + segments[segments.length - 1];
+    }
+
+    function allDistinct(values) {
+        return values.every(function (v, at) {
+            return values.indexOf(v) === at && values.lastIndexOf(v) === at;
+        });
+    }
+
+    var duplicateQualifier = (function () {
+        var byName = {};
+        internal.forEach(function (n) {
+            if (!byName[n.name]) { byName[n.name] = []; }
+            byName[n.name].push(n);
+        });
+
+        var qualifier = {};
+        Object.keys(byName).forEach(function (name) {
+            var group = byName[name];
+            if (group.length < 2) { return; }
+
+            var parts = group.map(function (n) { return pathSegments(n.path); });
+            var deepest = 0;
+            parts.forEach(function (p) { if (p.length > deepest) { deepest = p.length; } });
+
+            for (var take = 1; take <= deepest; take++) {
+                var runs = parts.map(function (p) { return p.slice(-take); });
+                if (!allDistinct(runs.map(function (r) { return r.join('/'); }))) { continue; }
+
+                var shown = runs.map(elideRun);
+                if (!allDistinct(shown)) { shown = runs.map(function (r) { return r.join('/'); }); }
+                group.forEach(function (n, at) { qualifier[n.id] = shown[at]; });
+                return;
+            }
+            // No depth of path separates them, or they carry no path at all.
+            group.forEach(function (n) { qualifier[n.id] = n.id; });
+        });
+        return qualifier;
+    })();
+
     // ---- test order list -------------------------------------------------
     function renderOrder() {
         var byLevel = [];
@@ -13,8 +89,10 @@
         var html = byLevel.map(function (group, index) {
             group.sort(function (a, b) { return a.name.localeCompare(b.name); });
             var names = group.map(function (n) {
+                var qualifier = duplicateQualifier[n.id];
                 return '<span class="' + (n.isExported ? 'exp' : 'priv') + '">' +
-                       escapeHtml(n.name) + '</span>';
+                       escapeHtml(n.name) + '</span>' +
+                       (qualifier ? '<span class="qual">' + escapeHtml(qualifier) + '</span>' : '');
             }).join(', ');
             return '<div class="order-step"><span class="lvl">' + (index + 1) + '</span>' +
                    '<span class="names">' + names + '</span></div>';
@@ -25,8 +103,14 @@
 
         var cycleBox = document.getElementById('order-cycle');
         if (order.cyclic.length > 0) {
+            // Plain text here rather than the span the step list uses: this
+            // box is one interpolated string, and strings.psd1 holds no markup
+            // so the whole of it is escaped as one blob.
             var byId = {};
-            internal.forEach(function (n) { byId[n.id] = n.name; });
+            internal.forEach(function (n) {
+                var qualifier = duplicateQualifier[n.id];
+                byId[n.id] = qualifier ? n.name + ' (' + qualifier + ')' : n.name;
+            });
             var names = order.cyclic.map(function (id) { return byId[id] || id; }).sort().join(', ');
             // The emphasis is the page's, not the string's: strings.psd1 holds
             // no markup, so a message can never inject an element.
