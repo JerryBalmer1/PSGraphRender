@@ -12,6 +12,47 @@ $script:ManifestPath = Join-Path $SrcRoot "$ModuleName.psd1"
 $script:TestsRoot = Join-Path $BuildRoot 'tests'
 $script:AnalyzerSettings = Join-Path $BuildRoot 'PSScriptAnalyzerSettings.psd1'
 
+function Resolve-BuildTool {
+    <#
+    .SYNOPSIS
+        A tool the build shells out to, at or above the version Requirements.psd1
+        pins, or a throw naming what is missing.
+    .DESCRIPTION
+        Absent is a failure and so is too old. A gate that runs under whatever
+        happens to be on PATH reports on that machine rather than on the code,
+        which is the same reason Pester is pinned exactly.
+    #>
+    param(
+        [Parameter(Mandatory)] [string] $Name,
+        [Parameter(Mandatory)] [string] $Command,
+        [Parameter(Mandatory)] [string] $Purpose
+    )
+
+    $requirements = Import-PowerShellDataFile -LiteralPath (Join-Path $BuildRoot 'Requirements.psd1') -ErrorAction Stop
+    $floor = [version]$requirements.Tools[$Name].MinimumVersion
+
+    $tool = Get-Command $Command -ErrorAction SilentlyContinue
+    if (-not $tool) {
+        # By name, not by skipping. A gate that quietly does nothing when its
+        # tool is missing is worse than no gate: it reports success for the one
+        # environment where it checked nothing.
+        throw ("$Command was not found on PATH, and $Purpose. " +
+            "Install $Name $floor or later and re-run - see docs/development.md. " +
+            'This task fails rather than skipping, deliberately.')
+    }
+
+    $reported = (& $tool.Source --version 2>&1 | Select-Object -First 1) -replace '^v', ''
+    $found = $null
+    if (-not [version]::TryParse(($reported -split '-')[0], [ref]$found)) {
+        throw "$Command --version reported '$reported', which is not a version. Cannot tell whether it meets the $Name floor of $floor."
+    }
+    if ($found -lt $floor) {
+        throw "$Command is $found and Requirements.psd1 pins $Name at $floor or later."
+    }
+
+    [pscustomobject]@{ Path = $tool.Source; Version = $found }
+}
+
 task Clean {
     if (Test-Path -LiteralPath (Join-Path $BuildRoot 'output')) {
         Remove-Item -LiteralPath (Join-Path $BuildRoot 'output') -Recurse -Force
@@ -48,6 +89,97 @@ task Lint {
     if ($results) {
         $results | Format-Table -AutoSize | Out-String | Write-Host
         throw "PSScriptAnalyzer reported $($results.Count) issue(s)."
+    }
+}
+
+task LintJavaScript {
+    # The renderer's largest component is JavaScript and until now nothing in
+    # either repository could tell whether it parsed. render.js was restructured
+    # by about a hundred lines in v0.3.0 and the only thing that would have said
+    # so is a browser nobody ran.
+    #
+    # A hand-rolled brace counter was tried first and reported a false positive
+    # on known-good output, because it cannot tell a regex literal from a
+    # division. The lesson is not to write a better counter.
+    $node = Resolve-BuildTool -Name Node -Command node -Purpose 'backend scripts cannot be syntax-checked without it'
+
+    $templateSets = Join-Path $SrcRoot 'TemplateSets'
+    $scripts = @(Get-ChildItem -LiteralPath $templateSets -Filter *.js -File -Recurse)
+    if ($scripts.Count -eq 0) {
+        throw "No .js found under $templateSets. The check found nothing to check, which is not the same as passing."
+    }
+
+    $failed = @()
+    foreach ($file in $scripts) {
+        # --check parses and discards. It reports a SyntaxError with a line and
+        # a caret, which is the whole value; nothing here needs to run the file.
+        $output = & $node.Path --check $file.FullName 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            $relative = $file.FullName.Substring($templateSets.Length).TrimStart('\', '/')
+            $failed += "$relative`n$($output -join [Environment]::NewLine)"
+        }
+    }
+
+    if ($failed) {
+        $failed | ForEach-Object { Write-Host $_ }
+        throw "node --check rejected $($failed.Count) backend script(s)."
+    }
+
+    Write-Build Green "JavaScript: $($scripts.Count) script(s) parse (node $($node.Version))"
+}
+
+task LintDocument Build, {
+    # The stronger half of the same question. A backend's scripts are spliced
+    # into one <script> block, so each file parsing on its own does not settle
+    # whether what the browser receives does - and the assembled form is the
+    # only one that ever runs. Neither replaces the other: this covers only the
+    # files a templateset.psd1 names, and the per-file task covers the rest.
+    $node = Resolve-BuildTool -Name Node -Command node -Purpose 'the assembled document cannot be syntax-checked without it'
+
+    Import-Module (Join-Path $OutRoot "$ModuleName.psd1") -Force -ErrorAction Stop
+
+    $fixture = Join-Path $TestsRoot 'fixtures/viewmodels/infrastructure.json'
+    $payload = Get-Content -LiteralPath $fixture -Raw | ConvertFrom-Json
+    $backends = @(
+        Get-ChildItem -LiteralPath (Join-Path $OutRoot 'TemplateSets') -Directory |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'templateset.psd1') }
+    )
+
+    $scratch = Join-Path ([System.IO.Path]::GetTempPath()) "psgraphrender-lint-$PID"
+    New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+    try {
+        $failed = @()
+        $blocks = 0
+        foreach ($backend in $backends) {
+            $document = New-RenderDocument -ViewModel $payload.data -Meta $payload.meta `
+                -Title 'lint' -TemplateSet $backend.Name
+
+            # Inline blocks only. A <script src=...> is somebody else's file and
+            # is not in this document to be parsed.
+            $inline = [regex]::Matches($document, '(?s)<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>')
+            foreach ($match in $inline) {
+                $blocks++
+                $path = Join-Path $scratch "$($backend.Name)-$blocks.js"
+                [System.IO.File]::WriteAllText($path, $match.Groups[1].Value)
+                $output = & $node.Path --check $path 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    $failed += "$($backend.Name) inline block $blocks`n$($output -join [Environment]::NewLine)"
+                }
+            }
+        }
+
+        if ($blocks -eq 0) {
+            throw 'No inline script found in any rendered document. Nothing was checked, which is not the same as passing.'
+        }
+        if ($failed) {
+            $failed | ForEach-Object { Write-Host $_ }
+            throw "node --check rejected $($failed.Count) assembled script block(s)."
+        }
+
+        Write-Build Green "Documents: $blocks assembled block(s) parse, across $($backends.Count) backend(s)"
+    }
+    finally {
+        Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -244,4 +376,4 @@ task Import Build, {
     Import-Module -Name $manifest -Force -Verbose
 }
 
-task . Clean, Lint, Build, Test
+task . Clean, Lint, LintJavaScript, Build, LintDocument, Test

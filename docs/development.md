@@ -55,10 +55,24 @@ and nothing makes the two agree. See `docs/improvements.md`.
 ## The build
 
 ```powershell
-./build.ps1                 # Clean, Lint, Build, Test
+./build.ps1                 # Clean, Lint, LintJavaScript, Build, LintDocument, Test
 ./build.ps1 -Task PreTag    # the extra gates that seal an iteration
-./build.ps1 -Bootstrap      # install the pinned dependencies first
+./build.ps1 -Bootstrap      # install the pinned PowerShell modules first
 ```
+
+**Node is required and the build fails without it.** `-Bootstrap` installs
+PowerShell modules and deliberately does not install tools: a build script that
+silently puts a runtime on a developer's machine is not a build script. Install
+Node 18 or later yourself, from <https://nodejs.org> or `winget install
+OpenJS.NodeJS.LTS`, and the floor is pinned under `Tools` in
+`Requirements.psd1`.
+
+Two tasks use it, and neither skips when it is absent. `LintJavaScript` runs
+`node --check` over every `.js` in every backend. `LintDocument` renders a
+fixture through every backend and runs `node --check` over the inline `<script>`
+blocks of the result, which is what the browser actually receives. Each catches
+what the other cannot: the first covers files no `templateset.psd1` names, the
+second covers the splice.
 
 `Build` concatenates `Private/**` (sorted by full path) then `Public/*` into a
 generated `.psm1`, copies the manifest and `TemplateSets/`, and sets

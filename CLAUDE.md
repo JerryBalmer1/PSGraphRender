@@ -112,9 +112,13 @@ because they are violated from outside that document:
 ## Build and test
 
 ```powershell
-./build.ps1                 # Clean, Lint, Build, Test — the entry point
+./build.ps1                 # lint, build, test — the entry point
 ./build.ps1 -Task PreTag    # the extra gates that seal a finished iteration
 ```
+
+**Node is required and the build fails by name without it.** Two tasks run
+`node --check` over the backend scripts and over the assembled document. They do
+not skip; see `docs/development.md`.
 
 **Never call `Invoke-Pester` or `Invoke-Build` directly.** `build.ps1` pins
 Pester to exactly 6.1.0 and verifies it; several 5.x versions are usually also
