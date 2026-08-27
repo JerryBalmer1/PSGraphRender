@@ -100,9 +100,8 @@ like. When a value could be either, ask which one a user would change to alter
 
 **What everything rests on goes at the bottom, and the report opens that way.**
 
-A standing invariant, not a preference. The reasoning and the measurements are
-in `docs/render-architecture.md`, which is the authority. Two rules are here
-because they are violated from outside that document:
+The reasoning and the measurements are in `docs/render-architecture.md`, the
+authority. Two rules are here because they are violated from outside it:
 
 - **`DefaultFlow` ships as `foundation` and stays `foundation`.** Changing which
   view a report opens in is a deliberate decision, and this one is made.
@@ -116,9 +115,8 @@ because they are violated from outside that document:
 ./build.ps1 -Task PreTag    # the extra gates that seal a finished iteration
 ```
 
-**Node is required and the build fails by name without it.** Two tasks run
-`node --check` over the backend scripts and over the assembled document. They do
-not skip; see `docs/development.md`.
+**Node is required and the build fails by name without it.** See
+`docs/development.md`.
 
 **Never call `Invoke-Pester` or `Invoke-Build` directly.** `build.ps1` pins
 Pester to exactly 6.1.0 and verifies it; several 5.x versions are usually also
@@ -194,18 +192,16 @@ what keeps this from becoming scope creep.
 3. Never re-derive the architecture. It is written down. To disagree, propose an
    amendment in one paragraph and wait — do not silently build to a different
    design.
-4. Do not restate the plan before starting. The prompt is the plan.
-5. One architectural delta paragraph, then code. No plan documents, no phased
-   roadmaps, no summaries of what you are about to do.
-6. Do not add comments explaining what the architecture document already
-   explains. Link to it.
-7. When something is ambiguous, ask one specific question. Do not implement both
+4. One architectural delta paragraph, then code. The prompt is the plan: no
+   restatement, no plan documents, no phased roadmaps.
+5. Do not comment what the architecture document explains. Link to it.
+6. When something is ambiguous, ask one specific question. Do not implement both
    options, and do not implement the safer one and mention the other.
 
-**This file has a byte ceiling of 10,000 and `tests/Instructions.Tests.ps1`
-enforces it.** The ceiling follows the tier down and never back up: raising it
-needs a ledger entry saying why, and "we needed more room" is not why. A prune
-is a move down a tier, not a deletion.
+**`tests/Instructions.Tests.ps1` holds this file's byte ceiling, and it
+ratchets: down with the tier, never back up.** Raising it needs a ledger entry
+saying why, and "we needed more room" is not why. A prune is a move down a tier,
+not a deletion. The target is 10,000.
 
 ## Everything else, and where it lives
 

@@ -29,7 +29,7 @@ BeforeAll {
     # whether the file is comprehensible: a file that trends downward in bytes
     # while getting harder to hold in your head has passed this gate and failed
     # its purpose.
-    $script:Ceiling = 11301
+    $script:Ceiling = 11223
 
     # Always-loaded means: read in full before the session knows what the work
     # is. Every CLAUDE.md in the tree, plus anything one of them @-imports.
