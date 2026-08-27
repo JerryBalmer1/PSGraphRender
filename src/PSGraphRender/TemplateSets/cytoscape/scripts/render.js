@@ -25,6 +25,26 @@
         });
     });
 
+    // One rule per resolution the theme names, generated the same way
+    // LINK_KIND_STYLE is. WHICH values exist is the payload's business; that a
+    // named one is drawn in the style the theme gives it is the renderer's.
+    //
+    // Spliced in after LINK_KIND_STYLE so a link that is both classified and
+    // uncertain reads as uncertain: the two rules set different properties
+    // except line-style, and later wins.
+    var EDGE_RESOLUTION_RULES = [];
+    Object.keys(EDGE_RESOLUTION_STYLE).forEach(function (value) {
+        var style = EDGE_RESOLUTION_STYLE[value] || {};
+        var css = {};
+        if (style.LineStyle) { css['line-style'] = style.LineStyle; }
+        if (typeof style.Opacity === 'number') { css.opacity = style.Opacity; }
+        if (!Object.keys(css).length) { return; }
+        EDGE_RESOLUTION_RULES.push({
+            selector: 'edge[resolution = "' + value + '"]',
+            style: css
+        });
+    });
+
     var STYLE = [
             {
                 // The name sits inside the box. A circle with the label
@@ -91,8 +111,9 @@
             { selector: 'edge.flip', style: { 'target-arrow-shape': 'none', 'source-arrow-shape': 'triangle', 'source-arrow-color': EDGE_COLOR } },
             { selector: 'edge[kind = "Unresolved"].flip', style: { 'source-arrow-color': UNRESOLVED_COLOR } },
             // LINK_KIND_STYLE is spliced in here, after the base edge rules and
-            // before .dimmed - see above.
-            ].concat(LINK_KIND_STYLE).concat([
+            // before .dimmed - see above. EDGE_RESOLUTION_RULES follows it so
+            // an uncertain link reads as uncertain whatever else classifies it.
+            ].concat(LINK_KIND_STYLE).concat(EDGE_RESOLUTION_RULES).concat([
             // Out-of-focus nodes stay readable. Hiding them, or fading the
             // label to nothing, loses the context that makes a focused
             // neighbourhood mean anything - you cannot see what it sits among.

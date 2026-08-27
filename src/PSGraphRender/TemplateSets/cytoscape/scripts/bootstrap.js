@@ -112,6 +112,13 @@ const STRINGS = /*__STRINGS__*/ null;
     var LINK_HEX = cfgMap('LinkColor');
     var EDGE_COLOR = cfgText('EdgeColor', '#6b7785');
 
+    // How a link is drawn for each value of links[].resolution, from
+    // theme.psd1. The renderer knows none of the values; it looks up whatever
+    // the payload states, exactly as KIND_HEX looks up a node classification.
+    // An empty map draws every link alike, which is what a payload that states
+    // nothing deserves.
+    var EDGE_RESOLUTION_STYLE = cfgMap('EdgeResolutionStyle');
+
     var meta = META || {};
     var data = DATA;
     var COLOR_BY = cfgText('ColorBy', 'structure');

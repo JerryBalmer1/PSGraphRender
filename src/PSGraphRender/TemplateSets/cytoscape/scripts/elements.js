@@ -113,7 +113,11 @@
                 // is what unclassified should look like. The default used to be
                 // 'CommandReference' - one producer's word for one kind of
                 // link, applied to every producer's unlabelled edges.
-                kind: l.kind || ''
+                kind: l.kind || '',
+                // Contract 1.1.0, optional. '' means the payload did not say,
+                // which is a different fact from any value it could carry - so
+                // it must not be defaulted to one.
+                resolution: l.resolution || ''
             }
         });
     });

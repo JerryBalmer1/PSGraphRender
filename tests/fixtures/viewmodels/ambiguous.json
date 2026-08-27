@@ -1,0 +1,145 @@
+{
+  "meta": {
+    "contractVersion": "1.1.0",
+    "title": "Two libraries, one name",
+    "version": "3.2.0",
+    "generatedAt": "2026-08-27T00:00:00Z",
+    "rootPath": "/srv/stack",
+    "stats": {
+      "nodes": 6,
+      "links": 6,
+      "ambiguous": 3
+    }
+  },
+  "data": {
+    "metrics": ["blastRadius", "reach"],
+    "nodes": [
+      {
+        "id": "task:deploy/web.yaml:restart",
+        "name": "restart",
+        "kind": "Task",
+        "isExported": true,
+        "path": "deploy/web.yaml",
+        "startLine": 12,
+        "metrics": { "blastRadius": 4, "reach": 2 }
+      },
+      {
+        "id": "task:deploy/api.yaml:restart",
+        "name": "restart",
+        "kind": "Task",
+        "isExported": true,
+        "path": "deploy/api.yaml",
+        "startLine": 9,
+        "metrics": { "blastRadius": 4, "reach": 2 }
+      },
+      {
+        "id": "task:deploy/web.yaml:drain",
+        "name": "drain",
+        "kind": "Task",
+        "isExported": false,
+        "path": "deploy/web.yaml",
+        "startLine": 3,
+        "metrics": { "blastRadius": 1, "reach": 3 }
+      },
+      {
+        "id": "task:deploy/api.yaml:drain",
+        "name": "drain",
+        "kind": "Task",
+        "isExported": false,
+        "path": "deploy/api.yaml",
+        "startLine": 4,
+        "metrics": { "blastRadius": 1, "reach": 3 }
+      },
+      {
+        "id": "task:deploy/orchestrate.yaml:rollout",
+        "name": "rollout",
+        "kind": "Task",
+        "isExported": true,
+        "path": "deploy/orchestrate.yaml",
+        "startLine": 1,
+        "metrics": { "blastRadius": 0, "reach": 5 }
+      },
+      {
+        "id": "policy:deploy/policy.yaml:window",
+        "name": "window",
+        "kind": "Policy",
+        "isExported": false,
+        "path": "deploy/policy.yaml",
+        "startLine": 7,
+        "metrics": { "blastRadius": 2, "reach": 0 }
+      }
+    ],
+    "links": [
+      {
+        "source": "task:deploy/orchestrate.yaml:rollout",
+        "target": "task:deploy/web.yaml:restart",
+        "sourceName": "rollout",
+        "targetName": "restart",
+        "kind": "Calls",
+        "resolution": "Ambiguous",
+        "path": "deploy/orchestrate.yaml",
+        "startLine": 4
+      },
+      {
+        "source": "task:deploy/orchestrate.yaml:rollout",
+        "target": "task:deploy/api.yaml:restart",
+        "sourceName": "rollout",
+        "targetName": "restart",
+        "kind": "Calls",
+        "resolution": "Ambiguous",
+        "path": "deploy/orchestrate.yaml",
+        "startLine": 4
+      },
+      {
+        "source": "task:deploy/orchestrate.yaml:rollout",
+        "target": "policy:deploy/policy.yaml:window",
+        "sourceName": "rollout",
+        "targetName": "window",
+        "kind": "Reads",
+        "resolution": "Unique",
+        "path": "deploy/orchestrate.yaml",
+        "startLine": 2
+      },
+      {
+        "source": "task:deploy/web.yaml:restart",
+        "target": "task:deploy/web.yaml:drain",
+        "sourceName": "restart",
+        "targetName": "drain",
+        "kind": "Calls",
+        "resolution": "SameFile",
+        "path": "deploy/web.yaml",
+        "startLine": 14
+      },
+      {
+        "source": "task:deploy/api.yaml:restart",
+        "target": "task:deploy/api.yaml:drain",
+        "sourceName": "restart",
+        "targetName": "drain",
+        "kind": "Calls",
+        "resolution": "SameFile",
+        "path": "deploy/api.yaml",
+        "startLine": 11
+      },
+      {
+        "source": "task:deploy/web.yaml:drain",
+        "target": "policy:deploy/policy.yaml:window",
+        "sourceName": "drain",
+        "targetName": "window",
+        "kind": "Reads",
+        "path": "deploy/web.yaml",
+        "startLine": 5
+      }
+    ],
+    "unresolved": [
+      {
+        "source": "task:deploy/orchestrate.yaml:rollout",
+        "sourceName": "rollout",
+        "targetName": "notify-oncall",
+        "path": "deploy/orchestrate.yaml",
+        "startLine": 8
+      }
+    ],
+    "roots": ["task:deploy/orchestrate.yaml:rollout"],
+    "leaves": ["policy:deploy/policy.yaml:window"]
+  }
+}
