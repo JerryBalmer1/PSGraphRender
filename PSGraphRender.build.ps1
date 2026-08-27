@@ -63,7 +63,7 @@ task Build Clean, {
     [void]$sb.AppendLine('Set-StrictMode -Version Latest')
     # Every source file is concatenated here at the module root, so $PSScriptRoot
     # differs from what the same code sees under the dev loader. Assets resolve
-    # from $script:ModuleRoot in both. See Get-PSModuleGraphAsset.
+    # from $script:ModuleRoot in both. See Get-RenderAssetPath.
     [void]$sb.AppendLine('$script:ModuleRoot = $PSScriptRoot')
     [void]$sb.AppendLine()
 
