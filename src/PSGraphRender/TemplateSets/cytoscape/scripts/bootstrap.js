@@ -291,8 +291,10 @@ const STRINGS = /*__STRINGS__*/ null;
     // First paint. Filters run before the first layout, so nodes that start
     // hidden - unresolved externals are off by default - never occupy space in
     // it. Cytoscape excludes display:none elements from layouts.
+    //
+    // Filter, lay out, fit is one act and not three: every later change to the
+    // visible set does the same three things in the same order, so they are
+    // one call. When they were three, this was the only place all three ran.
     renderOrder();
-    applyFilters();
-    runLayout();
-    fitVisible();
+    applyStructuralFilters();
 }());

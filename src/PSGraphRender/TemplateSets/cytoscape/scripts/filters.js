@@ -34,6 +34,30 @@
         reapplyFocus();
     }
 
+    // A node the reader can see needs a position from a layout that included
+    // it. foundationPositions() places the VISIBLE set - see foundation.js -
+    // so a node hidden when the layout last ran has never been placed at all
+    // and sits at the origin, which is where the top-left node of the drawing
+    // already is.
+    //
+    // That one fact produced three separate ledger threads, none of which
+    // named it: an invented node drawn on top of a real one (0008-t1), two
+    // unresolved targets drawn as one node (0010-t3 - they are two nodes with
+    // two ids, stacked), and unchecking "Exported only" moving nothing
+    // (0010-t2, where 371 of SqlServerDsc's nodes arrived in the same corner).
+    //
+    // The checkboxes relayout and the search box does not. A checkbox is a
+    // decision about which nodes belong on the page and is worth redrawing
+    // for; the search box fires on every keystroke, and a graph that
+    // rearranges itself mid-word is worse than the defect. Search is also
+    // safe: it can only hide nodes a layout has already placed, so it cannot
+    // strand one at the origin.
+    function applyStructuralFilters() {
+        applyFilters();
+        runLayout();
+        fitVisible();
+    }
+
     searchEl.addEventListener('input', applyFilters);
-    exportedOnlyEl.addEventListener('change', applyFilters);
-    showUnresolvedEl.addEventListener('change', applyFilters);
+    exportedOnlyEl.addEventListener('change', applyStructuralFilters);
+    showUnresolvedEl.addEventListener('change', applyStructuralFilters);

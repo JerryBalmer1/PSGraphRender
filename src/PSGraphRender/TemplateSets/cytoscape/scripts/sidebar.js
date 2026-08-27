@@ -57,7 +57,9 @@
             '<span class="swatch" style="background:' + (KIND_HEX[k] || KIND_FALLBACK) + '"></span>' +
             '<span>' + k + '</span><span class="count">' + kindCounts[k] + '</span>';
         kindBox.appendChild(label);
-        label.querySelector('input').addEventListener('change', applyFilters);
+        // Structural, like the two boxes under Filters: ticking a kind back on
+        // reveals nodes, and a revealed node needs a layout that included it.
+        label.querySelector('input').addEventListener('change', applyStructuralFilters);
     });
 
     if (unresolved.length > 0) {
