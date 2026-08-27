@@ -83,7 +83,15 @@ BeforeAll {
     $script:Sizes = @(
         $script:Files | ForEach-Object {
             [pscustomobject]@{
-                Path  = [System.IO.Path]::GetRelativePath($script:Repo, $_).Replace('\', '/')
+                # Substring, not [System.IO.Path]::GetRelativePath. That method
+                # arrived in .NET Core 2.0 and does not exist in the .NET
+                # Framework that Windows PowerShell 5.1 runs on, so it threw
+                # there - and Pester 6 reports an exception escaping a
+                # BeforeAll as "a 'break' or 'continue' statement ... escaped
+                # from your code", which is pester/pester#2669 and points
+                # nowhere near the cause. The whole file's three tests were
+                # lost on that leg, on every tag, until CI ran.
+                Path  = $_.Substring($script:Repo.Length).TrimStart([char]92, [char]47).Replace([char]92, [char]47)
                 Bytes = Measure-NormalisedByte -Path $_
             }
         }
