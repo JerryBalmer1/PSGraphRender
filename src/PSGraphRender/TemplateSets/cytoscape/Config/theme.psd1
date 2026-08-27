@@ -59,6 +59,20 @@
     }
     EdgeColor        = '#6b7785'
 
+    # How a link is drawn for each value of links[].resolution. A producer that
+    # can tell a certain reference from an undecidable one says so; this is
+    # where that stops being a field nobody sees.
+    #
+    # 'Ambiguous' is a PowerShell producer's word, and it is DATA here for the
+    # same reason KindColor's keys are: a producer describing Terraform ships a
+    # theme naming whatever it can distinguish. The renderer knows none of these
+    # values. A resolution the payload states and this map does not name draws
+    # normally, and so does a link that states none - absent means not stated,
+    # which is not the same as certain.
+    EdgeResolutionStyle = @{
+        Ambiguous = @{ LineStyle = 'dashed'; Opacity = 0.45 }
+    }
+
     # NOT a KindColor entry, deliberately. An unresolved node is one the
     # renderer INVENTED for a target the payload names but does not contain -
     # `External` is this renderer's word, not a producer's, and no producer

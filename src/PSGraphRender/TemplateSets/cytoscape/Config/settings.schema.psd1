@@ -83,6 +83,12 @@
             In = 'Theme'; Group = 'Appearance'
             Description = 'One colour per link classification. A kind named here is drawn dashed in its colour; anything else is solid in EdgeColor.'
         }
+        EdgeResolutionStyle = @{
+            Type = 'StyleMap'
+            Default = @{}
+            In = 'Theme'; Group = 'Appearance'
+            Description = 'How a link is drawn for each value of links[].resolution, contract 1.1.0. A value named here is drawn in that style; one that is not, and a link that states none, is drawn normally. The keys are the producer''s words and are never validated.'
+        }
         EdgeColor        = @{
             Type = 'Color'; Default = '#6b7785'
             In = 'Theme'; Group = 'Appearance'

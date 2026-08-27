@@ -119,6 +119,55 @@ function Test-RenderSettingValue {
             return New-Result $true $map ''
         }
 
+        'StyleMap' {
+            # An arbitrary key to a small style descriptor, and the same
+            # argument as ColorMap one step further: a backend drawing a
+            # classification differently cannot know the classifications. They
+            # come from whatever produced the payload.
+            #
+            # The KEYS are never validated - validating them would put the
+            # producer's vocabulary back into the renderer, which is the whole
+            # thing this type exists to prevent. The PROPERTY NAMES are, and
+            # that is not the same rule: LineStyle and Opacity are this
+            # renderer's own words for how a line looks, so a typo in one is a
+            # mistake and must say so rather than quietly drawing nothing.
+            if (-not ($Value -is [System.Collections.IDictionary])) {
+                return New-Result $false $null 'expected a map of name to style'
+            }
+            $lineStyles = @('solid', 'dashed', 'dotted')
+            $map = [ordered]@{}
+            foreach ($key in ($Value.Keys | Sort-Object)) {
+                $style = $Value[$key]
+                if (-not ($style -is [System.Collections.IDictionary])) {
+                    return New-Result $false $null "'$key' is not a style map such as @{ LineStyle = 'dashed'; Opacity = 0.5 }"
+                }
+                $out = [ordered]@{}
+                foreach ($prop in ($style.Keys | Sort-Object)) {
+                    switch ([string]$prop) {
+                        'LineStyle' {
+                            $v = [string]$style[$prop]
+                            if ($lineStyles -notcontains $v) {
+                                return New-Result $false $null "'$key' has LineStyle '$v', not one of: $($lineStyles -join ', ')"
+                            }
+                            $out['LineStyle'] = $v
+                        }
+                        'Opacity' {
+                            $v = $style[$prop] -as [double]
+                            if ($null -eq $v -or $v -lt 0 -or $v -gt 1) {
+                                return New-Result $false $null "'$key' has Opacity '$($style[$prop])', which is not a number from 0 to 1"
+                            }
+                            $out['Opacity'] = $v
+                        }
+                        default {
+                            return New-Result $false $null "'$key' names style property '$prop'; this renderer draws LineStyle and Opacity"
+                        }
+                    }
+                }
+                $map[[string]$key] = $out
+            }
+            return New-Result $true $map ''
+        }
+
         'Enum' {
             $allowed = @(Get-HashtableValue -InputObject $Entry -Key 'Values' -Default @())
             if ($allowed -contains $Value) { return New-Result $true $Value '' }
