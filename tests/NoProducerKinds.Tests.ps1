@@ -122,6 +122,59 @@ Describe 'A renderer that does not know what the nodes are' {
         }
     }
 
+    It 'says no producer word in anything a reader is shown' {
+        # THE HALF THAT WAS MISSING FOR TWELVE VERSIONS.
+        #
+        # `ScaleGuard` opened "This module has {count} nodes" from the
+        # extraction until v0.12.0, in the one banner every large payload shows
+        # on load. Nothing caught it, and the reason is written in
+        # Get-BackendSourceFile: the classification scan above once read every
+        # .psd1 in the tree, reported 'module' out of a comment and 'Enum' out
+        # of a schema type, and was narrowed to .js/.css/.html to stop the false
+        # alarms. The narrowing took the true positive with it.
+        #
+        # This is the narrow version that can come back. It reads VALUES from
+        # strings.psd1 - not keys, not comments, not schema types - and checks
+        # them against the list CLAUDE.md actually forbids, which are words this
+        # renderer has no legitimate reason to say to a reader. A fixture-kind
+        # list cannot be used here: 'output', 'policy', 'calls' and 'references'
+        # are all classifications some fixture carries AND ordinary English, so
+        # that check would be red in its correct state.
+        $forbidden = @('Module', 'PSModule', 'PSModuleGraph', 'Ast', 'Manifest', 'Cmdlet')
+
+        $offenders = foreach ($backend in $script:Backends) {
+            $stringsPath = Join-Path $backend.FullName 'Config/strings.psd1'
+            if (-not (Test-Path -LiteralPath $stringsPath)) { continue }
+
+            $strings = Import-PowerShellDataFile -LiteralPath $stringsPath
+            foreach ($key in $strings.Keys) {
+                $value = [string]$strings[$key]
+                foreach ($word in $forbidden) {
+                    if ($value -match "(?i)\b$([regex]::Escape($word))s?\b") {
+                        "$($backend.Name)/strings.psd1 [$key] says '$word'"
+                    }
+                }
+            }
+        }
+
+        $unique = @($offenders | Select-Object -Unique)
+        $message = "a user-visible string names the producer's domain: $($unique -join '; '). The renderer does not know what its nodes are, and neither does the page."
+        $unique.Count | Should-Be 0 -Because $message
+    }
+
+    It 'reads enough strings for the check above to mean anything' {
+        # The vacuity guard. An empty strings file, a renamed Config directory
+        # or a backend that ships none would make the assertion above pass by
+        # having nothing to assert on.
+        $counted = foreach ($backend in $script:Backends) {
+            $stringsPath = Join-Path $backend.FullName 'Config/strings.psd1'
+            if (Test-Path -LiteralPath $stringsPath) {
+                (Import-PowerShellDataFile -LiteralPath $stringsPath).Keys
+            }
+        }
+        @($counted).Count | Should-BeGreaterThan 20
+    }
+
     It 'colours a classification from theme data rather than from script' {
         # The specific regression. KindColor is a ColorMap, which exists as a
         # schema TYPE precisely because a backend colouring by classification

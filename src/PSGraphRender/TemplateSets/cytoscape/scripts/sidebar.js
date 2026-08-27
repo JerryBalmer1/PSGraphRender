@@ -170,6 +170,7 @@
     }));
 
     document.getElementById('colorby-heading').textContent = str('ColorByHeading');
+    document.getElementById('colorby-encoding').textContent = str('ColorByEncoding');
     document.getElementById('colorby-options').innerHTML = colorByOptions.map(function (o) {
         // Checked is set from config, never from markup - a checked attribute
         // in the partial would make editing settings.psd1 silently do nothing.
@@ -215,13 +216,15 @@
             return '<span class="chip" style="background:' + c + ';border-radius:0"></span>';
         }).join('');
 
+        // The range moved off the line under the strip and onto the line that
+        // says the strip is not an axis. Beside the swatches it read as one.
         return [
             '<div class="row">' + strip + '</div>',
             '<div class="row"><span class="hint">' +
-            escapeHtml(fmt('LegendHeatScale', {
-                metric: str(metricStringKey(metricId)), low: low, high: high
-            })) + '</span></div>',
-            '<div class="row"><span class="hint">' + escapeHtml(str('LegendHeatRank')) + '</span></div>'
+            escapeHtml(fmt('LegendHeatScale', { metric: str(metricStringKey(metricId)) })) +
+            '</span></div>',
+            '<div class="row"><span class="hint">' +
+            escapeHtml(fmt('LegendHeatRank', { low: low, high: high })) + '</span></div>'
         ];
     }
 

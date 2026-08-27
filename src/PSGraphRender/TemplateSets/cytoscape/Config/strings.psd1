@@ -1,4 +1,4 @@
-﻿@{
+@{
     # Every user-visible string in the template scripts. Behaviour lives in
     # settings.psd1, appearance in theme.psd1. See docs/render-architecture.md.
     #
@@ -42,7 +42,13 @@
     # every case except a file:// document. The reader should not have to
     # reconstruct a URL the page is already sitting on.
     EmbeddedViewerUrl             = 'Opened in an embedded viewer, which cannot hand a vscode:// link to the operating system - no prompt appears and nothing reports the failure. Open File Location is disabled here. Re-open this report at {url} in a real browser, or use Copy Editor Link and paste the URI into the Run dialog.'
-    ScaleGuard                    = 'This module has {count} nodes. Above ~{limit} the layout stops being readable, so the view starts filtered to exported functions. Uncheck "Exported only" to see everything.'
+    # Said no producer word and promised no view the page will not give. It used
+    # to open "This module has" and offer to "see everything" - the first is
+    # vocabulary this renderer is not allowed to have, and the second is a
+    # promise MinReadableZoom refuses to keep: past a floor the drawing stops
+    # shrinking and the reader pans instead. Both survived every check because
+    # nothing has ever read a value in this file. See 0013-t1.
+    ScaleGuard                    = 'This graph has {count} nodes. Above ~{limit} the drawing stops being readable, so the view opens filtered to the ones the payload marks exported. Unchecking "Exported only" draws the rest - past this size the page stops zooming out, so expect to pan.'
 
     # -- Header ------------------------------------------------------------
     HeaderVersionPrefix           = 'v'
@@ -58,6 +64,12 @@
     # 'Metric' + the id the payload carries, so adding a metric adds strings
     # here and nothing in a script.
     ColorByHeading                = 'Colour by'
+    # Sits under the radios, not in the legend. The legend has said colour is
+    # rank since before v0.1.0 and nobody has read it, because it is the last
+    # block of a sidebar that scrolls and the choice that needs the caveat is
+    # made eight blocks above it. 0012-t1 was raised as "the legend does not say
+    # this"; the legend says it, out of reach.
+    ColorByEncoding               = 'A kind gets a colour. A metric gets a rank - the bands hold equal numbers of the values that occur, not equal slices of the range - so colour orders the nodes and the number in Details measures them.'
     ColorByStructure              = 'Kind'
     ColorByStructureHint          = 'one colour per kind'
     MetricDependents              = 'Dependents'
@@ -71,10 +83,18 @@
 
     # -- Legend ------------------------------------------------------------
     LegendExported                = 'exported'
-    LegendBorderWidth             = 'thicker border = more direct callers'
-    LegendHeatScale               = '{metric}: {low} to {high}'
-    LegendHeatRank                = 'shaded by rank, not by size - the number is in Details'
-    LegendCalls                   = 'calls'
+    LegendBorderWidth             = 'thicker border = more direct dependents'
+    # Not '{metric}: {low} to {high}'. Under a five-band strip that reads as the
+    # strip's axis, which is the one thing the ramp is not - and the line below
+    # then contradicts it.
+    LegendHeatScale               = '{metric}, coldest to hottest'
+    LegendHeatRank                = 'equal bands of rank, not of value; the range is {low} to {high} and one node''s number is in Details'
+    # The base edge rule, which draws a link the theme names no style for. It
+    # used to say 'calls' - one producer's word for one kind of relationship,
+    # applied to every producer's unlabelled edges, which is the same mistake
+    # elements.js already stopped making when it dropped CommandReference as a
+    # default kind.
+    LegendCalls                   = 'unclassified link'
     # 'LegendLink' + the link classification. The key names a producer's word
     # because this file is DATA - a producer describing Terraform ships its own
     # strings.psd1 with LegendLinkReferences instead. sidebar.js falls back to
