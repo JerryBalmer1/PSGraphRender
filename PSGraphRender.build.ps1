@@ -551,4 +551,24 @@ task Import Build, {
     Import-Module -Name $manifest -Force -Verbose
 }
 
-task . Clean, Lint, LintJavaScript, Build, LintDocument, Test, TestBrowser
+# The chain, stated once. `.` runs it with the browser harness; WithoutBrowser
+# runs it and says out loud that it did not - see task ReportBrowserNotRun.
+$script:CoreTasks = @('Clean', 'Lint', 'LintJavaScript', 'Build', 'LintDocument', 'Test')
+
+task . (@($script:CoreTasks) + 'TestBrowser')
+
+task WithoutBrowser (@($script:CoreTasks) + 'ReportBrowserNotRun')
+
+task ReportBrowserNotRun {
+    # A DECISION, ANNOUNCED. The browser harness runs on one CI leg because the
+    # page a browser loads does not vary by which PowerShell produced it, so
+    # installing half a gigabyte of Chromium three times buys nothing. Every
+    # other gate does vary and runs everywhere.
+    #
+    # It says so by name rather than being absent from a task list. A leg
+    # quietly missing a gate is the failure this repository has now found three
+    # times: a lint gate that skipped, a pre-tag run that selected nothing, and
+    # a guard that could not fire.
+    Write-Build Yellow ('TestBrowser did not run on this leg, deliberately. The browser harness runs on ' +
+        'ubuntu-latest only; see .github/workflows/ci.yml. Every other gate ran here.')
+}

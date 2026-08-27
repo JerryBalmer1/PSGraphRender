@@ -46,8 +46,32 @@ Describe 'The tools this repository is pinned to' -Tag 'PreTag' {
 
     It 'installs the browser harness in CI before the build that needs it' {
         # The default task includes TestBrowser and TestBrowser throws when the
-        # harness is absent, so a CI leg without this step fails every run.
+        # harness is absent, so a browser leg without this step fails every run.
         $script:Workflow | Should-MatchString 'build\.ps1 -Task BootstrapBrowser'
+    }
+
+    It 'runs the browser harness on exactly one CI leg' {
+        # One is a decision: what a browser does with the page does not vary by
+        # which PowerShell produced it. Two would be waste; none would be the
+        # gate quietly not running anywhere.
+        [regex]::Matches($script:Workflow, '(?m)^\s*browser:\s*true\s*$').Count | Should-Be 1
+        [regex]::Matches($script:Workflow, '(?m)^\s*browser:\s*false\s*$').Count | Should-BeGreaterThan 0
+    }
+
+    It 'makes the legs that do not run it say so' {
+        # WithoutBrowser is the whole point: it runs every other gate and then
+        # announces the one it did not. A leg configured with a hand-written
+        # task list would drift from the default chain silently instead.
+        $script:Workflow | Should-MatchString "'WithoutBrowser'"
+
+        $build = Get-Content -LiteralPath (Join-Path $script:Repo 'PSGraphRender.build.ps1') -Raw
+        $build | Should-MatchString '(?m)^task WithoutBrowser .*ReportBrowserNotRun'
+        $build | Should-MatchString 'did not run on this leg, deliberately'
+
+        # And both chains come from one list, so a gate added to the default
+        # cannot go missing from the other.
+        $build | Should-MatchString '(?m)^task \. \(@\(\$script:CoreTasks\) \+'
+        $build | Should-MatchString '(?m)^task WithoutBrowser \(@\(\$script:CoreTasks\) \+'
     }
 
     It 'installs Node in CI at all' {

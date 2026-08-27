@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   test:
-    name: Test (${{ matrix.os }} / ${{ matrix.powershell }})
+    name: Test (${{ matrix.os }} / ${{ matrix.powershell }}${{ matrix.browser && ' + browser' || '' }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -20,20 +20,34 @@ jobs:
         include:
           - os: windows-latest
             powershell: pwsh
+            browser: false
           # Windows PowerShell 5.1 is load-bearing: the manifest claims Desktop
           # compatibility and this leg is the only thing proving it.
           - os: windows-latest
             powershell: powershell
+            browser: false
+          # THE BROWSER LEG, and one is a decision rather than a shortcut. What
+          # a browser does with the page does not vary by which PowerShell
+          # produced it, so installing half a gigabyte of Chromium three times
+          # buys nothing. Ubuntu because it is the cheapest runner and the only
+          # place `playwright install --with-deps` is a real question.
+          #
+          # The other two legs run `-Task WithoutBrowser`, which runs every
+          # other gate and then says out loud that this one did not run. A leg
+          # quietly missing a gate is the failure this repository has found
+          # three times.
           - os: ubuntu-latest
             powershell: pwsh
+            browser: true
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       # Two build tasks shell out to node --check and neither skips when it is
-      # missing, so this is not optional tooling. The version agrees with the
-      # Tools floor in Requirements.psd1; tests/PreTag.Tests.ps1 asserts it.
+      # missing, so this is not optional tooling on any leg. The version agrees
+      # with the Tools floor in Requirements.psd1; tests/PreTag.Tests.ps1
+      # asserts it.
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -42,6 +56,7 @@ jobs:
       # Keyed on Requirements.psd1, which is where the Playwright pin lives, so
       # changing the pin invalidates the browser cache with it.
       - name: Cache Playwright browsers
+        if: matrix.browser
         uses: actions/cache@v4
         with:
           path: |
@@ -60,18 +75,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.powershell }}-psmodules-
 
-      # Explicit, and before the default task rather than inside it. Nothing
-      # downloads half a gigabyte of Chromium as a side effect of running a
-      # build - the default task fails by name and points here instead.
+      # Explicit, and before the build rather than inside it. Nothing downloads
+      # a browser as a side effect of running a build - TestBrowser fails by
+      # name and points here instead.
       - name: Install the browser harness
+        if: matrix.browser
         shell: ${{ matrix.powershell }} {0}
         run: ./build.ps1 -Task BootstrapBrowser
 
       # -Bootstrap installs any missing PowerShell module and then runs the
-      # default task, so one invocation is enough. It does not install tools.
+      # named task, so one invocation is enough. It does not install tools.
       - name: Bootstrap and test
         shell: ${{ matrix.powershell }} {0}
-        run: ./build.ps1 -Bootstrap
+        run: ./build.ps1 -Bootstrap -Task ${{ matrix.browser && '.' || 'WithoutBrowser' }}
 
       - name: Publish test results and coverage
         uses: actions/upload-artifact@v4
