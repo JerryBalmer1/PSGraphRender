@@ -251,7 +251,7 @@ when the ledger was archived.
 | Repository | What it is |
 | --- | --- |
 | [PSModuleGraph](https://github.com/JerryBalmer1/PSModuleGraph) | the producer this renderer was extracted from, and its only consumer today. It builds a view model and hands it over in one call. |
-| PSGraphRenderToHtml | a rendering battery for this module. Not built yet. |
+| [PSGraphRenderToHtml](https://github.com/JerryBalmer1/PSGraphRenderToHtml) | the battery between a producer and this renderer: one producer-graph contract, options, view-model mapping, and a contract battery any producer runs against its own output. v0.1.0. |
 | PSTerraformGraph | a second producer, and the first that is not PowerShell — the real test of the boundary this renderer keeps. Not built yet. |
 | AI.Agent.Claude.PowerShellModuleBuilder | the harness project this repository is now operated from. Its decision 0010 governs how `main` and tags move here. |
 
