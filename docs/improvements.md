@@ -29,21 +29,6 @@ thought about yet.
 
 ## Open
 
-### The skills directory is a copy that makes false claims here — **closed in 0.9.0**
-
-Fixed, and the fork was made deliberate rather than synced: four of the five
-were never the same document. The missing `prune_proposals` gate was built.
-*Ledger `0009-t2`, struck at 0.10.0.*
-
-### No skill here has ever been invoked - **small**
-
-Measured across v0.5.0 to v0.8.0: every iteration closed correctly from
-`CLAUDE.md` and from memory, and no skill body was loaded.
-`instruction-prune` was invoked for the first time in `0009`. Not an argument
-for deleting any of them - a procedure followed correctly from memory is the
-good case - but nothing here has been read under the conditions it was
-written for, and `0005-t1` still says the descriptions are unbudgeted.
-
 ### There is no CHANGELOG — **closed in 0.9.0**
 
 `CHANGELOG.md` exists and says at the top that it was derived from the tags
@@ -77,10 +62,11 @@ stop on.** *Ledger `0013-t2`.*
 
 ### The backlog was not swept when the threads were — **small**
 
-The v0.11.0 triage retired twenty-eight threads in the ledger and left this file
-describing seven of them as open work, including one closed two releases
-earlier. Nothing connects a thread's disposition to the backlog entry that
-describes it, and `docs/threads.json` now knows every disposition. *Ledger
+The v0.11.0 triage retired twenty-eight threads and left this file describing
+seven of them as open work, including one closed two releases earlier. Nothing
+connected a thread's disposition to the backlog entry that describes it. The
+thread record that knew every disposition was deleted at v0.13.0, so this file
+and `constraints.md` are now the only statement of what was settled. *Ledger
 `0013-t5`.*
 
 ### The uncertain-edge style does not survive density — **large**
@@ -134,7 +120,7 @@ That last line was the block and the vendoring decision removed it: the
 libraries ship inside the backend, so an offline `cytoscape` page is a working
 page and a red harness means one thing. `TestBrowser` runs both backends against
 both fixtures with the network blocked, and it was proved able to fail before it
-was trusted — see `knowledge/ledger/0005`.
+was trusted — see `docs/ledger-archive/0005`.
 
 What it still does not do is judge. It says the page loaded, the counts match
 and something was drawn. It says nothing about whether the foundation layout is
@@ -157,18 +143,6 @@ never sees: an apostrophe and an angle bracket in one label, a path with a
 space, a two-node cycle, a metric at range. It is asserted against, but not
 recorded as a golden, so a change in how any of those renders is caught only by
 the specific assertions written for it.
-
-### The instruction tier is still above its stated ceiling — **small**
-
-`CLAUDE.md` targets 10,000 bytes and weighs 10,410, down from 13,659 at v0.1.0.
-"Traps that survived the move" and gravity's reasoning moved down a tier in
-v0.2.0. What is left that could follow: "Build and test" belongs in
-`docs/testing.md` and "Commit" in `docs/development.md`, which is roughly the
-remaining gap between them.
-
-Do not touch "The core constraint", "The contract is the product", or "A
-template set is a rendering backend" - those are true before the work is known,
-which is the test.
 
 ### `Show-RenderDocument` may not belong here — **large, and already open**
 
@@ -209,8 +183,9 @@ before resolving it.
 
 ## Open decisions
 
-Moved out of `CLAUDE.md` at v0.8.1 - they are backlog, not something an agent
-needs to be true before it starts. The rule stayed up there, because it is
+Moved here at v0.8.1 out of the always-loaded instruction tier that this
+repository no longer has - they are backlog, not something that has to be true
+before the work is known. The rule did not move with them, because it is
 violated from outside this file: **do not resolve one of these unilaterally as
 part of an unrelated change - raise it first.**
 

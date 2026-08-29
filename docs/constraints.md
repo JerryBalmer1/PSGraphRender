@@ -1,12 +1,12 @@
 # Constraints
 
 **Things this repository has decided to live with.** Each was a real doubt, each
-was raised as a ledger thread, each was ruled on, and each is here because the
-answer is *"yes, and that is the trade"* rather than *"not yet"*.
+was raised as a thread, each was ruled on, and each is here because the answer
+is *"yes, and that is the trade"* rather than *"not yet"*.
 
 This file exists because an accepted limitation that stays in the thread list is
-not accepted, it is deferred — and the ledger's own measurement is that deferral
-is the state nothing in this project has ever recovered from. Twenty-one of
+not accepted, it is deferred — and the measurement taken across every closure in
+this project is that deferral is the state nothing has ever recovered from. Twenty-one of
 twenty-three closures happened in the very next entry and **none has ever
 happened after four carries**. A thread that will not be worked on and will not
 be struck is a line item that costs a reading every iteration and buys nothing.
@@ -16,7 +16,8 @@ fix it.** If you think one of these is wrong, that is a proposal — raise it,
 do not quietly reverse it.
 
 Retired at **v0.11.0** unless a later entry says otherwise. The thread id is
-kept so the ledger entry that argued it is still findable.
+kept so the entry that argued it is still findable in `docs/ledger-archive/`,
+under the number that prefixes the id.
 
 ## The drawing
 
@@ -92,13 +93,11 @@ developer-tools session away from being tested, and that is the trade.
 
 ## The tooling around it
 
-**The skills are a fork and nothing watches the drift.** `0010-t1`. Five files
-exist in both repositories and are deliberately different as of v0.9.0, because
-four of the five were never the same document — one opened by naming another
-repository's directories. A sync check over documents that describe different
-repositories is a gate whose correct state is red, and those get deleted. What
-holds instead is a rule: **a skill copied between these repositories is reread
-against the destination before it lands.**
+**A sync check over documents that describe different repositories is a gate
+whose correct state is red.** `0010-t1`, and the reason five skill files were
+allowed to be a fork rather than a copy. The skills are gone as of v0.13.0 and
+the thread with them; the rule they established outlives them, because it is
+about gates and not about skills.
 
 **Two of five CI defects were PowerShell 5.1-only, on a leg that had run four
 times.** `0006-t3`. A young CI leg has found what it has found. Nothing here

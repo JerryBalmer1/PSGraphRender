@@ -86,7 +86,7 @@ PSGraphRender/
           strings.psd1
   tests/
     fixtures/viewmodels/*.json  hand-written. No producer runs to make these.
-  knowledge/ledger/             ledger ONLY. The store stays in PSModuleGraph.
+  docs/ledger-archive/          post-mortems to v0.12.0. A record, not a process.
   docs/
 ```
 
@@ -232,9 +232,9 @@ then making the result producer-neutral rather than merely relocated.
 - [x] Suite renders a hand-written fixture with no producer installed
 - [x] `TemplateSets/` holds the reference backend and code privileges none of them
 - [x] A second backend exists and proves the seam
-- [ ] CLAUDE.md pruned toward 10,000; ceiling ratcheted to match  (13,659 at
-      0.1.0, 11,301 at 0.2.0, 11,223 at 0.4.0 — the ratchet works, the target
-      is not reached)
+- [x] The always-loaded instruction tier is gone entirely  (0.13.0 — it was
+      pruned 13,659 → 11,223 bytes between 0.1.0 and 0.4.0 without reaching its
+      10,000 target, and the handoff removed the tier rather than the bytes)
 - [x] Every backend script parses, and the assembled document parses  (0.4.0)
 - [x] Something runs the page  (0.5.0, headless, network blocked, both
       backends, both fixtures — proved able to fail before it was trusted)
@@ -282,6 +282,14 @@ it is here for the same reason.
 and assignments classify PowerShell code, which is precisely what this
 repository must not know about. Mirroring the store would re-couple the two at
 the level the extraction was meant to separate.
+
+**2026-08-29 — the ledger is an archive and the workflow is gone.** `knowledge/`
+was removed and its entries moved to `docs/ledger-archive/`, alongside
+`CLAUDE.md`, `.claude/`, `docs/threads.json` and `tools/threads.ps1`. The entry
+above stands as written: it recorded why the store was never mirrored here, and
+that reasoning is why there was only a ledger to archive. This repository is now
+operated plan-by-plan from the harness project; `docs/HANDOFF.md` is the entry
+point.
 
 **2026-08-26 — Extraction is verified by byte-identity, and nothing else ships
 in that iteration.** A pure move can be proved correct by rendering the same

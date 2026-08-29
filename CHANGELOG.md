@@ -14,9 +14,75 @@ contract release, or the reverse.
 Everything before that date is reconstructed: the entries below say what each
 release changed, and they were derived rather than recorded at the time. For why
 a change was made, and for what could not be verified about it,
-`knowledge/ledger/` is the primary source and this is a reader's index to it.
+`docs/ledger-archive/` is the primary source and this is a reader's index to it.
+Those entries were written under a resident workflow that was removed at
+v0.13.0; they are a record, not a process.
 
 ## [Unreleased]
+
+## [0.13.0] - 2026-08-29
+
+The handoff. This repository no longer operates itself.
+
+### Added
+
+- **`tools/Update-Vendor.ps1`**, the tool the vendor manifests always described
+  in prose. `-Verify` re-hashes every file a manifest lists and names every one
+  that disagrees, not the first; `-Update [-Name] [-PinVersion]` fetches to a
+  temporary file, hashes *that*, and only then replaces the file and rewrites
+  the entry's `Version`, `Url` and `Integrity` together. It refuses a failed
+  download, and refuses a `-PinVersion` whose bytes hash to the value already
+  recorded — writing a new version number over unchanged bytes would make the
+  manifest lie. It rewrites the manifest textually, three lines inside the
+  matched entry, because a round trip through `Import-PowerShellDataFile` would
+  delete the comment header that is most of that file's value. `-WhatIf` is
+  honoured, an entry `Name` containing a path separator is refused, and the
+  file on disk is re-hashed after the copy before the manifest is allowed to
+  claim its hash.
+- **`docs/vendoring.md`** — provenance for both cytoscape libraries, why they
+  are vendored rather than linked, what `tests/Vendor.Tests.ps1` guarantees, the
+  `sourceMappingURL` caveat, and the three places a new template set has to
+  register a vendored file.
+- **`docs/HANDOFF.md`** — the entry point. What this is, the contract and its
+  change protocol, the boundaries, the version ledger, how the repository is
+  operated now, and the seventeen threads that were open when the ledger was
+  archived.
+- **`handoff-begin-2026-08-29`**, an annotated tag on v0.12.0's commit. It marks
+  the boundary: everything before it was operated by the in-repo thread-ledger
+  process, everything after is operated plan-by-plan from the harness project.
+
+### Removed
+
+- **`CLAUDE.md`, `.claude/`, `docs/threads.json`, `tools/threads.ps1`,
+  `tests/Ledger.Tests.ps1` and `tests/Instructions.Tests.ps1`.** The resident
+  agentic workflow. The suite goes 127 to 122 passing and 15 to 9 not-run,
+  which is exactly `Instructions.Tests.ps1`'s five tests and `Ledger.Tests.ps1`'s
+  six `PreTag` tests, and nothing else. No assertion about the renderer changed.
+
+### Changed
+
+- **`knowledge/ledger/` is now `docs/ledger-archive/`**, moved with `git mv` so
+  its history follows. Thirteen post-mortems, plus a README saying they are a
+  record and not a live process.
+- **`ModuleVersion` corrected from `0.11.0` to `0.13.0`.** It was bumped for
+  every tag through v0.11.0 and missed at v0.12.0, so the manifest has been a
+  version behind the tag for one release. `docs/improvements.md` already carried
+  the general observation that nothing enforces the agreement between the
+  manifest and the tag; this is that gap, occurring here.
+- **`docs/testing.md` describes the `PreTag` gate correctly.** It said "today
+  that is one test — an open prune proposal", which named the only `PreTag` test
+  this release deletes and omitted the three in `tests/PreTag.Tests.ps1` that
+  survive. It would have shipped 100% wrong about a gate.
+- Every surviving pointer into deleted machinery was repointed or removed:
+  `README.md`, `docs/constraints.md`, `docs/development.md`,
+  `docs/improvements.md`, `docs/render-architecture.md`, `docs/samples/README.md`,
+  `PSGraphRender.build.ps1`, `scripts/foundation.js` and a comment in
+  `tests/NoProducerKinds.Tests.ps1`. Historical citations of ledger entries were
+  repointed to the archive rather than deleted: they are still true, and the
+  entries they cite still exist.
+
+*No ledger entry. That is the point of this release; `docs/worklog/v0.13.0.md`
+is where the reasoning went instead.*
 
 ## [0.12.0] - 2026-08-27
 

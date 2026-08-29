@@ -135,7 +135,7 @@ Describe 'A renderer that does not know what the nodes are' {
         #
         # This is the narrow version that can come back. It reads VALUES from
         # strings.psd1 - not keys, not comments, not schema types - and checks
-        # them against the list CLAUDE.md actually forbids, which are words this
+        # them against the list docs/HANDOFF.md actually forbids, which are words this
         # renderer has no legitimate reason to say to a reader. A fixture-kind
         # list cannot be used here: 'output', 'policy', 'calls' and 'references'
         # are all classifications some fixture carries AND ordinary English, so

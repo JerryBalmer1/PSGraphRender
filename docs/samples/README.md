@@ -20,7 +20,7 @@ node tools/shoot.cjs <job.json>    # takes the pictures
 
 The table above is what the pages look like. These four were taken to settle
 a specific open thread, and each one settled it against the answer that was
-expected. `knowledge/ledger/0010` says what they showed.
+expected. `docs/ledger-archive/0010` says what they showed.
 
 | Picture | The question | What it showed |
 | --- | --- | --- |
@@ -37,10 +37,10 @@ orange one, and `input[name="colorby"][value="blastRadius"]` for the heat.
 ## The five pairs
 
 **Every `-before.png` was rendered from a worktree at `v0.11.0`, not from the
-working tree**, per `.claude/skills/golden-recording`. A before-shot taken by
+working tree**, never from the working tree itself. A before-shot taken by
 reverting an edit is a picture of a reverted edit.
 
-`knowledge/ledger/0013` is what these settled. They are the first change in
+`docs/ledger-archive/0013` is what these settled. They are the first change in
 this repository verified primarily by eye.
 
 | Pair | Thread | Before | After |
@@ -86,5 +86,5 @@ then, here:
 ## What these were for
 
 Four ledger threads all said the same thing: nobody had opened the page. Every
-claim about the drawing was about its source. `knowledge/ledger/0008` records
+claim about the drawing was about its source. `docs/ledger-archive/0008` records
 what looking at them actually showed, including the parts that do not work.

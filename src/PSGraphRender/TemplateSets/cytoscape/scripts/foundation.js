@@ -10,7 +10,7 @@
     // Bounding the layer width and letting the layer count grow instead is the
     // standard answer (Coffman-Graham with a layer capacity, used iteratively
     // to hit an aspect ratio). Measured on the same graph it comes out near
-    // 2:1. See the gravity rule in CLAUDE.md.
+    // 2:1. See the gravity rule in docs/HANDOFF.md.
 
     // Enough passes to settle, few enough to stay instant. The median heuristic
     // converges fast and alternating direction is what stops it oscillating.

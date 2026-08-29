@@ -34,7 +34,7 @@ a build change.
    in `tests/Module.Quality.Tests.ps1`. The test exists to make the omission
    loud rather than mysterious.
 3. Resolve assets from `$script:ModuleRoot`, never `$PSScriptRoot`. See the trap
-   list in `CLAUDE.md` — this is the one that only breaks in the built module.
+   list in `docs/HANDOFF.md` — this is the one that only breaks in the built module.
 
 ## Adding a setting, a colour, or a string
 
@@ -119,6 +119,10 @@ browser.
 report needs no network. They belong to the backend, not the module: a backend
 needing a different library brings its own and nothing above it knows.
 
+`docs/vendoring.md` is the full account: provenance, why these are not CDN
+links, and the procedure. `tools/Update-Vendor.ps1 -Verify` re-hashes every
+listed file; `-Update` re-fetches and rewrites the record in one operation.
+
 `vendor/vendor.psd1` records each file's source URL, version, licence and the
 SRI hash it was verified against. `tests/Vendor.Tests.ps1` recomputes every hash
 on every run, so replacing a file without updating the manifest fails the build.
@@ -156,7 +160,8 @@ names both candidates, so it does not need to be remembered.
 
 ## Traps that survived the move
 
-Moved down a tier from `CLAUDE.md` at v0.2.0. Every one of these cost a round
+Moved here at v0.2.0 from the always-loaded instruction tier that this
+repository no longer has. Every one of these cost a round
 in the original repository, and none of them is stylistic - but none is true
 before the work is known either, which is what the always-loaded tier is for.
 

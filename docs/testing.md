@@ -1,8 +1,8 @@
 # Testing
 
-On-demand. Read this when writing or changing a test, not before every session.
-`CLAUDE.md` carries only the two facts an agent needs before it starts: run
-`./build.ps1`, and never `Invoke-Pester` or `Invoke-Build` directly.
+On-demand. Read this when writing or changing a test. Two facts come before
+everything else here: run `./build.ps1`, and never call `Invoke-Pester` or
+`Invoke-Build` directly. `docs/HANDOFF.md` states them and says why.
 
 ## Running the suite
 
@@ -23,11 +23,10 @@ versions live in `Requirements.psd1`, not in `build.ps1`.
 `docs/development.md`. **Fixtures are JSON files under
 `tests/fixtures/viewmodels/`**, hand-written and schema-valid.
 
-Both moved down from `CLAUDE.md` at v0.11.0. The *prohibition* on calling
-`Invoke-Pester` directly stayed up there, because it is violated from outside
-this file - which is the rule for what a move leaves behind: a pointer, never a
-summary. The pin's reasoning was already here, and duplicating it into this
-section was caught and undone in the same turn.
+Both were moved here at v0.11.0 from the always-loaded instruction tier that
+this repository no longer has. The *prohibition* on calling `Invoke-Pester`
+directly did not move with them, because it is violated from outside this file;
+it is in `docs/HANDOFF.md`.
 
 ## The two gates in the default build
 
@@ -37,8 +36,9 @@ three green builds before that was noticed. Coverage runs against the built
 `output/PSGraphRender/PSGraphRender.psm1`, so line numbers in coverage reports
 refer to the generated file.
 
-**The instruction budget.** `tests/Instructions.Tests.ps1` fails when the
-always-loaded tier exceeds its ceiling. See `.claude/skills/instruction-prune/SKILL.md`.
+**The browser gate.** `TestBrowser` fails when the harness is not installed,
+rather than skipping. `./build.ps1 -Task BootstrapBrowser` installs it once.
+Nothing downloads a browser as a side effect of running the build.
 
 ## The `PreTag` gate
 
@@ -47,9 +47,22 @@ default `Test` task excludes. They are the seals on a *finished* iteration
 rather than checks on work in progress: the build should stay green while an
 iteration is half done, and the tag should not.
 
-Today that is one test - an open prune proposal that a second iteration ignored
-blocks the next annotated tag. `.claude/skills/iteration-close` runs it at
-step 8, before the tag.
+Three `Describe` blocks, all in `tests/PreTag.Tests.ps1`:
+
+- **The tools this repository is pinned to** — the `Requirements.psd1` floor
+  agrees with what CI installs, the npm pin agrees with what CI installs, CI
+  installs the browser harness before the build that needs it and runs it on
+  exactly one leg, and the legs that do not run it say so.
+- **The gates that are not allowed to skip** — `node --check` and the browser
+  harness are each invoked from a task that *fails* when the tool is absent,
+  rather than one that quietly passes.
+- **A filtered run that selects no test at all fails.** The guard on the guard.
+  It reads `PassedCount + FailedCount` and never `TotalCount`: `TotalCount`
+  counts tests *discovered*, and discovery walks the whole `tests/` path before
+  the tag filter applies, so it is never zero and a guard written against it
+  can never fire — which is what happened for four annotated tags.
+
+Run it before every annotated tag, after the default build is green.
 
 ## Pester 6
 

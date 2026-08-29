@@ -226,12 +226,40 @@ a PowerShell module.
 
 | File | Read it when |
 | --- | --- |
+| [`docs/HANDOFF.md`](docs/HANDOFF.md) | **first.** What this is, the contract, the boundaries, how it is operated, and what is still open. |
+| [`docs/constraints.md`](docs/constraints.md) | before proposing a fix. What this repository has decided to live with, and why. |
 | [`docs/render-architecture.md`](docs/render-architecture.md) | working in `TemplateSets/` or `Private/`. The authority, including the decision log. |
 | [`docs/contract.md`](docs/contract.md) | changing the view model, or writing a producer. |
 | [`docs/testing.md`](docs/testing.md) | writing a test. Pester 6 is not Pester 5. |
 | [`docs/development.md`](docs/development.md) | changing the module's shape. |
+| [`docs/vendoring.md`](docs/vendoring.md) | adding, replacing or updating a third-party file under a backend. |
 | [`docs/improvements.md`](docs/improvements.md) | the backlog and the size rules for taking from it. |
-| `knowledge/ledger/` | why something is the way it is. One entry per release, including what could not be verified. |
+| `docs/ledger-archive/` | why something is the way it is, up to v0.12.0. One entry per release, including what could not be verified. A record, not a live process. |
+
+## How this repository is operated
+
+There is no resident agent workflow here. Until v0.12.0 there was one — an
+always-loaded `CLAUDE.md`, five skills, and a thread ledger — and v0.13.0
+removed it. Work now happens plan by plan, on a `pass-NNNN-*` branch, and
+`main` is fast-forwarded only after a green build. **Read
+[`docs/HANDOFF.md`](docs/HANDOFF.md) first**: it carries the contract, the
+boundaries, the release conventions and the seventeen threads that were open
+when the ledger was archived.
+
+## Related repositories
+
+| Repository | What it is |
+| --- | --- |
+| [PSModuleGraph](https://github.com/JerryBalmer1/PSModuleGraph) | the producer this renderer was extracted from, and its only consumer today. It builds a view model and hands it over in one call. |
+| PSGraphRenderToHtml | a rendering battery for this module. Not built yet. |
+| PSTerraformGraph | a second producer, and the first that is not PowerShell — the real test of the boundary this renderer keeps. Not built yet. |
+| AI.Agent.Claude.PowerShellModuleBuilder | the harness project this repository is now operated from. Its decision 0010 governs how `main` and tags move here. |
+
+A producer talks to this module through
+[`contract/viewmodel.schema.json`](contract/viewmodel.schema.json) and nothing
+else. **Nothing in this list is a dependency of this module** — the renderer
+does not import any of them, and does not know what a PowerShell module, a
+pipeline or a Terraform resource is.
 
 ## Licence
 

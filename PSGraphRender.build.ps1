@@ -510,7 +510,7 @@ task Test Build, {
         $percent = [math]::Round($coverage.CoveragePercent, 2)
         $target = $coverage.CoveragePercentTarget
         if ($percent -lt $target) {
-            throw "Line coverage $percent% is below the target of $target%. Raise coverage, or lower the target deliberately and say so in the ledger."
+            throw "Line coverage $percent% is below the target of $target%. Raise coverage, or lower the target deliberately and say so in the commit message."
         }
         Write-Build Green "Line coverage: $percent% (target $target%)"
     }
