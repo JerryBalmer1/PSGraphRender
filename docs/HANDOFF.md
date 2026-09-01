@@ -198,6 +198,32 @@ prefixes the id.
 | `0013-t2` | No automated gate can see any of the four visual defects fixed at v0.12.0. The check that would catch the placement family is one sentence — after clicking each selector the backend declares, no two visible nodes share a position — but it needs a new declaration in `templateset.psd1`, which is a data shape, so it is logged and stopped on. |
 | `0013-t3` | The strings gate refuses six words and `strings.psd1` still assumes a call graph: three metric hints and a menu label say "call" about edges the payload never classified. A word list is not a rule. |
 | `0013-t4` | The shared-label qualifier has never met a payload with duplicate names and no paths; it falls through to the node id, which on a real module is eighty characters in a 340px sidebar. |
+
+### Pending, raised from outside this repository
+
+**`src/PSGraphRender/PSGraphRender.psd1` cannot be imported directly.** The
+manifest's `RootModule` names `PSGraphRender.psm1`, which the build generates
+into `output/` and which does not exist in `src/`, so:
+
+    Import-Module ./src/PSGraphRender/PSGraphRender.psd1
+
+fails with *"no valid module was found in any module directory"*. Verified in
+pass 0025 of the AI.Agent.Claude.PowerShellModuleBuilder harness; the two
+sibling modules built to the same pattern, PSGraphRenderToHtml and
+PSTerraformGraph, both carry a committed dev loader at
+`src/<Name>/<Name>.psm1` and both import cleanly from source. This repository
+does not.
+
+The fix is a committed dev-loader psm1 that **dot-sources** `Private/**` then
+`Public/*` and exports the same list as the manifest — dot-sources rather than
+concatenates, so `$script:ModuleRoot` means the same thing under both loaders
+and a template or culture directory resolves either way. The harness's
+`powershell-module-scaffold` skill now carries the pattern.
+
+**Not applied here.** Pass 0025 was scoped to leave this repository's code
+untouched, and this is a change to shipped source rather than a note. It is
+recorded so the next pass that may touch PSGraphRender does not rediscover it.
+Until then, import the built module from `output/`.
 | `0013-t5` | Retiring a thread did not retire the backlog entry describing it, so `docs/improvements.md` presented seven already-settled threads as open work. |
 
 `0011-t1`, `0011-t3`, `0012-t3` and `0013-t5` are about the thread machinery
