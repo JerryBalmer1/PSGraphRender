@@ -365,4 +365,41 @@ Import-Module '$manifest' -Force
                 Should-Be ($base.$name | ConvertTo-Json -Compress -Depth 10) -Because "setting '$name' must be untouched"
         }
     }
+
+    It 'changes STRINGS only by adding the three link strings, and moves no shipped value' {
+        # Backlog 64. Get-DocumentCode removes the whole STRINGS block before the
+        # two byte comparisons above, because acceptance B's carve-out for
+        # vscode:// prose is exactly that block and one helper serves both - so
+        # every user-visible string in the renderer is invisible to them. Pass
+        # 0047 added three strings and proved them additive by READING THE DIFF,
+        # which is the thing this gate exists to replace.
+        #
+        # Compared the way CONFIG is compared rather than by widening the byte
+        # comparison: widening it means changing Get-DocumentCode, and that turns
+        # acceptance B's vscode:// assertion red against correct work.
+        #
+        # It lives in this Describe because $script:BaseDoc is expensive - a
+        # clone plus a full build in a child process - and a second file would
+        # pay for it twice.
+        $set = New-ConfiguredTemplateSet -Name 'default-strings'
+        $head = Get-DocumentBlock -Document (New-Document -TemplateSetPath $set) -Name 'STRINGS'
+        $base = Get-DocumentBlock -Document $script:BaseDoc -Name 'STRINGS'
+
+        # NAMED, not counted. A count passes just as happily when one addition
+        # is swapped for another, and the whole claim of an additive change is
+        # about WHICH keys arrived.
+        $baseNames = @($base.PSObject.Properties.Name)
+        @($head.PSObject.Properties.Name | Where-Object { $_ -notin $baseNames } | Sort-Object) |
+            Should-BeCollection @('MenuCopyLink', 'MenuOpenLink', 'ReasonNoTemplate')
+
+        # An existing key may not change value, and may not vanish: a removed key
+        # reads as $null at head against a string at base, so this clause is what
+        # catches a deletion too. Both values go in the message - a gate that says
+        # only "the documents differ" sends the reader back to a 3,000-line diff,
+        # which is what Get-FirstDifference already exists to avoid.
+        foreach ($name in $baseNames) {
+            ($head.$name | ConvertTo-Json -Compress -Depth 10) |
+                Should-Be ($base.$name | ConvertTo-Json -Compress -Depth 10) -Because "string '$name' must be untouched"
+        }
+    }
 }
