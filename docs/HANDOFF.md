@@ -41,6 +41,12 @@ is logged and stopped on rather than taken.
 **Next.** That backlog item wants its own red-first iteration and a version
 bump. Nothing else here is blocked.
 
+### Pass 0045
+
+`PSGraphRender.code-workspace` no longer registers
+`../PSModuleGraph` as a workspace folder — the entry is deleted, and harness
+backlog 60 is closed.
+
 ## What this is
 
 A **generic, data-driven report renderer.** It takes a view model as JSON and
