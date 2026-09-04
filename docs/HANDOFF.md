@@ -13,6 +13,34 @@ Read `docs/constraints.md` early. It lists what this repository has decided
 **not** to fix, with the argument for each. Proposing to fix an accepted
 limitation without having read it is the most likely way to waste a pass.
 
+## State, as of pass 0043
+
+**Where it is.** v0.13.0, no tag taken this pass. `examples/` now holds six
+generated reports — three layouts, a theme pair, a node-link demo — each with
+the checked-in viewmodel that produced it, a 1600x900 screenshot, and a
+paste-able command that rebuilds it. `README.md` leads with the foundation
+screenshot and an Examples table; [`examples/README.md`](../examples/README.md)
+is the full index.
+
+**What pass 0043 did here.** Documentation and generated artifacts only. **No
+`src/` file was changed**, and no example required one. Configuration reaches
+this renderer through a template-set directory, so
+[`examples/Build-Examples.ps1`](../examples/Build-Examples.ps1) materialises a
+temporary overlay of the shipped `cytoscape` set, edits `Config/settings.psd1`
+or `Config/theme.psd1` in it, and passes `-TemplateSetPath`. That is the seam a
+third-party backend uses, and it is why generating six variants edited nothing.
+
+**What it found.** One capability gap, logged and not taken: a node link can
+only ever be an editor scheme, because `vsCodeUriFor` in
+`scripts/editor-link.js` hardcodes `vscode://file/` and no setting names an
+alternative. The examples wanted forge links for a report attached to a pull
+request and could not have them. See **A node link can only ever be an editor
+scheme** in [`docs/improvements.md`](improvements.md) — it is **large**, so it
+is logged and stopped on rather than taken.
+
+**Next.** That backlog item wants its own red-first iteration and a version
+bump. Nothing else here is blocked.
+
 ## What this is
 
 A **generic, data-driven report renderer.** It takes a view model as JSON and

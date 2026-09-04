@@ -1,7 +1,37 @@
 # PSGraphRender
 
+[![CI](https://github.com/JerryBalmer1/PSGraphRender/actions/workflows/ci.yml/badge.svg)](https://github.com/JerryBalmer1/PSGraphRender/actions/workflows/ci.yml)
+[![Module 0.13.0](https://img.shields.io/badge/module-0.13.0-blue)](CHANGELOG.md)
+[![Contract 1.1.0](https://img.shields.io/badge/view%20model%20contract-1.1.0-6ddf6d)](contract/viewmodel.schema.json)
+[![PowerShell 5.1+](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE)](src/PSGraphRender/PSGraphRender.psd1)
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-lightgrey)](LICENSE)
+
 **A generic, data-driven report renderer.** It takes a graph as JSON and writes
 one self-contained interactive HTML page.
+
+![PSGraphRender rendering its own function surface](examples/layouts/foundation.png)
+
+<sup>PSGraphRender's own 24 functions, in the foundation layout. Open
+[the report](examples/layouts/foundation.html) — it is one file, no server,
+no network.</sup>
+
+## Examples
+
+Every report below is committed, with the JSON that produced it and the command
+that rebuilds it. Run each from the repository root.
+
+| Example | What it shows | Artifacts | Regenerate |
+| --- | --- | --- | --- |
+| **Foundation layout** | The opening view: vertical, with what everything rests on sunk to the bottom. | [html](examples/layouts/foundation.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/layouts/foundation.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only foundation` |
+| **Test order layout** | Dependencies first. Nothing in a step depends on anything in a later step. | [html](examples/layouts/testorder.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/layouts/testorder.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only testorder` |
+| **Call flow layout** | Callers first, left to right, with the arrow on the callee. | [html](examples/layouts/callflow.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/layouts/callflow.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only callflow` |
+| **Theme — shipped** | One colour per classification, from `Config/theme.psd1`. | [html](examples/theme/default.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/theme/default.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only default` |
+| **Theme — contrast** | The same graph and layout under [a different theme file](examples/input/theme-contrast.psd1). No code changed. | [html](examples/theme/contrast.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/theme/contrast.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only contrast` |
+| **Node links** | Right-click a node to open its source, built from `rootPath` + `path` + `startLine`. | [html](examples/links/editor-links.html) · [input](examples/input/links-viewmodel.json) · [png](examples/links/editor-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links` |
+
+The three layouts are the complete value set of the `DefaultFlow` setting, not a
+selection — see [`examples/README.md`](examples/README.md) for the full index,
+the determinism note, and why the node-link example ships inert.
 
 **The producer can be written in any language.** The boundary is
 [`contract/viewmodel.schema.json`](contract/viewmodel.schema.json) — JSON
@@ -152,7 +182,7 @@ layout, its partials, styles, scripts and four config files.
 `cytoscape` is the reference implementation and is not privileged in code;
 `plain` renders the same payload as a table in 1% of the bytes.
 
-```
+```text
 TemplateSets/<name>/
   templateset.psd1     what to assemble, and the Smoke block the browser gate reads
   layout.html          slots: <!--__SLOT_X__--> and /*__SLOT_X__*/
