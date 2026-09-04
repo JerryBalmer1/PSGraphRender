@@ -1,12 +1,12 @@
 # Examples
 
-Seven generated reports, every one of them committed here with the input that
+Eight generated reports, every one of them committed here with the input that
 produced it, a screenshot, and the exact command that rebuilds it. Nothing in
 this directory was hand-edited after generation.
 
 Open any `.html` file straight from a clone — the reports are self-contained.
-There is no build step, no server and no network fetch: Cytoscape and dagre are
-vendored into the document itself.
+There is no build step, no server and no network fetch: every library each
+backend needs is vendored into the document itself.
 
 Every command below is run **from the repository root**.
 
@@ -19,8 +19,9 @@ Every command below is run **from the repository root**.
 | **Theme — contrast** | The same viewmodel and the same layout under a different [`theme-contrast.psd1`](input/theme-contrast.psd1). Node colours change, and `Reads`/`Validates` links become dashed in their own colours. No code changed. | [html](theme/contrast.html) · [input](input/ecosystem-viewmodel.json) · [png](theme/contrast.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only contrast` |
 | **Node links — editor** | `LinkMode = 'editor'`. Right-click a node for *Open File Location* and *Copy Editor Link*, built from `meta.rootPath` plus the node's own `path` and `startLine`. The links here are inert on purpose — see below. | [html](links/editor-links.html) · [input](input/links-viewmodel.json) · [png](links/editor-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links` |
 | **Node links — GitHub** | `LinkMode = 'hrefTemplate'` with `LinkHrefTemplate` set to a `blob/main/{relativePath}#L{line}` URL. The same payload and the same layout as the row above; one setting different, and the links are live. | [html](links/forge-links.html) · [input](input/links-viewmodel.json) · [png](links/forge-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only forge` |
+| **Three dimensions** | A different **backend**, not a different setting: the `forcegraph3d` template set draws the same viewmodel as the three layout rows above with a force simulation in three dimensions. Click an item for what it is and where it lives; the links are the same live GitHub URLs as the row above. | [html](threed/forcegraph3d.html) · [input](input/ecosystem-viewmodel.json) · [png](threed/forcegraph3d.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only threed` |
 
-Rebuild all seven with `pwsh -NoProfile -File examples/Build-Examples.ps1`.
+Rebuild all eight with `pwsh -NoProfile -File examples/Build-Examples.ps1`.
 
 ## The three layouts are the module's own list
 
@@ -65,6 +66,30 @@ for the two settings and
 [`templateset.psd1`](../src/PSGraphRender/TemplateSets/cytoscape/templateset.psd1)
 for the `SlotsBySetting` block that does the choosing.
 
+## The row that changes the backend rather than a setting
+
+Every row but the last varies **configuration**: a flow, a theme file, a link
+mode. The last one varies the **backend**, and it is the only row that does.
+
+The same payload renders through
+[`forcegraph3d`](../src/PSGraphRender/TemplateSets/forcegraph3d/) with no
+producer involved, no contract change and no `.ps1` edit anywhere — a template
+set is a directory, and that claim is what this row is evidence for. Put
+[`layouts/foundation.png`](layouts/foundation.png) and
+[`threed/forcegraph3d.png`](threed/forcegraph3d.png) beside each other: twenty-four
+items and thirty-four links, drawn twice, from one file neither backend wrote.
+
+It is deliberately **not** feature-parity with the reference backend. There is no
+sidebar, no filtering and no focus mode — the sidebar is Cytoscape-backend
+machinery, and a second elaborate backend would prove the seam while hiding any
+defect in it behind its own machinery. What it does carry is the whole link-mode
+registry: all three modes, resolved at assembly, with the same five tokens.
+
+Two things differ from the rows above and both are honest consequences rather
+than omissions. It has no `-Flow`, because `DefaultFlow` is a cytoscape setting
+and this backend has no views to choose between. And its page is about 1.3 MB
+against roughly 620 KB, because the library it vendors is larger.
+
 ## How a setting reaches the renderer
 
 `New-RenderDocument` has no `-Setting` parameter, by design. Configuration
@@ -76,7 +101,8 @@ layout, `Config/theme.psd1` for appearance — and passing that directory as
 
 That is the same seam a third-party backend uses, which is the point:
 generating these examples never edited the renderer.
-[`Build-Examples.ps1`](Build-Examples.ps1) does exactly that.
+[`Build-Examples.ps1`](Build-Examples.ps1) does exactly that. Which backend it
+copies is a field on each row, defaulting to `cytoscape`.
 
 ## Determinism
 

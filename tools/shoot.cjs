@@ -75,9 +75,17 @@ async function main() {
     if (shot.menuAt) {
       const box = await (await page.$(shot.menuAt.over || '#cy')).boundingBox();
       const points = shot.menuAt.points || [[0.5, 0.5]];
+      const button = shot.menuAt.button || 'right';
+      const hover = shot.menuAt.hover || 0;
       let opened = false;
       for (const [fx, fy] of points) {
-        await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy, { button: 'right' });
+        const x = box.x + box.width * fx, y = box.y + box.height * fy;
+        // A view that raycasts in its animation frame has not decided what is
+        // under the pointer when a move and a press arrive together. Off unless
+        // the job asks, so a backend that hit-tests on the event is driven
+        // exactly as it always was.
+        if (hover) { await page.mouse.move(x, y); await page.waitForTimeout(hover); }
+        await page.mouse.click(x, y, { button: button });
         await page.waitForTimeout(150);
         if (await page.$$eval(shot.menuAt.menu || '#node-menu > *', els => els.length)) { opened = true; break; }
       }

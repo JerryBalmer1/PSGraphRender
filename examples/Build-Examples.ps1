@@ -33,7 +33,7 @@
 [CmdletBinding()]
 param(
     [Parameter()]
-    [ValidateSet('all', 'foundation', 'testorder', 'callflow', 'default', 'contrast', 'links', 'forge')]
+    [ValidateSet('all', 'foundation', 'testorder', 'callflow', 'default', 'contrast', 'links', 'forge', 'threed')]
     [string] $Only = 'all',
 
     [Parameter()]
@@ -58,18 +58,26 @@ Import-Module -Name $manifest -Force -ErrorAction Stop
 $module = Get-Module -Name PSGraphRender
 Write-Host "PSGraphRender $($module.Version) from $($module.Path)"
 
-$shippedSet = Join-Path (Split-Path -Parent $module.Path) 'TemplateSets/cytoscape'
-if (-not (Test-Path -LiteralPath $shippedSet)) {
-    throw "PSGraphRender $($module.Version) ships no cytoscape template set. Looked in '$shippedSet'."
+$setsRoot = Join-Path (Split-Path -Parent $module.Path) 'TemplateSets'
+function Get-ShippedSet {
+    param([string] $Name)
+
+    $path = Join-Path $setsRoot $Name
+    if (-not (Test-Path -LiteralPath (Join-Path $path 'templateset.psd1'))) {
+        throw "PSGraphRender $($module.Version) ships no '$Name' template set. Looked in '$path'."
+    }
+    $path
 }
 
 # -- overlay helpers ---------------------------------------------------------
 function New-Overlay {
     <#
-        A caller-owned copy of the shipped backend. Returns its path.
+        A caller-owned copy of one shipped backend. Returns its path.
     #>
+    param([string] $Set = 'cytoscape')
+
     $dir = Join-Path ([System.IO.Path]::GetTempPath()) ('psgraphrender-example-' + [guid]::NewGuid().ToString('n'))
-    Copy-Item -LiteralPath $shippedSet -Destination $dir -Recurse -Force
+    Copy-Item -LiteralPath (Get-ShippedSet -Name $Set) -Destination $dir -Recurse -Force
     return $dir
 }
 
@@ -126,6 +134,7 @@ function Invoke-Render {
     param(
         [string] $InputFile,
         [string] $OutputFile,
+        [string] $Set = 'cytoscape',
         [string] $Flow,
         [string] $ThemeFile,
         [string] $LinkMode,
@@ -134,7 +143,7 @@ function Invoke-Render {
     )
 
     $payload = Get-Content -LiteralPath $InputFile -Raw | ConvertFrom-Json
-    $overlay = New-Overlay
+    $overlay = New-Overlay -Set $Set
     try {
         if ($Flow) { Set-OverlayFlow -OverlayPath $overlay -Flow $Flow }
         if ($ThemeFile) { Set-OverlayTheme -OverlayPath $overlay -ThemeFile $ThemeFile }
@@ -182,6 +191,19 @@ $builds = @(
         LinkHrefTemplate = 'https://github.com/JerryBalmer1/PSGraphRender/blob/main/{relativePath}#L{line}'
         Title = 'Node links - hrefTemplate mode, opening a node on GitHub'
     }
+    # A different BACKEND, not a different setting - the first example here that
+    # varies the one thing every other row holds fixed. Same payload as the
+    # three layout rows, so the two drawings are of the same data and can be put
+    # side by side.
+    #
+    # No Flow: DefaultFlow is a cytoscape setting and this backend has no view
+    # to choose between. Overlaying it would write a key with no schema entry
+    # and warn at every render, which is what the config split is for.
+    @{ Name = 'threed'; Set = 'forcegraph3d'; Input = $ecosystem; Out = 'threed/forcegraph3d.html'
+        LinkMode = 'hrefTemplate'
+        LinkHrefTemplate = 'https://github.com/JerryBalmer1/PSGraphRender/blob/main/{relativePath}#L{line}'
+        Title = 'Three dimensions - the same view model, a different backend'
+    }
 )
 
 foreach ($b in $builds) {
@@ -190,7 +212,8 @@ foreach ($b in $builds) {
     Invoke-Render `
         -InputFile $b.Input `
         -OutputFile (Join-Path $examplesRoot $b.Out) `
-        -Flow $b.Flow `
+        -Set $(if ($b.ContainsKey('Set')) { $b.Set } else { 'cytoscape' }) `
+        -Flow $(if ($b.ContainsKey('Flow')) { $b.Flow } else { $null }) `
         -ThemeFile $(if ($b.ContainsKey('Theme')) { $b.Theme } else { $null }) `
         -LinkMode $(if ($b.ContainsKey('LinkMode')) { $b.LinkMode } else { $null }) `
         -LinkHrefTemplate $(if ($b.ContainsKey('LinkHrefTemplate')) { $b.LinkHrefTemplate } else { $null }) `
