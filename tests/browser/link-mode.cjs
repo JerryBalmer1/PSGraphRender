@@ -19,23 +19,40 @@ const DEVICE_SCALE_FACTOR = 1;
 const SETTLE_MS = 500;
 const READY_TIMEOUT_MS = 15000;
 
-// Right-click points, in order, as fractions of the canvas box. A one-node
-// payload fits to the centre, so the first point is nearly always the hit; the
-// rest are a scan for the case where layout puts it elsewhere. Scanning rather
-// than asking the page where its nodes are, for the reason in the header.
+// Probe points, in order, as fractions of the canvas box. A one-node payload
+// fits to the centre, so the first point is nearly always the hit; the rest are
+// a scan for the case where layout puts it elsewhere. Scanning rather than
+// asking the page where its nodes are, for the reason in the header.
 const PROBE_POINTS = [
   [0.5, 0.5], [0.5, 0.42], [0.5, 0.58], [0.42, 0.5], [0.58, 0.5],
   [0.5, 0.35], [0.5, 0.65], [0.35, 0.5], [0.65, 0.5]
 ];
 
-async function openNodeMenu(page) {
-  const box = await (await page.$('#cy')).boundingBox();
+// Where a backend's canvas is, what opens a node's actions on it, and where
+// those actions land. Named by the JOB rather than assumed here: this file
+// drives more than one backend now, and a selector written into the harness
+// would be a second place a backend's shape is stated - the design bug the
+// Smoke block exists to avoid. The defaults are cytoscape's, so a job written
+// before this file grew the fields behaves exactly as it did.
+const DEFAULTS = { canvas: '#cy', menu: '#node-menu', button: 'right', ready: '#cy canvas' };
+
+function selectorsFor(job) {
+  return {
+    canvas: job.canvas || DEFAULTS.canvas,
+    menu: job.menu || DEFAULTS.menu,
+    button: job.button || DEFAULTS.button,
+    ready: job.ready || DEFAULTS.ready
+  };
+}
+
+async function openNodeMenu(page, sel) {
+  const box = await (await page.$(sel.canvas)).boundingBox();
 
   for (const [fx, fy] of PROBE_POINTS) {
-    await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy, { button: 'right' });
+    await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy, { button: sel.button });
     await page.waitForTimeout(120);
 
-    const count = await page.$$eval('#node-menu > *', els => els.length);
+    const count = await page.$$eval(sel.menu + ' > *', els => els.length);
     if (count > 0) { return true; }
   }
   return false;
@@ -44,8 +61,8 @@ async function openNodeMenu(page) {
 // Every item the menu offers, as data. Anchors and buttons are different
 // elements on purpose - the registry renders a real link for anything that
 // hands a URI to another application - so both are reported.
-async function readMenu(page) {
-  return page.$$eval('#node-menu > *', els => els.map(el => ({
+async function readMenu(page, sel) {
+  return page.$$eval(sel.menu + ' > *', els => els.map(el => ({
     tag: el.tagName.toLowerCase(),
     text: (el.textContent || '').trim(),
     // getAttribute, not .href: the property resolves relative URLs against the
@@ -74,20 +91,24 @@ async function runCase(browser, job) {
   // than ignoring, so a hung dialog cannot be mistaken for a passing case.
   page.on('dialog', async d => { dialogs.push(d.message()); await d.dismiss(); });
 
+  const sel = selectorsFor(job);
   const result = { case: job.id, ok: false, message: '', menu: [], dialogs, errors };
 
   try {
     await page.goto('file:///' + job.file.replace(/\\/g, '/'), { waitUntil: 'load', timeout: READY_TIMEOUT_MS });
-    await page.waitForSelector('#cy canvas', { timeout: READY_TIMEOUT_MS });
-    await page.waitForTimeout(SETTLE_MS);
+    await page.waitForSelector(sel.ready, { timeout: READY_TIMEOUT_MS });
+    // A force simulation is still moving when the canvas first exists, so a
+    // fixed settle is not enough for every backend. The job may ask for longer;
+    // the default is the one cytoscape has always used.
+    await page.waitForTimeout(job.settle || SETTLE_MS);
 
-    const opened = await openNodeMenu(page);
+    const opened = await openNodeMenu(page, sel);
     if (!opened) {
       result.message = 'no node menu opened at any probe point - the payload drew no reachable node';
       return result;
     }
 
-    result.menu = await readMenu(page);
+    result.menu = await readMenu(page, sel);
     const anchors = result.menu.filter(m => m.tag === 'a');
     const hrefs = anchors.map(m => m.href).filter(Boolean);
     result.hrefs = hrefs;

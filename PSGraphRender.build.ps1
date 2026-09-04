@@ -455,10 +455,10 @@ task TestLinkMode Build, {
         }
 
         function New-ModeSet {
-            param([string] $Name, [hashtable] $Setting)
+            param([string] $Name, [hashtable] $Setting, [string] $Backend)
 
             $dest = Join-Path $scratch "set-$Name"
-            Copy-Item -LiteralPath (Join-Path $OutRoot 'TemplateSets/cytoscape') -Destination $dest -Recurse -Force
+            Copy-Item -LiteralPath (Join-Path $OutRoot "TemplateSets/$Backend") -Destination $dest -Recurse -Force
 
             $file = Join-Path $dest 'Config/settings.psd1'
             $text = [System.IO.File]::ReadAllText($file)
@@ -480,6 +480,11 @@ task TestLinkMode Build, {
             $dest
         }
 
+        # The five behaviours, stated once and run against EVERY backend that
+        # declares link modes. Written per-backend, the second backend's cases
+        # would be the first's retyped, and the day a sixth behaviour is added
+        # it lands in one of them - which is how a backend ends up with its own
+        # quietly weaker idea of what a link mode is.
         $specs = @(
             @{ id = 'editor'; payload = $plain; expect = 'prefix'; prefix = 'vscode://file/'
                 setting = @{ LinkMode = 'editor' }
@@ -507,17 +512,68 @@ task TestLinkMode Build, {
             }
         )
 
-        $cases = @(
-            foreach ($spec in $specs) {
-                $set = New-ModeSet -Name $spec.id -Setting $spec.setting
-                $file = Join-Path $scratch "$($spec.id).html"
-                [System.IO.File]::WriteAllText($file, (New-RenderDocument -ViewModel $spec.payload `
-                            -Meta $meta -Title "link mode $($spec.id)" -TemplateSetPath $set))
+        # How each backend's node actions are reached. Three fields: the element
+        # to click in, the button that opens the actions, and the container they
+        # land in. tests/browser/link-mode.cjs defaults to cytoscape's, so a
+        # backend whose shape matches needs no entry.
+        #
+        # THIS IS A SECOND PLACE A BACKEND'S SHAPE IS WRITTEN DOWN, and that is
+        # the same defect the Smoke block was invented to remove from
+        # tests/browser/smoke.cjs. It is here rather than in each
+        # templateset.psd1 for one reason: putting it there means editing
+        # cytoscape's manifest, and this pass's no-regression control is that
+        # cytoscape does not move at all. Logged rather than worked around
+        # silently - see docs/improvements.md.
+        $LINK_PROBE = @{
+            cytoscape    = @{ canvas = '#cy'; menu = '#node-menu'; button = 'right' ; ready = '#cy canvas' }
+            forcegraph3d = @{ canvas = '#fg'; menu = '#fg-actions'; button = 'left' ; ready = '#fg canvas'
+                # A force simulation is still moving when the canvas first
+                # exists. The probe clicks a point, so it has to click after the
+                # node has stopped arriving at it.
+                settle = 3000
+            }
+        }
 
-                $case = @{ id = $spec.id; file = $file; expect = $spec.expect }
-                if ($spec.Contains('prefix')) { $case['prefix'] = $spec.prefix }
-                if ($spec.Contains('forbid')) { $case['forbidInHref'] = $spec.forbid }
-                $case
+        # Which backends have link modes at all, discovered from the manifests.
+        # `plain` renders a table and has no node action, so it declares no
+        # SlotsBySetting and is skipped - which is not a failure and is not a
+        # silent inclusion either.
+        $probes = @(
+            foreach ($backend in (Get-ChildItem -LiteralPath (Join-Path $OutRoot 'TemplateSets') -Directory)) {
+                $manifestPath = Join-Path $backend.FullName 'templateset.psd1'
+                if (-not (Test-Path -LiteralPath $manifestPath)) { continue }
+                $manifest = Import-PowerShellDataFile -LiteralPath $manifestPath
+                if (-not $manifest.Contains('SlotsBySetting')) { continue }
+                if (-not $manifest.SlotsBySetting.Contains('LinkMode')) { continue }
+                if (-not $LINK_PROBE.ContainsKey($backend.Name)) {
+                    # By name, not by skipping. A backend that grew link modes
+                    # and no way to drive them is a gate quietly checking one
+                    # fewer thing than the build reports.
+                    throw ("$($backend.Name) declares link modes and this task does not know how to reach its " +
+                        'node actions. Add an entry to $LINK_PROBE above; a backend the probe skips is a mode nobody checked.')
+                }
+                [pscustomobject]@{ Name = $backend.Name; Probe = $LINK_PROBE[$backend.Name] }
+            }
+        )
+        if ($probes.Count -eq 0) {
+            throw 'No backend declares a link mode. The probe found nothing to drive, which is not the same as passing.'
+        }
+
+        $cases = @(
+            foreach ($probe in $probes) {
+                foreach ($spec in $specs) {
+                    $id = "$($probe.Name)/$($spec.id)"
+                    $set = New-ModeSet -Name "$($probe.Name)-$($spec.id)" -Setting $spec.setting -Backend $probe.Name
+                    $file = Join-Path $scratch "$($probe.Name)-$($spec.id).html"
+                    [System.IO.File]::WriteAllText($file, (New-RenderDocument -ViewModel $spec.payload `
+                                -Meta $meta -Title "link mode $id" -TemplateSetPath $set))
+
+                    $case = @{ id = $id; file = $file; expect = $spec.expect }
+                    foreach ($key in @($probe.Probe.Keys)) { $case[$key] = $probe.Probe[$key] }
+                    if ($spec.Contains('prefix')) { $case['prefix'] = $spec.prefix }
+                    if ($spec.Contains('forbid')) { $case['forbidInHref'] = $spec.forbid }
+                    $case
+                }
             }
         )
 
