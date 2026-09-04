@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Node links - open a node's source in your editor</title>
+<title>Node links - editor mode, opening a node in your own editor</title>
 <style>
 :root {
     --bg: #12161c;
@@ -407,7 +407,7 @@ input[type="range"] { width: 100%; }
 
 <div id="app" hidden>
     <header>
-        <h1 id="hdr-title">Node links - open a node's source in your editor</h1>
+        <h1 id="hdr-title">Node links - editor mode, opening a node in your own editor</h1>
         <span class="version" id="hdr-version"></span>
         <div class="counts">
             <span><b id="c-nodes">0</b> nodes</span>
@@ -746,10 +746,10 @@ const DATA = {
 };
 const META = {
   "contractVersion": "1.1.0",
-  "title": "Node links - open a node's source in your editor",
-  "version": "0.13.0",
+  "title": "Node links",
+  "version": "0.14.0",
   "rootPath": "REPLACE-WITH-YOUR-CLONE-PATH",
-  "generatedAt": "2026-09-03",
+  "generatedAt": "2026-09-04",
   "stats": {
     "nodes": 8,
     "links": 10,
@@ -790,6 +790,8 @@ const CONFIG = {
   "LinkColor": {
     "Inherits": "#f2c14e"
   },
+  "LinkHrefTemplate": "",
+  "LinkMode": "editor",
   "MinReadableZoom": 0.45,
   "NodeFontSize": 10.0,
   "NodeHeight": 24.0,
@@ -848,10 +850,12 @@ const STRINGS = {
   "LibraryMissingBody": "This report has the library it needs embedded in it, so this is not a network problem. The file may be truncated, or a content security policy may be blocking scripts inside the page. Generating the report again is the first thing to try.",
   "LibraryMissingHeading": "The graph library did not load",
   "MenuCopyEditorLink": "Copy Editor Link",
+  "MenuCopyLink": "Copy Link",
   "MenuCopyPath": "Copy Path",
   "MenuDiagnostics": "Diagnostics",
   "MenuOpenCallSite": "Open Call Site",
   "MenuOpenFileLocation": "Open File Location",
+  "MenuOpenLink": "Open Link",
   "MenuReasonSeparator": " — ",
   "MetricBlastRadius": "Blast radius",
   "MetricBlastRadiusHint": "everything that breaks if this changes",
@@ -867,6 +871,7 @@ const STRINGS = {
   "ReasonEmbedded": "not available in an embedded viewer, open the report in a browser",
   "ReasonNoFile": "no file recorded",
   "ReasonNoRootPath": "root path unknown",
+  "ReasonNoTemplate": "LinkHrefTemplate is not set",
   "ScaleGuard": "This graph has {count} nodes. Above ~{limit} the drawing stops being readable, so the view opens filtered to the ones the payload marks exported. Unchecking \"Exported only\" draws the rest - past this size the page stops zooming out, so expect to pan.",
   "SelectionActionClear": "Clear selection",
   "SelectionActionCopyLinks": "Copy editor links",

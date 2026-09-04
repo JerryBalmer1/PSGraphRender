@@ -33,7 +33,7 @@
 [CmdletBinding()]
 param(
     [Parameter()]
-    [ValidateSet('all', 'foundation', 'testorder', 'callflow', 'default', 'contrast', 'links')]
+    [ValidateSet('all', 'foundation', 'testorder', 'callflow', 'default', 'contrast', 'links', 'forge')]
     [string] $Only = 'all',
 
     [Parameter()]
@@ -94,6 +94,28 @@ function Set-OverlayFlow {
     [System.IO.File]::WriteAllText($file, ($text -replace $pattern, ('${1}''' + $Flow + '''')))
 }
 
+function Set-OverlayLinkMode {
+    param([string] $OverlayPath, [string] $Mode, [string] $Template)
+
+    # Same in-place replacement as Set-OverlayFlow, and for the same reason: a
+    # minimal settings.psd1 would reset every other setting to its schema
+    # default. Both keys are shipped values, so both lines exist to replace -
+    # asserted rather than assumed, because a silent no-op here would render the
+    # DEFAULT mode and look like the feature is missing.
+    $file = Join-Path $OverlayPath 'Config/settings.psd1'
+    $text = [System.IO.File]::ReadAllText($file)
+
+    foreach ($pair in @(@{ Key = 'LinkMode'; Value = $Mode }, @{ Key = 'LinkHrefTemplate'; Value = $Template })) {
+        if ($null -eq $pair.Value) { continue }
+        $pattern = "(?m)^(\s*$($pair.Key)\s*=\s*)'[^']*'"
+        if ($text -notmatch $pattern) {
+            throw "Could not set $($pair.Key) in '$file' - the settings file has no $($pair.Key) line to replace."
+        }
+        $text = $text -replace $pattern, ('${1}''' + $pair.Value + '''')
+    }
+    [System.IO.File]::WriteAllText($file, $text)
+}
+
 function Set-OverlayTheme {
     param([string] $OverlayPath, [string] $ThemeFile)
 
@@ -105,7 +127,10 @@ function Invoke-Render {
         [string] $InputFile,
         [string] $OutputFile,
         [string] $Flow,
-        [string] $ThemeFile
+        [string] $ThemeFile,
+        [string] $LinkMode,
+        [string] $LinkHrefTemplate,
+        [string] $Title
     )
 
     $payload = Get-Content -LiteralPath $InputFile -Raw | ConvertFrom-Json
@@ -113,11 +138,12 @@ function Invoke-Render {
     try {
         if ($Flow) { Set-OverlayFlow -OverlayPath $overlay -Flow $Flow }
         if ($ThemeFile) { Set-OverlayTheme -OverlayPath $overlay -ThemeFile $ThemeFile }
+        if ($LinkMode) { Set-OverlayLinkMode -OverlayPath $overlay -Mode $LinkMode -Template $LinkHrefTemplate }
 
         $document = New-RenderDocument `
             -ViewModel $payload.data `
             -Meta $payload.meta `
-            -Title $payload.meta.title `
+            -Title $(if ($Title) { $Title } else { $payload.meta.title }) `
             -TemplateSetPath $overlay
 
         $dir = Split-Path -Parent $OutputFile
@@ -143,7 +169,19 @@ $builds = @(
     @{ Name = 'callflow'; Input = $ecosystem; Out = 'layouts/callflow.html'; Flow = 'callflow' }
     @{ Name = 'default'; Input = $ecosystem; Out = 'theme/default.html'; Flow = 'foundation' }
     @{ Name = 'contrast'; Input = $ecosystem; Out = 'theme/contrast.html'; Flow = 'foundation'; Theme = $contrastTheme }
-    @{ Name = 'links'; Input = $linksInput; Out = 'links/editor-links.html'; Flow = 'callflow' }
+    @{ Name = 'links'; Input = $linksInput; Out = 'links/editor-links.html'; Flow = 'callflow'
+        LinkMode = 'editor'
+        Title = 'Node links - editor mode, opening a node in your own editor'
+    }
+    # The same payload, the same layout, one setting different - and links that
+    # actually go somewhere from a committed file. hrefTemplate never reads
+    # meta.rootPath, so the placeholder in the input stays put and no machine
+    # path is baked in: the URL is built from each node's own relative path.
+    @{ Name = 'forge'; Input = $linksInput; Out = 'links/forge-links.html'; Flow = 'callflow'
+        LinkMode = 'hrefTemplate'
+        LinkHrefTemplate = 'https://github.com/JerryBalmer1/PSGraphRender/blob/main/{relativePath}#L{line}'
+        Title = 'Node links - hrefTemplate mode, opening a node on GitHub'
+    }
 )
 
 foreach ($b in $builds) {
@@ -153,7 +191,10 @@ foreach ($b in $builds) {
         -InputFile $b.Input `
         -OutputFile (Join-Path $examplesRoot $b.Out) `
         -Flow $b.Flow `
-        -ThemeFile $(if ($b.ContainsKey('Theme')) { $b.Theme } else { $null })
+        -ThemeFile $(if ($b.ContainsKey('Theme')) { $b.Theme } else { $null }) `
+        -LinkMode $(if ($b.ContainsKey('LinkMode')) { $b.LinkMode } else { $null }) `
+        -LinkHrefTemplate $(if ($b.ContainsKey('LinkHrefTemplate')) { $b.LinkHrefTemplate } else { $null }) `
+        -Title $(if ($b.ContainsKey('Title')) { $b.Title } else { $null })
 }
 
 Write-Host 'done.'

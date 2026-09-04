@@ -1,10 +1,10 @@
 {
   "meta": {
     "contractVersion": "1.1.0",
-    "title": "Node links - open a node's source in your editor",
-    "version": "0.13.0",
+    "title": "Node links",
+    "version": "0.14.0",
     "rootPath": "REPLACE-WITH-YOUR-CLONE-PATH",
-    "generatedAt": "2026-09-03",
+    "generatedAt": "2026-09-04",
     "stats": {
       "nodes": 8,
       "links": 10,

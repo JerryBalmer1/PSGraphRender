@@ -1,6 +1,6 @@
 # Examples
 
-Six generated reports, every one of them committed here with the input that
+Seven generated reports, every one of them committed here with the input that
 produced it, a screenshot, and the exact command that rebuilds it. Nothing in
 this directory was hand-edited after generation.
 
@@ -17,9 +17,10 @@ Every command below is run **from the repository root**.
 | **Call flow layout** | Callers first, left to right, `network-simplex` ranked. The arrow stays on the callee. | [html](layouts/callflow.html) · [input](input/ecosystem-viewmodel.json) · [png](layouts/callflow.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only callflow` |
 | **Theme — shipped** | The palette the module ships: one colour per classification, from `Config/theme.psd1`. | [html](theme/default.html) · [input](input/ecosystem-viewmodel.json) · [png](theme/default.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only default` |
 | **Theme — contrast** | The same viewmodel and the same layout under a different [`theme-contrast.psd1`](input/theme-contrast.psd1). Node colours change, and `Reads`/`Validates` links become dashed in their own colours. No code changed. | [html](theme/contrast.html) · [input](input/ecosystem-viewmodel.json) · [png](theme/contrast.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only contrast` |
-| **Node links** | Right-click a node for *Open file location* and *Copy editor link*. Both are built from `meta.rootPath` plus the node's own `path` and `startLine`. | [html](links/editor-links.html) · [input](input/links-viewmodel.json) · [png](links/editor-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links` |
+| **Node links — editor** | `LinkMode = 'editor'`. Right-click a node for *Open File Location* and *Copy Editor Link*, built from `meta.rootPath` plus the node's own `path` and `startLine`. The links here are inert on purpose — see below. | [html](links/editor-links.html) · [input](input/links-viewmodel.json) · [png](links/editor-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links` |
+| **Node links — GitHub** | `LinkMode = 'hrefTemplate'` with `LinkHrefTemplate` set to a `blob/main/{relativePath}#L{line}` URL. The same payload and the same layout as the row above; one setting different, and the links are live. | [html](links/forge-links.html) · [input](input/links-viewmodel.json) · [png](links/forge-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only forge` |
 
-Rebuild all six with `pwsh -NoProfile -File examples/Build-Examples.ps1`.
+Rebuild all seven with `pwsh -NoProfile -File examples/Build-Examples.ps1`.
 
 ## The three layouts are the module's own list
 
@@ -32,24 +33,37 @@ and they match the `FLOW_LAYOUT` table in
 one for one. If a fourth layout is ever added, this directory is short an
 example and the two sources say so.
 
-## Why the links example does not open anything
+## Why the editor example does not open anything, and the GitHub one does
 
 `meta.rootPath` in [`links-viewmodel.json`](input/links-viewmodel.json) is the
-literal string `REPLACE-WITH-YOUR-CLONE-PATH`, so the editor links in the
-committed report are inert placeholders. That is deliberate: an absolute path
-baked into a committed artifact names the machine that generated it, and these
-files are meant to be read from a clone by someone who is not its author.
+literal string `REPLACE-WITH-YOUR-CLONE-PATH`, so the editor links in
+[`editor-links.html`](links/editor-links.html) are inert placeholders. That is
+deliberate: an absolute path baked into a committed artifact names the machine
+that generated it, and these files are meant to be read from a clone by someone
+who is not its author.
 
-To see live links, put your own clone path in that field and rebuild:
+To see live editor links, put your own clone path in that field and rebuild:
 
 ```powershell
 pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links
 ```
 
-The action then emits `vscode://file/<your path>/<node path>:<line>:1`. The
-scheme is the renderer's and is not configurable today — see
-[`docs/improvements.md`](../docs/improvements.md) for the open item on making
-node links choose between an editor scheme and an href template.
+The action then emits `vscode://file/<your path>/<node path>:<line>:1`.
+
+[`forge-links.html`](links/forge-links.html) has no such problem, and that is
+the point of it. `hrefTemplate` mode never reads `meta.rootPath` at all: a URL
+is built from each node's own relative path, which is a fact about the
+repository rather than about anyone's disk. So its links work from a committed
+file, on anyone's machine, and the placeholder above stays exactly where it is.
+
+The two pages differ by one setting. Which mode a report is built with is
+decided when the document is **assembled**, not in the browser — so
+`forge-links.html` contains no `vscode://` construction at all, and a report
+built with `LinkMode = 'none'` contains no link machinery of any kind. See
+[`Config/settings.schema.psd1`](../src/PSGraphRender/TemplateSets/cytoscape/Config/settings.schema.psd1)
+for the two settings and
+[`templateset.psd1`](../src/PSGraphRender/TemplateSets/cytoscape/templateset.psd1)
+for the `SlotsBySetting` block that does the choosing.
 
 ## How a setting reaches the renderer
 
@@ -62,7 +76,7 @@ layout, `Config/theme.psd1` for appearance — and passing that directory as
 
 That is the same seam a third-party backend uses, which is the point:
 generating these examples never edited the renderer.
-[`Build-Examples.ps1`](Build-Examples.ps1) is 150 lines and does exactly that.
+[`Build-Examples.ps1`](Build-Examples.ps1) does exactly that.
 
 ## Determinism
 

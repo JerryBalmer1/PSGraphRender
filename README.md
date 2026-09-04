@@ -27,11 +27,13 @@ that rebuilds it. Run each from the repository root.
 | **Call flow layout** | Callers first, left to right, with the arrow on the callee. | [html](examples/layouts/callflow.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/layouts/callflow.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only callflow` |
 | **Theme — shipped** | One colour per classification, from `Config/theme.psd1`. | [html](examples/theme/default.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/theme/default.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only default` |
 | **Theme — contrast** | The same graph and layout under [a different theme file](examples/input/theme-contrast.psd1). No code changed. | [html](examples/theme/contrast.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/theme/contrast.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only contrast` |
-| **Node links** | Right-click a node to open its source, built from `rootPath` + `path` + `startLine`. | [html](examples/links/editor-links.html) · [input](examples/input/links-viewmodel.json) · [png](examples/links/editor-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links` |
+| **Node links — editor** | Right-click a node to open its source in your editor, built from `rootPath` + `path` + `startLine`. | [html](examples/links/editor-links.html) · [input](examples/input/links-viewmodel.json) · [png](examples/links/editor-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links` |
+| **Node links — GitHub** | The same report with `LinkMode = 'hrefTemplate'`: one setting, and the links point at the forge instead. | [html](examples/links/forge-links.html) · [input](examples/input/links-viewmodel.json) · [png](examples/links/forge-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only forge` |
 
 The three layouts are the complete value set of the `DefaultFlow` setting, not a
 selection — see [`examples/README.md`](examples/README.md) for the full index,
-the determinism note, and why the node-link example ships inert.
+the determinism note, and why one node-link example ships inert while the
+other does not.
 
 **The producer can be written in any language.** The boundary is
 [`contract/viewmodel.schema.json`](contract/viewmodel.schema.json) — JSON

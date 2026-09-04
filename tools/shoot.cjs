@@ -62,6 +62,31 @@ async function main() {
     }
     if ((shot.clicks || []).length) { await page.waitForTimeout(shot.afterClickMs || 1500); }
 
+    // A real right-click, for a picture of a context menu. The clicks above go
+    // through the DOM because they are checkboxes; this one cannot, because the
+    // node it has to hit is drawn on a canvas and the menu opens on the graph
+    // library's own event. Points are fractions of the box so the job file does
+    // not carry pixel coordinates that only hold at one viewport.
+    //
+    // Scanning rather than asking the page where its nodes are: nothing here is
+    // allowed to reach inside the document, for the same reason the link probe
+    // in tests/browser is not - exposing the instance for tooling would put a
+    // global into every shipped report.
+    if (shot.menuAt) {
+      const box = await (await page.$(shot.menuAt.over || '#cy')).boundingBox();
+      const points = shot.menuAt.points || [[0.5, 0.5]];
+      let opened = false;
+      for (const [fx, fy] of points) {
+        await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy, { button: 'right' });
+        await page.waitForTimeout(150);
+        if (await page.$$eval(shot.menuAt.menu || '#node-menu > *', els => els.length)) { opened = true; break; }
+      }
+      // Reported, never silent. A picture of a menu that did not open is a
+      // picture of the thing the example exists to show, missing.
+      if (!opened) { errors.push('no menu opened at any of ' + points.length + ' point(s)'); }
+      await page.waitForTimeout(shot.afterMenuMs || 400);
+    }
+
     const out = path.join(job.outDir, shot.id + '.png');
     if (shot.selector) {
       const handle = await page.$(shot.selector);
