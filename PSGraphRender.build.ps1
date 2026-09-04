@@ -357,6 +357,127 @@ task TestBrowser Build, {
     }
 }
 
+# What a node link DOES, as opposed to what the document says. Separate from
+# TestBrowser because it asks a different question: TestBrowser establishes that
+# a page came alive, this establishes that the link a live page offers is the one
+# configuration asked for. Both need a browser; neither is a substitute.
+task TestLinkMode Build, {
+    $node = Resolve-BuildTool -Name Node -Command node -Purpose 'a link is not a link until a browser resolves it'
+
+    $harness = Join-Path $TestsRoot 'browser'
+    $playwright = Join-Path $harness 'node_modules/playwright'
+    if (-not (Test-Path -LiteralPath $playwright)) {
+        # By name, not by skipping - the same rule as TestBrowser. A gate that
+        # quietly does nothing reports success for the environment where it
+        # checked nothing.
+        throw ('The browser harness is not installed. Run ./build.ps1 -Task BootstrapBrowser first. ' +
+            'This task fails rather than skipping, deliberately.')
+    }
+
+    Import-Module (Join-Path $OutRoot "$ModuleName.psd1") -Force -ErrorAction Stop
+
+    $scratch = Join-Path ([System.IO.Path]::GetTempPath()) "psgraphrender-linkmode-$PID"
+    New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+
+    try {
+        # ONE node, so a fitted view puts it at the centre of the canvas and the
+        # probe's first right-click lands on it. A nine-node fixture would make
+        # the probe hunt, and a probe that hunts reports "no node here" for a
+        # layout change as readily as for a broken link.
+        $meta = [pscustomobject]@{
+            contractVersion = '1.0.0'
+            title           = 'Link mode'
+            rootPath        = 'C:/fixtures/LinkMode'
+        }
+        $plain = [pscustomobject]@{
+            nodes = @([pscustomobject]@{
+                    id = 'function:Get-Thing'; name = 'Get-Thing'; kind = 'Function'
+                    path = 'src\Public\Get-Thing.ps1'; startLine = 12; isExported = $true
+                })
+            links = @()
+        }
+        # SC3's payload. A label that is markup and a path carrying a quote and a
+        # bracket: if either reaches an attribute value unencoded, the report is
+        # one forwarded file away from executing a producer's string.
+        $hostile = [pscustomobject]@{
+            nodes = @([pscustomobject]@{
+                    id = 'function:Bad'; name = '"><script>alert(1)</script>'; kind = 'Function'
+                    path = 'src\a"b<c>.ps1'; startLine = 1; isExported = $true
+                })
+            links = @()
+        }
+
+        function New-ModeSet {
+            param([string] $Name, [hashtable] $Setting)
+
+            $dest = Join-Path $scratch "set-$Name"
+            Copy-Item -LiteralPath (Join-Path $OutRoot 'TemplateSets/cytoscape') -Destination $dest -Recurse -Force
+
+            $file = Join-Path $dest 'Config/settings.psd1'
+            $text = [System.IO.File]::ReadAllText($file)
+            $lines = foreach ($key in ($Setting.Keys | Sort-Object)) {
+                "    $key = '$($Setting[$key].Replace("'", "''"))'"
+            }
+            # Inside the closing brace: Import-PowerShellDataFile takes the last
+            # value for a repeated key, so this overrides without rewriting.
+            [System.IO.File]::WriteAllText($file, $text.Insert($text.LastIndexOf('}'), ($lines -join "`n") + "`n"))
+            $dest
+        }
+
+        $specs = @(
+            @{ id = 'editor'; payload = $plain; expect = 'prefix'; prefix = 'vscode://file/'
+                setting = @{ LinkMode = 'editor' }
+            }
+            @{ id = 'hrefTemplate'; payload = $plain; expect = 'prefix'; prefix = 'https://example.invalid/'
+                setting = @{ LinkMode = 'hrefTemplate'; LinkHrefTemplate = 'https://example.invalid/{relativePath}' }
+            }
+            @{ id = 'none'; payload = $plain; expect = 'none'
+                setting = @{ LinkMode = 'none' }
+            }
+            @{ id = 'injection'; payload = $hostile; expect = 'prefix'; prefix = 'https://example.invalid/'
+                forbid = @('<', '>', '"')
+                setting = @{ LinkMode = 'hrefTemplate'; LinkHrefTemplate = 'https://example.invalid/{relativePath}?l={label}' }
+            }
+        )
+
+        $cases = @(
+            foreach ($spec in $specs) {
+                $set = New-ModeSet -Name $spec.id -Setting $spec.setting
+                $file = Join-Path $scratch "$($spec.id).html"
+                [System.IO.File]::WriteAllText($file, (New-RenderDocument -ViewModel $spec.payload `
+                            -Meta $meta -Title "link mode $($spec.id)" -TemplateSetPath $set))
+
+                $case = @{ id = $spec.id; file = $file; expect = $spec.expect }
+                if ($spec.Contains('prefix')) { $case['prefix'] = $spec.prefix }
+                if ($spec.Contains('forbid')) { $case['forbidInHref'] = $spec.forbid }
+                $case
+            }
+        )
+
+        $jobFile = Join-Path $scratch 'job.json'
+        [System.IO.File]::WriteAllText($jobFile, (ConvertTo-Json -InputObject @($cases) -Depth 8))
+
+        $output = & $node.Path (Join-Path $harness 'link-mode.cjs') $jobFile 2>&1
+        $exit = $LASTEXITCODE
+        $text = ($output | Out-String)
+
+        if ($exit -ne 0) {
+            Write-Host $text
+            throw "The link-mode probe reported failures across $($cases.Count) case(s)."
+        }
+
+        $report = $text | ConvertFrom-Json
+        foreach ($r in $report.results) {
+            $shown = if ($r.hrefs) { $r.hrefs -join ', ' } else { '(no link action)' }
+            Write-Build Green "  link mode $($r.case): $shown"
+        }
+        Write-Build Green "Link mode: $($report.results.Count) case(s) resolved as configured."
+    }
+    finally {
+        Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 task Build Clean, {
     New-Item -ItemType Directory -Path $OutRoot -Force | Out-Null
 
