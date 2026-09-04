@@ -20,8 +20,51 @@ v0.13.0; they are a record, not a process.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-09-04
+
+A third rendering backend, and the seam held.
+
+### Added
+
+- **`forcegraph3d`, a template set that draws in three dimensions.** It reads
+  contract 1.1.0 unchanged, and **no `.ps1` under `src/` was edited to add it** —
+  which is the claim `plain` could only half support, because `plain` renders a
+  table and could not have inherited a Cytoscape assumption. This one has a
+  library, a canvas, its own vendoring question and all three link modes.
+  `cytoscape` remains the default; `TemplateSets/index.psd1` is untouched and so
+  are both existing backends, asserted byte-for-byte by
+  `tests/ForceGraph.Tests.ps1`.
+- **No contract change, and the question was asked before any code was
+  written.** Whether the library *requires* positional input or *computes* it
+  was established from the vendored bundle: the simulation consults `fx`/`fy`/
+  `fz` when a node states one and computes a position from a spherical lattice
+  when it does not. Consuming coordinates is a capability it offers, not an
+  input it demands, so the open decision about backends declaring required
+  contract fields stays open and untouched.
+- **All three link modes, with token parity asserted rather than intended.**
+  `LinkMode` and `LinkHrefTemplate` are declared in this backend's own schema
+  with the same enum and the same `editor` default. The five tokens are checked
+  against the reference backend's own resolver rather than a list retyped in a
+  test, so a token that arrives in one backend and not the other is red.
+- **`3d-force-graph` 1.80.0, vendored, MIT.** One file: three.js is inside it,
+  verified by inspection of the built bundle rather than assumed from the
+  package's dependency list. It ends with no `sourceMappingURL`, so this backend
+  does not inherit the accepted limitation `0005-t4` carries for
+  `cytoscape-dagre`.
+- **An eighth example**, and the first that varies the backend rather than a
+  setting: the same payload the three layout rows use, drawn by `forcegraph3d`
+  with the live GitHub link template. `examples/Build-Examples.ps1` takes the
+  backend as a field per row, defaulting to `cytoscape`.
+
 ### Changed
 
+- **`./build.ps1 -Task TestLinkMode` runs its five behaviours against every
+  backend that declares link modes**, discovered from the manifests rather than
+  named. `tests/browser/link-mode.cjs` takes its selectors from the job and
+  separates what OPENED from where the actions ARE — without that split, correct
+  `none` behaviour is indistinguishable from a click that landed on nothing.
+  Defaults are what the file always used, so `cytoscape` is driven exactly as
+  before and stayed green throughout.
 - **`STRINGS` joined the byte gate.** `tests/LinkMode.Tests.ps1` asserts that an
   `editor`-mode document is byte-identical to the base commit's for the same
   payload, and `Get-DocumentCode` removed the whole `STRINGS` block before that
@@ -34,6 +77,8 @@ v0.13.0; they are a record, not a process.
   the three added keys are pinned by value as well as by name. `Get-DocumentCode`
   is unchanged; widening it would turn acceptance B red against correct work.
   Tests only. Nothing a consumer installs changed.
+
+*Ledger `0049` and `0048` in the AI.Agent.Claude.PowerShellModuleBuilder harness.*
 
 ## [0.14.0] - 2026-09-04
 

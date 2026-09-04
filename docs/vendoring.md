@@ -9,13 +9,14 @@ provenance, the reasoning and the procedure.
 ## What is vendored
 
 Third-party files live under `src/PSGraphRender/TemplateSets/<set>/vendor/` and
-belong to **that backend, not to the module**. One backend vendors anything
-today:
+belong to **that backend, not to the module**. Two backends vendor anything
+today, and neither knows what the other vendored:
 
-| File | Package | Version | Licence |
-| --- | --- | --- | --- |
-| `cytoscape.min.js` | `cytoscape` | 3.34.2 | MIT |
-| `cytoscape-dagre.min.js` | `cytoscape-dagre` | 4.0.0 | MIT |
+| Backend | File | Package | Version | Licence |
+| --- | --- | --- | --- | --- |
+| `cytoscape` | `cytoscape.min.js` | `cytoscape` | 3.34.2 | MIT |
+| `cytoscape` | `cytoscape-dagre.min.js` | `cytoscape-dagre` | 4.0.0 | MIT |
+| `forcegraph3d` | `3d-force-graph.min.js` | `3d-force-graph` | 1.80.0 | MIT |
 
 **`cytoscape.min.js` is the graph.** `scripts/render.js` calls
 `cytoscape({ container: ... })` to build the view in `#cy`, and every element,
@@ -35,6 +36,27 @@ built bundle, not assumed from the package name**. The distinction is the whole
 value of the note: a package named after a dependency is not evidence that it
 ships one, and the cost of guessing wrong is a page that loads and lays out
 nothing.
+
+**`3d-force-graph.min.js` is the whole of `forcegraph3d`** — the drawing, the
+camera, the pointer interaction and the force simulation that decides where
+items go. `scripts/graph.js` calls `ForceGraph3D()` on `#fg` and hands it the
+payload's nodes and links; nothing else in that backend draws anything.
+
+**And there is no second file for three.js**, which is the same question
+`cytoscape-dagre` raised and had to be answered the same way — by reading the
+built bundle, because `3d-force-graph`'s package metadata lists `three` as an
+ordinary dependency and that says nothing about what its `dist/` ships. It is
+inside: the file carries the `__THREE__` global three.js registers itself under,
+the *"Multiple instances of Three.js being imported"* warning that exists only
+in three.js's own source, `WebGLRenderer`, `PerspectiveCamera`, `BufferGeometry`,
+`MeshLambertMaterial`, the `meshphong_vert` shader chunk and a reference to a
+`mrdoob/three.js` issue. It makes no `require()` call and imports nothing. **A
+second file here would put a second copy of three.js in the page**, which is
+what that warning exists to report.
+
+**It ends with no `sourceMappingURL`**, so this backend does not inherit the
+accepted limitation below. Its claim to need nothing survives a developer-tools
+session.
 
 ## Why they are not loaded from a CDN
 
@@ -68,6 +90,7 @@ The files were fetched from jsDelivr, version-pinned in the path:
 ```
 https://cdn.jsdelivr.net/npm/cytoscape@3.34.2/dist/cytoscape.min.js
 https://cdn.jsdelivr.net/npm/cytoscape-dagre@4.0.0/dist/cytoscape-dagre.min.js
+https://cdn.jsdelivr.net/npm/3d-force-graph@1.80.0/dist/3d-force-graph.min.js
 ```
 
 `Integrity` is a Subresource Integrity `sha384-` digest over the whole file.
@@ -178,6 +201,13 @@ carried in `docs/constraints.md` as `0005-t4`. Three facts decide it:
 
 So the page's claim to need nothing is one developer-tools session away from
 being tested, and that is the accepted side. **Do not strip the comment.**
+
+### Why the 3D backend's page is twice the size
+
+`examples/threed/forcegraph3d.html` is about 1.3 MB against roughly 620 KB for
+the cytoscape rows beside it. The library is larger, it contains a whole 3D
+engine, and that is the price of the view. It is recorded here rather than
+hidden, the same way the 126 KB → 607 KB cost of vendoring at v0.5.0 was.
 
 ## A backend that vendors nothing is not a failure
 

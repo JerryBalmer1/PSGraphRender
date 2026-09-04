@@ -60,6 +60,24 @@ not acquire reasons to change. It cannot go in that file and it cannot name
 `templateset.psd1`. **That is a data shape, which the charter says to log and
 stop on.** *Ledger `0013-t2`.*
 
+### The link probe names each backend's selectors in the build task — **medium**
+
+`./build.ps1 -Task TestLinkMode` carries a `$LINK_PROBE` map: per backend, the
+element to click in, the button that opens its actions, and the container they
+land in. `tests/browser/link-mode.cjs` reads them off the job, so the harness
+stays backend-agnostic — but the map itself is **a second place a backend's shape
+is written down**, which is exactly the defect the `Smoke` block was invented to
+remove from `tests/browser/smoke.cjs`.
+
+It belongs in each `templateset.psd1`, beside `Smoke`, for the same reason
+`Smoke` is there. It is not there because putting it there means editing
+`cytoscape/templateset.psd1`, and pass 0049's no-regression control is that
+`cytoscape` does not move at all. The task throws by name for a backend it does
+not know how to reach, so a fourth backend cannot arrive with its modes silently
+unchecked — but that is a guard against forgetting, not the fix.
+
+*Found while adding the third backend, pass `0049`.*
+
 ### The backlog was not swept when the threads were — **small**
 
 The v0.11.0 triage retired twenty-eight threads and left this file describing
@@ -150,6 +168,48 @@ Listed under **Open decisions** at the foot of this file. It launches browsers,
 probes
 loopback ports and reads user agents, none of which is rendering. Raise it
 before resolving it.
+
+### One backend draws and the other proves nothing about it — **closed in 0.15.0**
+
+Two backends shipped from v0.2.0 and `docs/constraints.md` records, as `0002-t1`,
+why the count overstated the evidence: **`plain` is trivial enough to prove less
+than it looks.** It renders a table, asks configuration for nothing structural,
+and could not have inherited a Cytoscape assumption because it has never heard
+of Cytoscape. Its triviality is what makes it a control — and it is also what
+makes "a template set is a rendering backend" a claim with one witness.
+
+**This entry is written at its closure, and nothing is struck above it, because
+nothing was here to strike.** The work was **large** — a new directory, new
+tests, a vendored dependency — and under the size rules a large item is logged
+and stopped on. It was not logged: it lived on the operator's list as item 2,
+outside this file, from before v0.14.0 until pass 0049 took it. The gap is the
+point of recording it this way. A large item held somewhere this file cannot see
+is one that reads, from here, as an item nobody has thought about.
+
+**Closed by pass 0049 at v0.15.0: `forcegraph3d`.** A `3d-force-graph`
+(three.js) template set that reads the same contract 1.1.0 payload and draws it
+in three dimensions. **No `.ps1` under `src/` was edited**, `TemplateSets/index.psd1`
+is untouched, and `cytoscape` and `plain` render byte-identically to the base
+commit — asserted, not asserted-to-have-been-checked, by
+`tests/ForceGraph.Tests.ps1`.
+
+**The contract stop never fired, and the question was put to the artifact rather
+than to a guess.** Whether the library *requires* positional input or *computes*
+it decides whether this backend needs a coordinate field, which would have been
+a contract change and therefore a decision nobody had made. Read out of the
+vendored bundle: the simulation consults `fx`/`fy`/`fz` when a node states one
+and computes a position from a spherical lattice when it does not. Consuming
+coordinates is a capability it offers, not an input it demands — so the open
+decision below about backends declaring required contract fields stays open,
+untouched, and is now a question with one worked example against it.
+
+**What it is deliberately not** is feature parity. No sidebar, no filtering, no
+focus mode: those are the reference backend's machinery, and the whole argument
+of `0002-t1` is that a second *elaborate* backend proves the seam while hiding a
+seam defect behind its own. What it does carry is everything the seam has to
+survive — its own `vendor/`, its own four Config files, its own Smoke block, and
+the whole link-mode registry with token parity asserted against the reference
+backend's own resolver.
 
 ### A node link can only ever be an editor scheme — **closed in 0.14.0**
 
@@ -245,7 +305,12 @@ part of an unrelated change - raise it first.**
 - **Should a backend be able to declare required contract fields?** Today every
   backend must cope with every payload. A declaration would let a 3D backend
   demand coordinates, at the cost of a payload that renders in one backend and
-  not another.
+  not another. **Still open, and now with a worked example against it**: the 3D
+  backend shipped at v0.15.0 and demanded nothing. Its layout computes positions
+  from nodes and links and consults a fixed one only when a node offers it, so
+  the case this question was written around turned out not to need the
+  mechanism. That is evidence about one library, not an answer — a backend that
+  genuinely required a field would still have nowhere to say so.
 - **Should `Show-RenderDocument` stay in this repository?** It launches
   browsers, probes loopback ports and reads user agents, none of which is
   rendering. It moved here because the charter said so; that may have been the

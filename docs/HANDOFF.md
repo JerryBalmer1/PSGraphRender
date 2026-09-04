@@ -85,6 +85,65 @@ before parsing them; see `FragmentSlots` in `templateset.psd1`.
 wanted and could not have: the same payload as `editor-links.html`, one setting
 different, and live GitHub links from a committed file.
 
+### Pass 0049
+
+**Where it is.** v0.15.0. Three rendering backends.
+
+**What it did.** Added `forcegraph3d`: a `3d-force-graph` (three.js) template
+set that draws the same contract 1.1.0 payload in three dimensions. **No `.ps1`
+under `src/` was edited to add it**, `TemplateSets/index.psd1` is untouched and
+`cytoscape` stays the default, and both existing backends render byte-identically
+to the base commit. That is the whole claim of the template-set design, and
+until this pass its only witness was `plain` — which `docs/constraints.md` says
+outright is *trivial enough to prove less than it looks*.
+
+**The one thing worth knowing before touching this.** Four defects in it were
+found by **running the page and looking at it**, and none of them was visible in
+the source:
+
+- The library's tooltip inserts a **string** as markup and appends an
+  **element** as itself, so a producer's label goes in as an element carrying it
+  in `textContent`. Safe by construction, not by an escaper.
+- Its layout stops on a **fifteen-second timer** by default — longer than any
+  gate here waits — so "fit the view when the layout settles" never fitted
+  anything. The simulation is bounded in ticks now.
+- It opened a **1280x900 canvas inside an 859px box** and never corrected it, so
+  the bottom of every graph was outside its own element. Sized from the
+  container explicitly.
+- `#fg-notice` sets `display`, which **beats the user agent's
+  `[hidden]{display:none}`**, so a hidden `inset: 0` element became an invisible
+  sheet across the viewport that swallowed every click on the canvas. Eighty-one
+  grid clicks hit nothing before `elementFromPoint` named it.
+
+If you add a fourth backend that draws into a canvas, that last one is the trap:
+any element you both style with `display` and hide with `hidden` is still there.
+
+**The contract did not change and the stop never fired.** Whether the library
+*requires* positional input or *computes* it was read out of the vendored bundle
+before a line of the backend was written: it consults `fx`/`fy`/`fz` when a node
+states one, and computes a position from a spherical lattice when it does not.
+Consuming coordinates is a capability, not a demand — so the open decision about
+backends declaring required contract fields stays open and untouched.
+
+**Its `CanvasGrowth` floor is 2, and that is not a weaker standard.** This
+backend draws lit spheres and thin lines where the reference draws filled boxes
+with labels, so its measured ratios are 3.50 to 6.49 rather than 12.2. Two sits
+1.75x below the thinnest case observed; the reference's 4 sits 1.84x below its
+own thinnest of 7.34. Same daylight, different digit. The thinnest case is also
+the first measured value between 4 and 12.2, which thread `0006-t2` records as
+the gap that made the requirement untested against a sparse payload.
+
+**New in the build.** `./build.ps1 -Task TestLinkMode` now runs its five
+behaviours against **every** backend that declares link modes, discovered from
+the manifests. Where each backend's actions are reached is a map in that task —
+and that map is a second place a backend's shape is written down, which is
+logged in `docs/improvements.md` rather than left as a silent trade. It is there
+because `cytoscape/templateset.psd1` could not move this pass.
+
+**Examples.** Eight. `examples/threed/forcegraph3d.html` is the first that
+varies the backend rather than a setting: the same payload the three layout rows
+draw, rendered by a different directory.
+
 ## What this is
 
 A **generic, data-driven report renderer.** It takes a view model as JSON and
@@ -104,7 +163,7 @@ skipping, deliberately.
 
 `contract/viewmodel.schema.json` is the boundary and it is the product. It is
 JSON Schema, language-neutral, and **versioned independently of the module**: it
-is at **1.1.0** while the module is at 0.14.0.
+is at **1.1.0** while the module is at 0.15.0.
 
 Change protocol:
 
@@ -165,6 +224,7 @@ are.** Everything else follows from that one rule.
 | `handoff-begin-2026-08-29` | annotated tag on `v0.12.0`'s commit, `4a367c6`. Everything before it was operated by the in-repo thread-ledger process; everything after is operated plan-by-plan from the harness project |
 | `v0.13.0` | this handoff. Vendor tooling added, resident workflow removed, knowledge archived |
 | `v0.14.0` | link mode: a node link is configuration rather than a hardcoded scheme. First `src/` change since the handoff |
+| `v0.15.0` | a third backend, `forcegraph3d`. The first evidence that a template set is a rendering backend that does not come from a trivial one |
 
 The module version and the contract version move independently. For the module:
 **patch** for a normal implementation, **minor** when a template set, a setting

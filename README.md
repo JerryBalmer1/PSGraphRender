@@ -29,9 +29,11 @@ that rebuilds it. Run each from the repository root.
 | **Theme — contrast** | The same graph and layout under [a different theme file](examples/input/theme-contrast.psd1). No code changed. | [html](examples/theme/contrast.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/theme/contrast.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only contrast` |
 | **Node links — editor** | Right-click a node to open its source in your editor, built from `rootPath` + `path` + `startLine`. | [html](examples/links/editor-links.html) · [input](examples/input/links-viewmodel.json) · [png](examples/links/editor-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only links` |
 | **Node links — GitHub** | The same report with `LinkMode = 'hrefTemplate'`: one setting, and the links point at the forge instead. | [html](examples/links/forge-links.html) · [input](examples/input/links-viewmodel.json) · [png](examples/links/forge-links.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only forge` |
+| **Three dimensions** | The same payload as the three layouts, through a different **backend**: `forcegraph3d` places it with a force simulation and draws it with three.js. | [html](examples/threed/forcegraph3d.html) · [input](examples/input/ecosystem-viewmodel.json) · [png](examples/threed/forcegraph3d.png) | `pwsh -NoProfile -File examples/Build-Examples.ps1 -Only threed` |
 
 The three layouts are the complete value set of the `DefaultFlow` setting, not a
-selection — see [`examples/README.md`](examples/README.md) for the full index,
+selection. Every row but the last varies configuration; the last varies the
+backend — see [`examples/README.md`](examples/README.md) for the full index,
 the determinism note, and why one node-link example ships inert while the
 other does not.
 
@@ -180,9 +182,12 @@ pwsh -c '$vm = Get-Content graph.json -Raw | ConvertFrom-Json;
 ## Backends
 
 A backend is a rendering *backend*: a directory under `TemplateSets/` holding a
-layout, its partials, styles, scripts and four config files.
+layout, its partials, styles, scripts and four config files. Three ship.
 `cytoscape` is the reference implementation and is not privileged in code;
-`plain` renders the same payload as a table in 1% of the bytes.
+`plain` renders the same payload as a table in 1% of the bytes; `forcegraph3d`
+draws it in three dimensions with its own vendored library, and adding it edited
+no `.ps1` at all — which is the claim the other two could only half support,
+one being the reference and the other being trivial on purpose.
 
 ```text
 TemplateSets/<name>/
