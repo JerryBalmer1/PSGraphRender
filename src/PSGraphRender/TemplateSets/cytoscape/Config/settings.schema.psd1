@@ -111,6 +111,27 @@
             Description = 'Zoom the opening view will not go below, however large the graph. Pan instead of squinting.'
         }
 
+        # -- Links ---------------------------------------------------------
+        # What a node's link is. Until v0.14.0 there was no answer to this: the
+        # scheme was hardcoded and a report could only ever point at the reader's
+        # own editor, which is wrong for every report that leaves the machine
+        # that made it.
+        #
+        # The mode is resolved when the document is ASSEMBLED, not in the
+        # browser, so a report carries only the one it was built with. See
+        # SlotsBySetting in templateset.psd1.
+        LinkMode         = @{
+            Type = 'Enum'; Default = 'editor'
+            Values = @('editor', 'hrefTemplate', 'none')
+            In = 'Settings'; Group = 'Links'
+            Description = 'What a node links to. editor opens the file on the reader''s machine; hrefTemplate builds a URL from LinkHrefTemplate; none ships no link at all.'
+        }
+        LinkHrefTemplate = @{
+            Type = 'String'; Default = ''
+            In = 'Settings'; Group = 'Links'
+            Description = 'URL pattern for hrefTemplate mode. Tokens: {relativePath} {path} {id} {label} {line}, each a field the payload already carries. Token values are percent-encoded; the pattern around them is not.'
+        }
+
         # -- Scale ---------------------------------------------------------
         NodeLimit        = @{
             Type = 'Integer'; Default = 400; Min = 1; Max = 100000

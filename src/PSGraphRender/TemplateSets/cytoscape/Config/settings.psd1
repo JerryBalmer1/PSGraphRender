@@ -30,5 +30,14 @@
     # is in the sidebar, and flipping the default is this one line.
     ColorBy       = 'structure'
 
+    # 'editor' is today's behaviour and stays the default: a report built by
+    # someone looking at the code is still the common case. Changing this is a
+    # deliberate decision about who the report is FOR, and it is one line.
+    LinkMode         = 'editor'
+
+    # Only read when LinkMode is hrefTemplate. Empty rather than an example
+    # URL: a plausible-looking default is one somebody ships by accident.
+    LinkHrefTemplate = ''
+
     NodeLimit     = 400
 }

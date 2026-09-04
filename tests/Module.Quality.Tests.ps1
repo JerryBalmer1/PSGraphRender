@@ -51,7 +51,20 @@ Describe 'Built module layout' {
         foreach ($set in $script:Backends) {
             $manifest = Import-PowerShellDataFile -LiteralPath (Join-Path $set 'templateset.psd1')
 
-            $declared = @($manifest.Layout) + @($manifest.Slots.Values | ForEach-Object { $_ })
+            # SlotsBySetting as well as Slots. A file reachable only through a
+            # setting's value is still a file the manifest names, and leaving it
+            # out here would mean two of the three link modes shipped unchecked -
+            # the coverage hole that adding SlotsBySetting would otherwise open.
+            $conditional = @()
+            if ($manifest.Contains('SlotsBySetting')) {
+                $conditional = @(
+                    $manifest.SlotsBySetting.Values |
+                        ForEach-Object { $_.Values } |
+                        ForEach-Object { $_.Values } |
+                        ForEach-Object { $_ }
+                )
+            }
+            $declared = @($manifest.Layout) + @($manifest.Slots.Values | ForEach-Object { $_ }) + $conditional
             foreach ($part in $declared) {
                 $full = Join-Path $set $part
                 $message = "$(Split-Path $set -Leaf) declares '$part' and it did not ship"

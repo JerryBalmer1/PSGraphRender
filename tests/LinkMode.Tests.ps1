@@ -56,16 +56,25 @@ BeforeAll {
             $settingsFile = Join-Path $dest 'Config/settings.psd1'
             $text = [System.IO.File]::ReadAllText($settingsFile)
 
-            $lines = foreach ($key in ($Setting.Keys | Sort-Object)) {
+            foreach ($key in ($Setting.Keys | Sort-Object)) {
                 $value = $Setting[$key]
-                if ($value -is [string]) { "    $key = '$($value.Replace("'", "''"))'" }
+                $assignment = if ($value -is [string]) { "    $key = '$($value.Replace("'", "''"))'" }
                 else { "    $key = $value" }
-            }
 
-            # Appended inside the closing brace. Import-PowerShellDataFile takes
-            # the last value for a repeated key, so this overrides a shipped one
-            # without having to find and rewrite it.
-            $text = $text.Insert($text.LastIndexOf('}'), ($lines -join "`n") + "`n")
+                # REPLACE a shipped key, append only a new one. Appending
+                # unconditionally produces a duplicate hash key, which is a parse
+                # error rather than an override - PowerShell does not take the
+                # last value, it refuses the file. That failure is silent in the
+                # useful sense: Resolve-RenderConfiguration warns and falls back
+                # to the schema defaults, so every case renders the DEFAULT mode
+                # and the suite reports the feature missing when it is present.
+                if ($text -match "(?m)^\s*$key\s*=") {
+                    $text = $text -replace "(?m)^\s*$key\s*=.*$", $assignment.Replace('$', '$$')
+                }
+                else {
+                    $text = $text.Insert($text.LastIndexOf('}'), $assignment + "`n")
+                }
+            }
             [System.IO.File]::WriteAllText($settingsFile, $text)
         }
 

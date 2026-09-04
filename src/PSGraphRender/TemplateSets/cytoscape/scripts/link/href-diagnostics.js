@@ -1,0 +1,1 @@
+            ['nodeLinkUriFor', nodeLinkUriFor(node)],

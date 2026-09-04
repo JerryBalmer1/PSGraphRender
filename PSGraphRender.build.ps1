@@ -125,15 +125,61 @@ task LintJavaScript {
         throw "No .js found under $templateSets. The check found nothing to check, which is not the same as passing."
     }
 
+    # Which parts are fragments, read from each backend's own manifest. A
+    # fragment is valid only where its slot puts it - the link-mode action parts
+    # are runs of array elements - so checking one on its own reports a
+    # SyntaxError about the check. Wrapped into the shape the manifest names,
+    # the check still parses the file's real syntax and still says which file.
+    #
+    # Discovered from FragmentSlots rather than from a list of paths here, so a
+    # new mode's parts arrive covered. See the note in cytoscape/templateset.psd1.
+    $fragmentShape = @{}
+    foreach ($manifestFile in (Get-ChildItem -LiteralPath $templateSets -Filter 'templateset.psd1' -File -Recurse)) {
+        $manifest = Import-PowerShellDataFile -LiteralPath $manifestFile.FullName
+        $setRoot = Split-Path $manifestFile.FullName -Parent
+        if (-not $manifest.Contains('FragmentSlots')) { continue }
+        $fragmentSlots = $manifest['FragmentSlots']
+
+        foreach ($slot in @($fragmentSlots.Keys)) {
+            $lists = @($manifest.Slots[$slot])
+            if ($manifest.Contains('SlotsBySetting')) {
+                foreach ($modeMap in @($manifest.SlotsBySetting.Values)) {
+                    foreach ($mode in @($modeMap.Values)) {
+                        if ($mode.Contains($slot)) { $lists += @($mode[$slot]) }
+                    }
+                }
+            }
+            foreach ($part in ($lists | Where-Object { $_ })) {
+                $fragmentShape[(Join-Path $setRoot $part)] = $fragmentSlots[$slot]
+            }
+        }
+    }
+
     $failed = @()
+    $wrapped = 0
     foreach ($file in $scripts) {
         # --check parses and discards. It reports a SyntaxError with a line and
         # a caret, which is the whole value; nothing here needs to run the file.
-        $output = & $node.Path --check $file.FullName 2>&1
+        $target = $file.FullName
+
+        $shape = $fragmentShape[$file.FullName]
+        if ($shape) {
+            if ($shape -ne 'ArrayElements') {
+                throw "templateset.psd1 names fragment shape '$shape', which this check does not know how to wrap."
+            }
+            # Written beside nothing the build ships: a temp file, removed below.
+            $target = Join-Path ([System.IO.Path]::GetTempPath()) "psgr-fragment-$PID-$($file.BaseName).js"
+            [System.IO.File]::WriteAllText($target,
+                "var __fragment = [`n" + [System.IO.File]::ReadAllText($file.FullName) + "`n];")
+            $wrapped++
+        }
+
+        $output = & $node.Path --check $target 2>&1
         if ($LASTEXITCODE -ne 0) {
             $relative = $file.FullName.Substring($templateSets.Length).TrimStart('\', '/')
             $failed += "$relative`n$($output -join [Environment]::NewLine)"
         }
+        if ($shape) { Remove-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue }
     }
 
     if ($failed) {
@@ -141,7 +187,8 @@ task LintJavaScript {
         throw "node --check rejected $($failed.Count) backend script(s)."
     }
 
-    Write-Build Green "JavaScript: $($scripts.Count) script(s) parse (node $($node.Version))"
+    Write-Build Green ("JavaScript: $($scripts.Count) script(s) parse, $wrapped of them as declared " +
+        "fragments (node $($node.Version))")
 }
 
 task LintDocument Build, {
@@ -415,12 +462,21 @@ task TestLinkMode Build, {
 
             $file = Join-Path $dest 'Config/settings.psd1'
             $text = [System.IO.File]::ReadAllText($file)
-            $lines = foreach ($key in ($Setting.Keys | Sort-Object)) {
-                "    $key = '$($Setting[$key].Replace("'", "''"))'"
+            foreach ($key in ($Setting.Keys | Sort-Object)) {
+                $assignment = "    $key = '$($Setting[$key].Replace("'", "''"))'"
+
+                # REPLACE a shipped key, append only a new one. A duplicate key
+                # is a parse error, not an override: the file then fails to load,
+                # the resolver warns and falls back to schema defaults, and every
+                # case quietly renders the DEFAULT mode.
+                if ($text -match "(?m)^\s*$key\s*=") {
+                    $text = $text -replace "(?m)^\s*$key\s*=.*$", $assignment.Replace('$', '$$')
+                }
+                else {
+                    $text = $text.Insert($text.LastIndexOf('}'), $assignment + "`n")
+                }
             }
-            # Inside the closing brace: Import-PowerShellDataFile takes the last
-            # value for a repeated key, so this overrides without rewriting.
-            [System.IO.File]::WriteAllText($file, $text.Insert($text.LastIndexOf('}'), ($lines -join "`n") + "`n"))
+            [System.IO.File]::WriteAllText($file, $text)
             $dest
         }
 
@@ -437,6 +493,17 @@ task TestLinkMode Build, {
             @{ id = 'injection'; payload = $hostile; expect = 'prefix'; prefix = 'https://example.invalid/'
                 forbid = @('<', '>', '"')
                 setting = @{ LinkMode = 'hrefTemplate'; LinkHrefTemplate = 'https://example.invalid/{relativePath}?l={label}' }
+            }
+            # SC3's other half. The case above proves producer data is escaped;
+            # this one proves the TEMPLATE cannot execute either. It is not
+            # escaped - it is configuration and has to stay a URL - so the claim
+            # here is different and weaker on purpose: whatever it contains, the
+            # result is assigned to an href property rather than interpolated
+            # into markup, so nothing runs and the page reports no error.
+            @{ id = 'injection-template'; payload = $hostile; expect = 'prefix'; prefix = 'https://example.invalid/'
+                setting = @{ LinkMode = 'hrefTemplate'
+                    LinkHrefTemplate = 'https://example.invalid/{relativePath}?q="><script>alert(2)</script>&l={label}'
+                }
             }
         )
 

@@ -132,11 +132,21 @@
     MenuOpenCallSite              = 'Open Call Site'
     MenuCopyEditorLink            = 'Copy Editor Link'
     MenuCopyPath                  = 'Copy Path'
+
+    # hrefTemplate mode. Deliberately not 'Open in GitHub' or any other
+    # product: the template is configuration and the renderer has no idea
+    # what it points at - a forge, a wiki, an internal build viewer.
+    MenuOpenLink                  = 'Open Link'
+    MenuCopyLink                  = 'Copy Link'
     MenuDiagnostics               = 'Diagnostics'
     # Sits between an action and the reason it is unavailable.
     MenuReasonSeparator           = ' — '
     ReasonNoFile                  = 'no file recorded'
     ReasonNoRootPath              = 'root path unknown'
+    # hrefTemplate mode is configured but no template was given. Names the
+    # setting, because the reader of a greyed-out menu item is the person
+    # who can go and set it.
+    ReasonNoTemplate              = 'LinkHrefTemplate is not set'
     ReasonEmbedded                = 'not available in an embedded viewer, open the report in a browser'
 
     # -- Selection ---------------------------------------------------------

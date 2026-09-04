@@ -5,7 +5,7 @@
             ['node.data(path)', node.data('path')],
             ['meta.rootPath', meta.rootPath],
             ['absolutePathFor', absolutePathFor(node)],
-            ['vsCodeUriFor', vsCodeUriFor(node)],
+/*__SLOT_LINK_DIAGNOSTIC_ROWS__*/
             ['node.data(startLine)', node.data('startLine')],
             ['location.protocol', location.protocol],
             ['location.href', location.href],

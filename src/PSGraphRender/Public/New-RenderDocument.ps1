@@ -118,8 +118,13 @@ function New-RenderDocument {
         $setPath = if ($TemplateSetPath) { $TemplateSetPath }
         else { Resolve-RenderTemplateSetPath -Name $TemplateSet }
 
-        $template = Get-RenderTemplateSet -Path $setPath
+        # Configuration first, and handed to the assembler. Some slots depend on
+        # a setting's value - link mode picks which of three files fills the
+        # node-link slot - so the settings have to be resolved before the
+        # document is assembled, not after. Passing it also stops the config
+        # files being read, validated and warned about twice per render.
         $config = Resolve-RenderConfiguration -TemplateSetPath $setPath
+        $template = Get-RenderTemplateSet -Path $setPath -Configuration $config
         $resolvedStrings = Resolve-RenderString -TemplateSetPath $setPath -Value $Strings
 
         # [string]::Replace, never the -replace operator. -replace is regex: the
