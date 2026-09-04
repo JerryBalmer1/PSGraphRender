@@ -392,6 +392,22 @@ Import-Module '$manifest' -Force
         @($head.PSObject.Properties.Name | Where-Object { $_ -notin $baseNames } | Sort-Object) |
             Should-BeCollection @('MenuCopyLink', 'MenuOpenLink', 'ReasonNoTemplate')
 
+        # The added keys are pinned BY VALUE as well as by name - the same half
+        # of the control the CONFIG case above spends on $head.LinkMode. Named
+        # alone, the three strings 0047 added would be the only user-visible
+        # strings in the renderer still invisible to this gate, since the value
+        # loop below can only speak for keys that exist at base. Probe P1 was
+        # written expecting a changed MenuOpenLink to go red, and against the
+        # name-only form it did not.
+        $addedValues = [ordered]@{
+            MenuCopyLink     = 'Copy Link'
+            MenuOpenLink     = 'Open Link'
+            ReasonNoTemplate = 'LinkHrefTemplate is not set'
+        }
+        foreach ($name in $addedValues.Keys) {
+            $head.$name | Should-Be $addedValues[$name] -Because "added string '$name' is pinned by value, not only by name"
+        }
+
         # An existing key may not change value, and may not vanish: a removed key
         # reads as $null at head against a string at base, so this clause is what
         # catches a deletion too. Both values go in the message - a gate that says
