@@ -20,6 +20,21 @@ v0.13.0; they are a record, not a process.
 
 ## [Unreleased]
 
+### Changed
+
+- **`STRINGS` joined the byte gate.** `tests/LinkMode.Tests.ps1` asserts that an
+  `editor`-mode document is byte-identical to the base commit's for the same
+  payload, and `Get-DocumentCode` removed the whole `STRINGS` block before that
+  comparison — acceptance B's carve-out for `vscode://` prose is exactly that
+  block, and one helper served both. Every user-visible string in the renderer
+  was therefore invisible to the strongest gate here: v0.14.0 added three
+  strings and proved them additive by reading the diff, which is the thing the
+  gate exists to replace. `STRINGS` is now compared the way `CONFIG` already
+  was — an existing key may not change value, only additions are permitted, and
+  the three added keys are pinned by value as well as by name. `Get-DocumentCode`
+  is unchanged; widening it would turn acceptance B red against correct work.
+  Tests only. Nothing a consumer installs changed.
+
 ## [0.14.0] - 2026-09-04
 
 Link mode. A node link is configuration now, not a hardcoded scheme.
