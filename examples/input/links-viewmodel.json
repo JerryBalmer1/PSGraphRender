@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "contractVersion": "1.1.0",
+    "title": "Node links - open a node's source in your editor",
+    "version": "0.13.0",
+    "rootPath": "REPLACE-WITH-YOUR-CLONE-PATH",
+    "generatedAt": "2026-09-03",
+    "stats": {
+      "nodes": 8,
+      "links": 10,
+      "note": "Every node carries path and startLine, which is what the editor-link action needs. rootPath is a placeholder on purpose - see examples/README.md."
+    }
+  },
+  "data": {
+    "metrics": ["dependents"],
+    "roots": ["New-RenderDocument"],
+    "leaves": ["Get-HashtableValue"],
+    "nodes": [
+      { "id": "New-RenderDocument", "name": "New-RenderDocument", "kind": "Function", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 57, "isExported": true, "metrics": { "dependents": 0 } },
+      { "id": "Get-RenderTemplateSet", "name": "Get-RenderTemplateSet", "kind": "Function", "path": "src/PSGraphRender/Public/Get-RenderTemplateSet.ps1", "startLine": 19, "isExported": true, "metrics": { "dependents": 1 } },
+      { "id": "Test-RenderViewModel", "name": "Test-RenderViewModel", "kind": "Function", "path": "src/PSGraphRender/Private/Contract/Test-RenderViewModel.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1 } },
+      { "id": "Assert-RenderContractVersion", "name": "Assert-RenderContractVersion", "kind": "Function", "path": "src/PSGraphRender/Private/Contract/Test-RenderViewModel.ps1", "startLine": 181, "isExported": false, "metrics": { "dependents": 1 } },
+      { "id": "Resolve-RenderConfiguration", "name": "Resolve-RenderConfiguration", "kind": "Function", "path": "src/PSGraphRender/Private/Config/Resolve-RenderConfiguration.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1 } },
+      { "id": "Resolve-RenderTemplateSetPath", "name": "Resolve-RenderTemplateSetPath", "kind": "Function", "path": "src/PSGraphRender/Private/Config/Resolve-RenderTemplateSetPath.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 2 } },
+      { "id": "Get-HashtableValue", "name": "Get-HashtableValue", "kind": "Function", "path": "src/PSGraphRender/Private/Get-HashtableValue.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 3 } },
+      { "id": "viewmodel.schema.json", "name": "contract/viewmodel.schema.json", "kind": "Contract", "path": "contract/viewmodel.schema.json", "startLine": 1, "isExported": false, "metrics": { "dependents": 1 } }
+    ],
+    "links": [
+      { "source": "New-RenderDocument", "target": "Get-RenderTemplateSet", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 118 },
+      { "source": "New-RenderDocument", "target": "Test-RenderViewModel", "kind": "Validates", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 94 },
+      { "source": "New-RenderDocument", "target": "Assert-RenderContractVersion", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 90 },
+      { "source": "New-RenderDocument", "target": "Resolve-RenderConfiguration", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 119 },
+      { "source": "Get-RenderTemplateSet", "target": "Resolve-RenderTemplateSetPath", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/Get-RenderTemplateSet.ps1", "startLine": 34 },
+      { "source": "Resolve-RenderConfiguration", "target": "Resolve-RenderTemplateSetPath", "kind": "Calls", "resolution": "Ambiguous" },
+      { "source": "Test-RenderViewModel", "target": "viewmodel.schema.json", "kind": "Reads", "resolution": "Certain" },
+      { "source": "Test-RenderViewModel", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Assert-RenderContractVersion", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Resolve-RenderConfiguration", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" }
+    ]
+  }
+}

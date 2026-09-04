@@ -151,6 +151,28 @@ probes
 loopback ports and reads user agents, none of which is rendering. Raise it
 before resolving it.
 
+### A node link can only ever be an editor scheme — **large**
+
+`vsCodeUriFor` in `scripts/editor-link.js` builds `vscode://file/{path}:{line}`
+and `NODE_ACTIONS` in `scripts/menu.js` binds to it. The prefix is a literal in
+script, so a caller cannot ask for anything else, and there is no setting in
+`Config/settings.schema.psd1` that names one.
+
+That makes one obvious use impossible: a report attached to a pull request,
+where the reader has no clone and the useful destination is the file **on the
+forge** — `https://…/blob/<sha>/<path>#L<line>`. Today such a report has to
+ship links that only work on the author's machine, or none.
+
+The shape of the answer is probably a settings entry naming a link MODE, with
+the editor scheme as its default so nothing changes for existing callers, plus
+a template for the href case. It is **large**: it adds a setting, changes what
+a node's context menu can do, and touches the one file whose links a reader
+clicks — so it is logged and stopped on, not taken unprompted.
+
+Found by pass 0043 while building `examples/links/`, which wanted forge links
+and could not have them. That example ships with a placeholder `rootPath`
+instead, and says so. *Wants its own red-first iteration.*
+
 ## Noticed, not logged as work
 
 - CI had never executed a single step before v0.6.0. `shell: ${{ matrix.powershell }}`

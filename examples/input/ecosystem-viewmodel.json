@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "contractVersion": "1.1.0",
+    "title": "PSGraphRender - its own function surface",
+    "version": "0.13.0",
+    "rootPath": "REPLACE-WITH-YOUR-CLONE-PATH",
+    "generatedAt": "2026-09-03",
+    "stats": {
+      "nodes": 24,
+      "links": 34,
+      "unresolved": 2,
+      "exported": 4,
+      "note": "Hand-written from the module's own src/ tree, so a reader can open any node and find the function."
+    }
+  },
+  "data": {
+    "metrics": ["dependents", "dependencies", "blastRadius", "reach"],
+    "roots": ["New-RenderDocument", "Show-RenderDocument", "New-RenderDocumentPath", "Get-RenderTemplateSet"],
+    "leaves": ["Get-HashtableValue"],
+    "stats": {
+      "layers": 4,
+      "kinds": 4
+    },
+    "nodes": [
+      { "id": "New-RenderDocument", "name": "New-RenderDocument", "kind": "Function", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 1, "isExported": true, "metrics": { "dependents": 0, "dependencies": 7, "blastRadius": 14, "reach": 9 } },
+      { "id": "Show-RenderDocument", "name": "Show-RenderDocument", "kind": "Function", "path": "src/PSGraphRender/Public/Show-RenderDocument.ps1", "startLine": 1, "isExported": true, "metrics": { "dependents": 0, "dependencies": 3, "blastRadius": 5, "reach": 4 } },
+      { "id": "New-RenderDocumentPath", "name": "New-RenderDocumentPath", "kind": "Function", "path": "src/PSGraphRender/Public/New-RenderDocumentPath.ps1", "startLine": 1, "isExported": true, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "Get-RenderTemplateSet", "name": "Get-RenderTemplateSet", "kind": "Function", "path": "src/PSGraphRender/Public/Get-RenderTemplateSet.ps1", "startLine": 1, "isExported": true, "metrics": { "dependents": 1, "dependencies": 3, "blastRadius": 6, "reach": 4 } },
+
+      { "id": "Test-RenderViewModel", "name": "Test-RenderViewModel", "kind": "Function", "path": "src/PSGraphRender/Private/Contract/Test-RenderViewModel.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 2, "blastRadius": 3, "reach": 3 } },
+      { "id": "Assert-RenderContractVersion", "name": "Assert-RenderContractVersion", "kind": "Function", "path": "src/PSGraphRender/Private/Contract/Test-RenderViewModel.ps1", "startLine": 181, "isExported": false, "metrics": { "dependents": 1, "dependencies": 1, "blastRadius": 2, "reach": 2 } },
+      { "id": "Resolve-RenderMeta", "name": "Resolve-RenderMeta", "kind": "Function", "path": "src/PSGraphRender/Private/Contract/Test-RenderViewModel.ps1", "startLine": 240, "isExported": false, "metrics": { "dependents": 1, "dependencies": 1, "blastRadius": 2, "reach": 2 } },
+      { "id": "Resolve-RenderConfiguration", "name": "Resolve-RenderConfiguration", "kind": "Function", "path": "src/PSGraphRender/Private/Config/Resolve-RenderConfiguration.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 4, "blastRadius": 6, "reach": 5 } },
+      { "id": "Import-RenderDataFile", "name": "Import-RenderDataFile", "kind": "Function", "path": "src/PSGraphRender/Private/Config/Import-RenderDataFile.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 2, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "Test-RenderSettingValue", "name": "Test-RenderSettingValue", "kind": "Function", "path": "src/PSGraphRender/Private/Config/Test-RenderSettingValue.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 1, "blastRadius": 2, "reach": 2 } },
+      { "id": "Invoke-RenderConfigurationConstraint", "name": "Invoke-RenderConfigurationConstraint", "kind": "Function", "path": "src/PSGraphRender/Private/Config/Invoke-RenderConfigurationConstraint.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 1, "blastRadius": 2, "reach": 2 } },
+      { "id": "Resolve-RenderTemplateSetPath", "name": "Resolve-RenderTemplateSetPath", "kind": "Function", "path": "src/PSGraphRender/Private/Config/Resolve-RenderTemplateSetPath.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 3, "dependencies": 1, "blastRadius": 2, "reach": 2 } },
+
+      { "id": "ConvertTo-EscapedHtmlJson", "name": "ConvertTo-EscapedHtmlJson", "kind": "Function", "path": "src/PSGraphRender/Private/Document/ConvertTo-EscapedHtmlJson.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "ConvertTo-EscapedHtmlText", "name": "ConvertTo-EscapedHtmlText", "kind": "Function", "path": "src/PSGraphRender/Private/Document/ConvertTo-EscapedHtmlText.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "Resolve-RenderString", "name": "Resolve-RenderString", "kind": "Function", "path": "src/PSGraphRender/Private/Document/Resolve-RenderString.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 2, "blastRadius": 3, "reach": 3 } },
+      { "id": "Get-RenderAsset", "name": "Get-RenderAsset", "kind": "Function", "path": "src/PSGraphRender/Private/Document/Get-RenderAsset.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 1, "blastRadius": 2, "reach": 2 } },
+      { "id": "Get-RenderAssetPath", "name": "Get-RenderAssetPath", "kind": "Function", "path": "src/PSGraphRender/Private/Document/Get-RenderAssetPath.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+
+      { "id": "Get-VSCodeLauncher", "name": "Get-VSCodeLauncher", "kind": "Function", "path": "src/PSGraphRender/Private/Transport/Get-VSCodeLauncher.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "Resolve-LoopbackDocumentUrl", "name": "Resolve-LoopbackDocumentUrl", "kind": "Function", "path": "src/PSGraphRender/Private/Transport/Resolve-LoopbackDocumentUrl.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "Get-HashtableValue", "name": "Get-HashtableValue", "kind": "Function", "path": "src/PSGraphRender/Private/Get-HashtableValue.ps1", "startLine": 1, "isExported": false, "metrics": { "dependents": 6, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+
+      { "id": "PSGraphRender.psm1", "name": "PSGraphRender.psm1", "kind": "Script", "path": "src/PSGraphRender/PSGraphRender.psm1", "startLine": 1, "isExported": false, "metrics": { "dependents": 0, "dependencies": 4, "blastRadius": 20, "reach": 20 } },
+
+      { "id": "settings.psd1", "name": "Config/settings.psd1", "kind": "Config", "path": "src/PSGraphRender/TemplateSets/cytoscape/Config/settings.psd1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "theme.psd1", "name": "Config/theme.psd1", "kind": "Config", "path": "src/PSGraphRender/TemplateSets/cytoscape/Config/theme.psd1", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } },
+      { "id": "viewmodel.schema.json", "name": "contract/viewmodel.schema.json", "kind": "Contract", "path": "contract/viewmodel.schema.json", "startLine": 1, "isExported": false, "metrics": { "dependents": 1, "dependencies": 0, "blastRadius": 1, "reach": 1 } }
+    ],
+    "links": [
+      { "source": "PSGraphRender.psm1", "target": "New-RenderDocument", "kind": "Imports", "resolution": "Certain" },
+      { "source": "PSGraphRender.psm1", "target": "Show-RenderDocument", "kind": "Imports", "resolution": "Certain" },
+      { "source": "PSGraphRender.psm1", "target": "New-RenderDocumentPath", "kind": "Imports", "resolution": "Certain" },
+      { "source": "PSGraphRender.psm1", "target": "Get-RenderTemplateSet", "kind": "Imports", "resolution": "Certain" },
+
+      { "source": "New-RenderDocument", "target": "Resolve-RenderMeta", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 85 },
+      { "source": "New-RenderDocument", "target": "Assert-RenderContractVersion", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 90 },
+      { "source": "New-RenderDocument", "target": "Test-RenderViewModel", "kind": "Validates", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 94 },
+      { "source": "New-RenderDocument", "target": "Get-RenderTemplateSet", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 118 },
+      { "source": "New-RenderDocument", "target": "Resolve-RenderConfiguration", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 119 },
+      { "source": "New-RenderDocument", "target": "Resolve-RenderString", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 120 },
+      { "source": "New-RenderDocument", "target": "ConvertTo-EscapedHtmlJson", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 127 },
+      { "source": "New-RenderDocument", "target": "ConvertTo-EscapedHtmlText", "kind": "Calls", "resolution": "Certain", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 131 },
+      { "source": "New-RenderDocument", "target": "Resolve-RenderTemplateSetPath", "kind": "Calls", "resolution": "Ambiguous", "path": "src/PSGraphRender/Public/New-RenderDocument.ps1", "startLine": 116 },
+
+      { "source": "Get-RenderTemplateSet", "target": "Resolve-RenderTemplateSetPath", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Get-RenderTemplateSet", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Get-RenderTemplateSet", "target": "Get-RenderAsset", "kind": "Calls", "resolution": "Ambiguous" },
+
+      { "source": "Test-RenderViewModel", "target": "viewmodel.schema.json", "kind": "Reads", "resolution": "Certain" },
+      { "source": "Test-RenderViewModel", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Assert-RenderContractVersion", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Resolve-RenderMeta", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+
+      { "source": "Resolve-RenderConfiguration", "target": "Import-RenderDataFile", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Resolve-RenderConfiguration", "target": "Test-RenderSettingValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Resolve-RenderConfiguration", "target": "Invoke-RenderConfigurationConstraint", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Resolve-RenderConfiguration", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Import-RenderDataFile", "target": "settings.psd1", "kind": "Reads", "resolution": "Certain" },
+      { "source": "Import-RenderDataFile", "target": "theme.psd1", "kind": "Reads", "resolution": "Certain" },
+      { "source": "Test-RenderSettingValue", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Invoke-RenderConfigurationConstraint", "target": "Get-HashtableValue", "kind": "Calls", "resolution": "Certain" },
+
+      { "source": "Resolve-RenderString", "target": "Import-RenderDataFile", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Resolve-RenderString", "target": "Get-RenderAssetPath", "kind": "Calls", "resolution": "Ambiguous" },
+      { "source": "Get-RenderAsset", "target": "Get-RenderAssetPath", "kind": "Calls", "resolution": "Certain" },
+
+      { "source": "Show-RenderDocument", "target": "New-RenderDocumentPath", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Show-RenderDocument", "target": "Get-VSCodeLauncher", "kind": "Calls", "resolution": "Certain" },
+      { "source": "Show-RenderDocument", "target": "Resolve-LoopbackDocumentUrl", "kind": "Calls", "resolution": "Certain" }
+    ],
+    "unresolved": [
+      { "source": "Show-RenderDocument", "sourceName": "Show-RenderDocument", "targetName": "Start-Process", "path": "src/PSGraphRender/Public/Show-RenderDocument.ps1", "startLine": 142 },
+      { "source": "Import-RenderDataFile", "sourceName": "Import-RenderDataFile", "targetName": "Import-PowerShellDataFile", "path": "src/PSGraphRender/Private/Config/Import-RenderDataFile.ps1", "startLine": 44 }
+    ]
+  }
+}
