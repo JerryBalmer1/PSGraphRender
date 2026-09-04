@@ -34,14 +34,23 @@ const PROBE_POINTS = [
 // would be a second place a backend's shape is stated - the design bug the
 // Smoke block exists to avoid. The defaults are cytoscape's, so a job written
 // before this file grew the fields behaves exactly as it did.
-const DEFAULTS = { canvas: '#cy', menu: '#node-menu', button: 'right', ready: '#cy canvas' };
+const DEFAULTS = { canvas: '#cy', menu: '#node-menu', button: 'right', ready: '#cy canvas', hover: 0 };
 
+// `open` is what proves a node was selected; `menu` is where its actions are.
+// They are the same element for a context menu and different for a panel that
+// names the item and then lists what it offers - and they have to be separable,
+// because in `none` mode the ACTIONS are empty by design while the panel is not.
+// Reading "did it open" off the action list would make correct `none` behaviour
+// indistinguishable from a click that landed on nothing.
 function selectorsFor(job) {
+  const menu = job.menu || DEFAULTS.menu;
   return {
     canvas: job.canvas || DEFAULTS.canvas,
-    menu: job.menu || DEFAULTS.menu,
+    menu: menu,
+    open: job.open || menu,
     button: job.button || DEFAULTS.button,
-    ready: job.ready || DEFAULTS.ready
+    ready: job.ready || DEFAULTS.ready,
+    hover: job.hover || DEFAULTS.hover
   };
 }
 
@@ -49,10 +58,19 @@ async function openNodeMenu(page, sel) {
   const box = await (await page.$(sel.canvas)).boundingBox();
 
   for (const [fx, fy] of PROBE_POINTS) {
-    await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy, { button: sel.button });
+    const x = box.x + box.width * fx, y = box.y + box.height * fy;
+    if (sel.hover) {
+      // A view that raycasts in its animation frame has not decided what is
+      // under the pointer when a move and a press arrive together. Off by
+      // default, so a backend that hit-tests on the event is driven exactly as
+      // it always was.
+      await page.mouse.move(x, y);
+      await page.waitForTimeout(sel.hover);
+    }
+    await page.mouse.click(x, y, { button: sel.button });
     await page.waitForTimeout(120);
 
-    const count = await page.$$eval(sel.menu + ' > *', els => els.length);
+    const count = await page.$$eval(sel.open + ' > *', els => els.length);
     if (count > 0) { return true; }
   }
   return false;
@@ -125,8 +143,12 @@ async function runCase(browser, job) {
         result.message = `expected no editor action, found: ${named.map(n => n.text).join(' | ')}`;
         return result;
       }
-      if (result.menu.length === 0) {
-        result.message = 'the menu opened empty - none mode must remove the link actions, not the menu';
+      // What must survive `none` is the thing that OPENED, not the action list:
+      // an empty action list is the correct answer here, and the panel or menu
+      // around it still has to be there.
+      const stillThere = await page.$$eval(sel.open + ' > *', els => els.length);
+      if (stillThere === 0) {
+        result.message = 'nothing opened - none mode must remove the link actions, not what holds them';
         return result;
       }
     }

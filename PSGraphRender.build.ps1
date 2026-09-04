@@ -526,11 +526,17 @@ task TestLinkMode Build, {
         # silently - see docs/improvements.md.
         $LINK_PROBE = @{
             cytoscape    = @{ canvas = '#cy'; menu = '#node-menu'; button = 'right' ; ready = '#cy canvas' }
-            forcegraph3d = @{ canvas = '#fg'; menu = '#fg-actions'; button = 'left' ; ready = '#fg canvas'
+            forcegraph3d = @{ canvas = '#fg'; menu = '#fg-actions'; open = '#fg-panel'; button = 'left'
+                ready = '#fg canvas'
                 # A force simulation is still moving when the canvas first
-                # exists. The probe clicks a point, so it has to click after the
-                # node has stopped arriving at it.
+                # exists, and the view fits itself when it stops. The probe
+                # clicks a point, so it clicks after the item has stopped
+                # arriving at it.
                 settle = 3000
+                # And this backend resolves what is under the pointer in its
+                # render loop rather than on the event, so the pointer has to be
+                # somewhere before the press.
+                hover = 150
             }
         }
 

@@ -1,0 +1,149 @@
+/* Appearance values arrive as configuration and are written onto :root by
+   bootstrap.js, so every colour here names a variable rather than a literal.
+   The fallbacks are what a raw, unsubstituted template looks like - not a
+   second palette to keep in step. */
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--PageBackground, #0d1117);
+  color: var(--BodyColor, #e6edf3);
+  font-family: var(--BodyFont, system-ui, -apple-system, Segoe UI, sans-serif);
+  font-size: 13px;
+}
+
+/* A column, and the drawing gets what is left. The status bar could have
+   floated over a full-bleed canvas and it deliberately does not: the smoke
+   gate screenshots this container and compares it against the same container
+   in an EMPTY render, and anything else painted inside that rectangle is in
+   both numbers. Chrome over the canvas does not make a blank page look drawn,
+   but it makes a drawn page look less drawn - the floor stops discriminating
+   long before it stops passing. Measured on one payload with everything else
+   held still: 3.07 with the bar inside the capture, 3.95 with it above, and
+   the empty render fell from 9,252 bytes to 5,168. */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The library sizes its canvas to this element. */
+#fg {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Setting `display` on an element that is sometimes `hidden` beats the user
+   agent's [hidden]{display:none}, so the attribute stops working. Stated once,
+   for every such element here, because the two failures it caused look nothing
+   alike: the status bar showed zero counts before anything had filled it, and
+   the notice - which is inset:0 - became an invisible sheet across the whole
+   viewport that swallowed every click on the canvas under it. The second one
+   cost a grid of eighty-one clicks that hit nothing and a hunt through the
+   camera code, and what found it was elementFromPoint naming the notice. */
+#fg-status[hidden],
+#fg-notice[hidden] {
+  display: none;
+}
+
+#fg-status {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  padding: 10px 14px;
+  background: var(--ChromeBackground, #161b22);
+  border-bottom: 1px solid var(--ChromeBorder, #30363d);
+}
+
+#fg-title {
+  font-weight: 600;
+  margin-right: auto;
+}
+
+#fg-status .count b {
+  color: var(--AccentColor, #58a6ff);
+}
+
+#fg-generated {
+  color: var(--MutedColor, #8b949e);
+}
+
+#fg-panel {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  /* A length is a number in Config, so the unit is applied here. */
+  max-width: calc(var(--PanelWidth, 340) * 1px);
+  padding: 12px 14px;
+  background: var(--ChromeBackground, #161b22);
+  border: 1px solid var(--ChromeBorder, #30363d);
+  border-radius: 6px;
+}
+
+#fg-name {
+  font-weight: 600;
+  /* A label is free text from a producer and one of them is eventually very
+     long. Wrapping rather than ellipsising: this panel has room and a
+     truncated identifier is worse than a tall box. */
+  overflow-wrap: anywhere;
+}
+
+#fg-where {
+  color: var(--MutedColor, #8b949e);
+  overflow-wrap: anywhere;
+  margin-top: 2px;
+}
+
+#fg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Empty in `none` mode, for every item. The rule stays because the container
+   stays: the mode removes the actions, not the panel. */
+#fg-actions:empty {
+  display: none;
+}
+
+#fg-actions a,
+#fg-actions button {
+  font: inherit;
+  color: var(--AccentColor, #58a6ff);
+  background: none;
+  border: 1px solid var(--ChromeBorder, #30363d);
+  border-radius: 4px;
+  padding: 3px 8px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+#fg-actions [aria-disabled="true"] {
+  color: var(--MutedColor, #8b949e);
+  cursor: default;
+}
+
+#fg-close {
+  font: inherit;
+  color: var(--MutedColor, #8b949e);
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+#fg-notice {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  color: var(--MutedColor, #8b949e);
+}

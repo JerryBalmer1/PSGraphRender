@@ -1,0 +1,24 @@
+  <!-- The counts the smoke gate reads, and the only numbers on the page. They
+       are here rather than in a heading because a canvas backend needs a DOM
+       fact to state "this many arrived" - a screenshot cannot be counted. -->
+  <div id="fg-status" hidden>
+    <span id="fg-title"></span>
+    <span class="count"><b id="fg-nodes">0</b> <span id="fg-nodes-label"></span></span>
+    <span class="count"><b id="fg-links">0</b> <span id="fg-links-label"></span></span>
+    <span id="fg-generated"></span>
+    <span id="fg-hint"></span>
+  </div>
+
+  <div id="fg"></div>
+
+  <!-- What a selected item offers. Empty until something is clicked, and in
+       `none` mode it stays empty of links for every item, because the files
+       that build one were never assembled into this document. -->
+  <div id="fg-panel" hidden>
+    <div id="fg-name"></div>
+    <div id="fg-where"></div>
+    <div id="fg-actions"></div>
+    <button type="button" id="fg-close"></button>
+  </div>
+
+  <p id="fg-notice" hidden></p>
