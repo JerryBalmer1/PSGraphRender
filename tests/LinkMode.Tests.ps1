@@ -37,7 +37,7 @@ BeforeAll {
     # set, never an edit in place: a suite that rewrites src/ to make its own
     # assertion pass has stopped testing the thing that ships.
     #
-    # Settings are appended as data, the same way a caller sets any other
+    # Settings are written as data, the same way a caller sets any other
     # setting - there is no test-only mechanism here, which is the point.
     function New-ConfiguredTemplateSet {
         param(
@@ -344,9 +344,12 @@ Import-Module '$manifest' -Force
     }
 
     It 'changes CONFIG only by adding the two link settings, and defaults the mode to editor' {
-        # The half of the control with the red capability: flipping the shipped
-        # default turns THIS red while the comparisons above stay green, because
-        # the mode is one value in one blob.
+        # The half of the control that pins WHICH value the default is. Flipping
+        # the shipped default turns this red - and, because the mode is resolved
+        # at assembly rather than in the browser, it turns the comparisons above
+        # red too: a different mode assembles different files, so the document
+        # body moves as well as CONFIG. Verified by probe P1b in the pass's
+        # verify.ps1, which was written asserting the opposite and was wrong.
         $set = New-ConfiguredTemplateSet -Name 'default-config'
         $head = Get-DocumentBlock -Document (New-Document -TemplateSetPath $set) -Name 'CONFIG'
         $base = Get-DocumentBlock -Document $script:BaseDoc -Name 'CONFIG'

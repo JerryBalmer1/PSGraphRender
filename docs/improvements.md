@@ -151,7 +151,7 @@ probes
 loopback ports and reads user agents, none of which is rendering. Raise it
 before resolving it.
 
-### A node link can only ever be an editor scheme — **large**
+### A node link can only ever be an editor scheme — **closed in 0.14.0**
 
 `vsCodeUriFor` in `scripts/editor-link.js` builds `vscode://file/{path}:{line}`
 and `NODE_ACTIONS` in `scripts/menu.js` binds to it. The prefix is a literal in
@@ -163,15 +163,40 @@ where the reader has no clone and the useful destination is the file **on the
 forge** — `https://…/blob/<sha>/<path>#L<line>`. Today such a report has to
 ship links that only work on the author's machine, or none.
 
-The shape of the answer is probably a settings entry naming a link MODE, with
+~~The shape of the answer is probably a settings entry naming a link MODE, with
 the editor scheme as its default so nothing changes for existing callers, plus
 a template for the href case. It is **large**: it adds a setting, changes what
 a node's context menu can do, and touches the one file whose links a reader
-clicks — so it is logged and stopped on, not taken unprompted.
+clicks — so it is logged and stopped on, not taken unprompted.~~
 
-Found by pass 0043 while building `examples/links/`, which wanted forge links
+~~Found by pass 0043 while building `examples/links/`, which wanted forge links
 and could not have them. That example ships with a placeholder `rootPath`
-instead, and says so. *Wants its own red-first iteration.*
+instead, and says so.~~ *Wants its own red-first iteration.*
+
+**Closed by pass 0047, and the guess above was right about the shape and wrong
+about the mechanism.** `LinkMode` is an Enum of `editor`, `hrefTemplate` and
+`none`, defaulting to `editor`, with `LinkHrefTemplate` beside it — declared as
+data in `Config/settings.schema.psd1` like every other setting, needing no new
+validator type and no contract change.
+
+What the guess missed is that a runtime branch is the wrong place for it. A
+report is one self-contained file that gets forwarded, so a mode selected in the
+browser would leave every other mode's code sitting in the document — inert, but
+present. `none` has to mean the scheme construction is not in the artifact.
+So the mode is resolved when the document is **assembled**: `SlotsBySetting` in
+`templateset.psd1` picks which files fill the node-link slots, and the shipped
+document carries one mode's code and not three.
+
+The constraint that shaped it was the no-regression control: an `editor`-mode
+document had to stay byte-identical to v0.13.0's. Code could not move within the
+assembled document, only into files re-inserted where it already sat — which is
+why `editor-link.js` became `link/common.js` plus `link/editor.js` and the menu
+entries, selection action and diagnostics row became slots rather than a
+`concat`. `tests/LinkMode.Tests.ps1` asserts that identity on every run.
+
+`examples/links/forge-links.html` is the report pass 0043 wanted and could not
+have: the same payload as `editor-links.html`, one setting different, and links
+that work from a committed file on anyone's machine.
 
 ## Noticed, not logged as work
 

@@ -38,14 +38,52 @@ request and could not have them. See **A node link can only ever be an editor
 scheme** in [`docs/improvements.md`](improvements.md) — it is **large**, so it
 is logged and stopped on rather than taken.
 
-**Next.** That backlog item wants its own red-first iteration and a version
-bump. Nothing else here is blocked.
+**Next.** ~~That backlog item wants its own red-first iteration and a version
+bump.~~ **Taken by pass 0047 at v0.14.0 — see below.** Nothing else here is
+blocked.
 
 ### Pass 0045
 
 `PSGraphRender.code-workspace` no longer registers
 `../PSModuleGraph` as a workspace folder — the entry is deleted, and harness
 backlog 60 is closed.
+
+### Pass 0047
+
+**Where it is.** v0.14.0. The first pass to change `src/` since the handoff.
+
+**What it did.** A node link is declared configuration now. `LinkMode` is an
+Enum of `editor` (unchanged behaviour, and the default), `hrefTemplate` (a URL
+per node from a template over view-model fields) and `none` (no link at all),
+with `LinkHrefTemplate` beside it. Both are declared as data in
+`Config/settings.schema.psd1` like every other setting. The backlog item pass
+0043 filed is closed; no contract change was needed, because every token
+resolves from a field the view model already carries.
+
+**The one thing worth knowing before touching this.** The mode is resolved when
+the document is **assembled**, not in the browser. `SlotsBySetting` in
+`templateset.psd1` chooses which files fill the node-link slots, so a shipped
+report carries one mode's code and not three — which is what lets `none` mean
+the scheme construction is absent from the file rather than present and unused.
+A report is one self-contained document that gets forwarded, so that
+distinction is the whole point rather than a detail.
+
+That is also why the link code is split the way it is.
+`tests/LinkMode.Tests.ps1` asserts an `editor`-mode document is byte-identical
+to v0.13.0's for the same payload, so code could not move within the assembled
+document — only into files re-inserted where it already sat. If you are
+tempted to tidy `link/` into one file per mode with a `concat` in `menu.js`,
+that test is what will stop you, and it is right to.
+
+**New in the build.** `./build.ps1 -Task TestLinkMode` opens each mode in
+Chromium, right-clicks a node and reads the href off the menu — separate from
+`TestBrowser`, which asks whether a page came alive rather than whether its
+links are the ones configured. `LintJavaScript` now wraps declared fragments
+before parsing them; see `FragmentSlots` in `templateset.psd1`.
+
+**Examples.** Seven now. `examples/links/forge-links.html` is the report 0043
+wanted and could not have: the same payload as `editor-links.html`, one setting
+different, and live GitHub links from a committed file.
 
 ## What this is
 
@@ -66,7 +104,7 @@ skipping, deliberately.
 
 `contract/viewmodel.schema.json` is the boundary and it is the product. It is
 JSON Schema, language-neutral, and **versioned independently of the module**: it
-is at **1.1.0** while the module is at 0.13.0.
+is at **1.1.0** while the module is at 0.14.0.
 
 Change protocol:
 
@@ -126,6 +164,7 @@ are.** Everything else follows from that one rule.
 | `v0.12.0` | the last release operated by the resident agentic workflow |
 | `handoff-begin-2026-08-29` | annotated tag on `v0.12.0`'s commit, `4a367c6`. Everything before it was operated by the in-repo thread-ledger process; everything after is operated plan-by-plan from the harness project |
 | `v0.13.0` | this handoff. Vendor tooling added, resident workflow removed, knowledge archived |
+| `v0.14.0` | link mode: a node link is configuration rather than a hardcoded scheme. First `src/` change since the handoff |
 
 The module version and the contract version move independently. For the module:
 **patch** for a normal implementation, **minor** when a template set, a setting

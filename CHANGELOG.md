@@ -20,6 +20,75 @@ v0.13.0; they are a record, not a process.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-09-04
+
+Link mode. A node link is configuration now, not a hardcoded scheme.
+
+### Added
+
+- **`LinkMode`**, an Enum setting of `editor`, `hrefTemplate` and `none`,
+  defaulting to `editor`, with **`LinkHrefTemplate`** beside it. Declared as
+  data in `Config/settings.schema.psd1` like every other setting: no new
+  validator type was needed, because `Enum` and `String` were already there.
+  `hrefTemplate` resolves `{relativePath}`, `{path}`, `{id}`, `{label}` and
+  `{line}` — every one a field the view model already carries, so the contract
+  did not move. Closes the **large** item logged in `docs/improvements.md` and
+  the backlog entry pass 0043 filed, which wanted forge links for a report
+  attached to a pull request and could not have them.
+- **`SlotsBySetting` in `templateset.psd1`**, which is how the mode is chosen.
+  A setting's value selects which files fill a slot, so the mode is resolved
+  when the document is **assembled** rather than by a branch in the browser. A
+  report is one self-contained file that gets forwarded, so `none` has to mean
+  the scheme construction is not in the document — not that something declines
+  to call it. A backend declaring no `SlotsBySetting`, such as `plain`, is
+  unaffected.
+- **`./build.ps1 -Task TestLinkMode`** and `tests/browser/link-mode.cjs`. It
+  opens each mode in Chromium, right-clicks a node and reads the href off the
+  menu the registry built. Separate from `TestBrowser`, which asks whether a
+  page came alive; this asks whether its links are the ones configured. It
+  drives the UI rather than reaching into the page, because a hook for tooling
+  would be a global in every shipped report.
+- **`tests/LinkMode.Tests.ps1`**, including a no-regression control that builds
+  a fresh clone at the previous release and asserts an `editor`-mode document
+  is byte-identical to it for the same payload.
+- **`examples/links/forge-links.html`**, a seventh example: the same payload
+  and layout as `editor-links.html` with one setting different, and links that
+  work from a committed file. `hrefTemplate` never reads `meta.rootPath`, so
+  the placeholder that keeps a machine path out of the committed artifact stays
+  exactly where it was.
+- **`menuAt` in `tools/shoot.cjs`**, a real right-click, so both link examples
+  now show the open context menu instead of a graph that says nothing about
+  links.
+- **`FragmentSlots` in `templateset.psd1`**, read by `LintJavaScript`. The
+  link-mode action parts are runs of array elements and do not parse alone;
+  they are wrapped in the shape their manifest names before `node --check` sees
+  them. Declared by slot rather than by listing paths, so a fourth mode's parts
+  arrive checked.
+
+### Changed
+
+- **`Get-RenderTemplateSet` takes `-Configuration`**, and `New-RenderDocument`
+  resolves the settings before assembling rather than after. Some slots depend
+  on a setting's value, so the configuration has to exist first. Omitting it
+  still works and resolves from the template-set path.
+- **`scripts/editor-link.js` split into `scripts/link/`**, one file per mode
+  plus the shared `common.js`. The two editor menu entries, the selection
+  action and the diagnostics row became slots filled at the positions they
+  already occupied — the byte-identity control above is why the code could not
+  simply move.
+- **`Module.Quality.Tests.ps1` walks `SlotsBySetting`** as well as `Slots`, so
+  files reachable only through a setting's value are still asserted to ship.
+
+### Fixed
+
+- **`{relativePath}` escaped its own separators.** `encodeURIComponent` over a
+  whole path yields `src%2FPublic%2FWidget.ps1`, which is right for a query
+  value and wrong for the one thing that token exists for: a forge URL of the
+  shape `/blob/main/{relativePath}` resolves to nothing with `%2F` in it. Each
+  token now escapes for its own shape — a path by segment, everything else
+  whole. Found by the browser probe before the feature shipped, on the example
+  this release adds.
+
 ## [0.13.0] - 2026-08-29
 
 The handoff. This repository no longer operates itself.

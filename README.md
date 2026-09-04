@@ -1,7 +1,7 @@
 # PSGraphRender
 
 [![CI](https://github.com/JerryBalmer1/PSGraphRender/actions/workflows/ci.yml/badge.svg)](https://github.com/JerryBalmer1/PSGraphRender/actions/workflows/ci.yml)
-[![Module 0.13.0](https://img.shields.io/badge/module-0.13.0-blue)](CHANGELOG.md)
+[![Module 0.14.0](https://img.shields.io/badge/module-0.14.0-blue)](CHANGELOG.md)
 [![Contract 1.1.0](https://img.shields.io/badge/view%20model%20contract-1.1.0-6ddf6d)](contract/viewmodel.schema.json)
 [![PowerShell 5.1+](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE)](src/PSGraphRender/PSGraphRender.psd1)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-lightgrey)](LICENSE)
