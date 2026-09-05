@@ -20,7 +20,7 @@ a{color:#58a6ff}
 code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 </style></head><body>
 <h1>forcegraph3d variant catalogue</h1>
-<p class="note">19 labelled looks for the 3D backend, in 5 families. Every one is ONE overlay of declared settings away from <span class="label">A0</span>, which is what the backend ships with no configuration at all &mdash; so any two pictures here differ by exactly the keys named under them.</p>
+<p class="note">22 labelled looks for the 3D backend, in 5 families. Every one is ONE overlay of declared settings away from <span class="label">A0</span>, which is what the backend ships with no configuration at all &mdash; so any two pictures here differ by exactly the keys named under them.</p>
 <p class="note">All of them draw the same payload, <code>input/ecosystem-viewmodel.json</code>, so the only variable is the overlay. Generated from <code>examples/threed/variants.psd1</code> by <code>examples/Build-Examples.ps1 -Variant all</code>; this page is never edited by hand.</p>
 <p class="note">A screenshot cannot show a zoom speed or a hover. The D family is here for its labels and its captions; open the page to use it.</p>
 <h2>A &mdash; shape and size</h2>
@@ -65,14 +65,22 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <div class="keys">KindShape</div>
 <div style="margin-top:.5rem"><a href="catalog/A4.html">open</a></div>
 </div></div>
+<div class="card">
+<a href="catalog/A5.html"><img src="catalog/A5.png" alt="A5 - The v0.16.0 default" loading="lazy"></a>
+<div class="body">
+<div><span class="label">A5</span> <span class="name">The v0.16.0 default</span></div>
+<div class="caption">The look this backend shipped before v0.17.0 promoted the composed one: flat ground, no environment, no panel, a wider softer glow and a torus on exported items.</div>
+<div class="keys">BackgroundGlowColor, BackgroundStyle, EdgeColor, EdgeOpacity, EdgeWidth, ExportedEmphasis, FitPadding, GlowOpacity, GlowSize, GlowStrength, GridStyle, KindColor, KindColorFallback, NodeSize, ParticleColor, ParticleCount, ParticleWidth, ShowControlPanel</div>
+<div style="margin-top:.5rem"><a href="catalog/A5.html">open</a></div>
+</div></div>
 </div>
 <h2>B &mdash; colour and mood</h2>
 <div class="grid">
 <div class="card">
-<a href="catalog/B1.html"><img src="catalog/B1.png" alt="B1 - Vignette" loading="lazy"></a>
+<a href="catalog/B1.html"><img src="catalog/B1.png" alt="B1 - Flat ground" loading="lazy"></a>
 <div class="body">
-<div><span class="label">B1</span> <span class="name">Vignette</span></div>
-<div class="caption">BackgroundStyle = vignette. A centred glow behind the graph, so it sits IN something rather than against it.</div>
+<div><span class="label">B1</span> <span class="name">Flat ground</span></div>
+<div class="caption">BackgroundStyle vignette -&gt; flat. One unbroken colour behind the graph - what shipped as the default until v0.17.0.</div>
 <div class="keys">BackgroundStyle</div>
 <div style="margin-top:.5rem"><a href="catalog/B1.html">open</a></div>
 </div></div>
@@ -80,7 +88,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <a href="catalog/B2.html"><img src="catalog/B2.png" alt="B2 - Top-lit gradient" loading="lazy"></a>
 <div class="body">
 <div><span class="label">B2</span> <span class="name">Top-lit gradient</span></div>
-<div class="caption">BackgroundStyle = gradient. The same environment lit from above rather than from behind.</div>
+<div class="caption">BackgroundStyle vignette -&gt; gradient. The same environment lit from above rather than from behind.</div>
 <div class="keys">BackgroundStyle</div>
 <div style="margin-top:.5rem"><a href="catalog/B2.html">open</a></div>
 </div></div>
@@ -88,7 +96,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <a href="catalog/B3.html"><img src="catalog/B3.png" alt="B3 - Ember" loading="lazy"></a>
 <div class="body">
 <div><span class="label">B3</span> <span class="name">Ember</span></div>
-<div class="caption">A warm palette and a much stronger glow: GlowStrength 0.3 -&gt; 1.4, GlowOpacity 0.16 -&gt; 0.42, and warm KindColor.</div>
+<div class="caption">A warm palette and a much stronger glow: GlowStrength 0.4 -&gt; 1.4, GlowOpacity 0.1 -&gt; 0.42, and warm KindColor.</div>
 <div class="keys">FogColor, GlowOpacity, GlowSize, GlowStrength, KindColor, KindColorFallback, PageBackground, ParticleColor</div>
 <div style="margin-top:.5rem"><a href="catalog/B3.html">open</a></div>
 </div></div>
@@ -100,6 +108,22 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <div class="keys">FogColor, FogDensity, GlowOpacity, GlowStrength, KindColor, KindColorFallback</div>
 <div style="margin-top:.5rem"><a href="catalog/B4.html">open</a></div>
 </div></div>
+<div class="card">
+<a href="catalog/B5.html"><img src="catalog/B5.png" alt="B5 - Enclosure" loading="lazy"></a>
+<div class="body">
+<div><span class="label">B5</span> <span class="name">Enclosure</span></div>
+<div class="caption">GridStyle floor -&gt; room. Ruled on all six sides, so there is a reference whichever way the reader turns - which a floor stops giving at eye level.</div>
+<div class="keys">GridStyle</div>
+<div style="margin-top:.5rem"><a href="catalog/B5.html">open</a></div>
+</div></div>
+<div class="card">
+<a href="catalog/B6.html"><img src="catalog/B6.png" alt="B6 - Ungrounded" loading="lazy"></a>
+<div class="body">
+<div><span class="label">B6</span> <span class="name">Ungrounded</span></div>
+<div class="caption">GridStyle floor -&gt; none. The graph with nothing at a known distance behind it - the complaint that prompted the environment, kept as a picture.</div>
+<div class="keys">GridStyle</div>
+<div style="margin-top:.5rem"><a href="catalog/B6.html">open</a></div>
+</div></div>
 </div>
 <h2>C &mdash; connectors</h2>
 <div class="grid">
@@ -107,7 +131,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <a href="catalog/C1.html"><img src="catalog/C1.png" alt="C1 - Dense particles" loading="lazy"></a>
 <div class="body">
 <div><span class="label">C1</span> <span class="name">Dense particles</span></div>
-<div class="caption">ParticleCount 2 -&gt; 6 and faster. Direction becomes the loudest thing on the page.</div>
+<div class="caption">ParticleCount 3 -&gt; 6 and faster. Direction becomes the loudest thing on the page.</div>
 <div class="keys">ParticleCount, ParticleSpeed, ParticleWidth</div>
 <div style="margin-top:.5rem"><a href="catalog/C1.html">open</a></div>
 </div></div>
@@ -115,7 +139,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <a href="catalog/C2.html"><img src="catalog/C2.png" alt="C2 - Heavy connectors" loading="lazy"></a>
 <div class="body">
 <div><span class="label">C2</span> <span class="name">Heavy connectors</span></div>
-<div class="caption">EdgeWidth 1.0 -&gt; 3.0 and EdgeOpacity 0.42 -&gt; 0.8, with no particles. Structure over motion.</div>
+<div class="caption">EdgeWidth 1.4 -&gt; 3.0 and EdgeOpacity 0.62 -&gt; 0.8, with no particles. Structure over motion.</div>
 <div class="keys">ArrowSize, EdgeOpacity, EdgeWidth, ParticleCount</div>
 <div style="margin-top:.5rem"><a href="catalog/C2.html">open</a></div>
 </div></div>
@@ -158,21 +182,21 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <a href="catalog/D3.html"><img src="catalog/D3.png" alt="D3 - Names always on" loading="lazy"></a>
 <div class="body">
 <div><span class="label">D3</span> <span class="name">Names always on</span></div>
-<div class="caption">ShowLabels hover -&gt; always. Every item names itself, positioned over the canvas from its projected coordinates.</div>
+<div class="caption">ShowLabels hover -&gt; always. Every item names itself, positioned over the canvas from its projected coordinates - which it did not actually do until v0.17.0.</div>
 <div class="keys">ShowLabels</div>
 <div style="margin-top:.5rem"><a href="catalog/D3.html">open</a></div>
+</div></div>
+<div class="card">
+<a href="catalog/D4.html"><img src="catalog/D4.png" alt="D4 - No controls at all" loading="lazy"></a>
+<div class="body">
+<div><span class="label">D4</span> <span class="name">No controls at all</span></div>
+<div class="caption">ShowControlPanel open -&gt; none. The panel is removed from the document rather than hidden - for a report built for print, or for a wall nobody can press.</div>
+<div class="keys">ShowControlPanel</div>
+<div style="margin-top:.5rem"><a href="catalog/D4.html">open</a></div>
 </div></div>
 </div>
 <h2>E &mdash; composed looks</h2>
 <div class="grid">
-<div class="card">
-<a href="catalog/E1.html"><img src="catalog/E1.png" alt="E1 - Nebula - the recommended look" loading="lazy"></a>
-<div class="body">
-<div><span class="label">E1</span> <span class="name">Nebula - the recommended look</span></div>
-<div class="caption">The whole scene at once: vignette environment, every classification shaped, a slightly warmer palette, and a ring on everything the module exports.</div>
-<div class="keys">BackgroundGlowColor, BackgroundStyle, EdgeOpacity, EdgeWidth, ExportedEmphasis, GlowOpacity, GlowSize, GlowStrength, KindColor, KindColorFallback, KindShape, NodeSize, ParticleColor, ParticleCount, ParticleWidth</div>
-<div style="margin-top:.5rem"><a href="catalog/E1.html">open</a></div>
-</div></div>
 <div class="card">
 <a href="catalog/E2.html"><img src="catalog/E2.png" alt="E2 - Atlas - built to be read" loading="lazy"></a>
 <div class="body">
@@ -185,8 +209,8 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#c9d1d9}
 <a href="catalog/E3.html"><img src="catalog/E3.png" alt="E3 - Schematic - no atmosphere at all" loading="lazy"></a>
 <div class="body">
 <div><span class="label">E3</span> <span class="name">Schematic - no atmosphere at all</span></div>
-<div class="caption">Everything atmospheric off: no glow, no fog, no particles, flat ground. Three dimensions drawn as a diagram.</div>
-<div class="keys">BackgroundStyle, EdgeOpacity, EdgeWidth, ExportedEmphasis, FogDensity, GlowOpacity, GlowSize, GlowStrength, KindShape, ParticleCount, ToneMappingExposure</div>
+<div class="caption">Everything atmospheric off: no glow, no fog, no particles, no environment, flat ground. Three dimensions drawn as a diagram.</div>
+<div class="keys">BackgroundStyle, EdgeOpacity, EdgeWidth, ExportedEmphasis, FogDensity, GlowOpacity, GlowSize, GlowStrength, GridStyle, KindShape, ParticleCount, ToneMappingExposure</div>
 <div style="margin-top:.5rem"><a href="catalog/E3.html">open</a></div>
 </div></div>
 </div>

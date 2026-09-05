@@ -26,7 +26,7 @@
     Build one example instead of all of them.
 .PARAMETER Variant
     Build the labelled 3D variants instead of the examples: `all` for every row
-    in threed/variants.psd1, or one label such as E1. The catalogue page is
+    in threed/variants.psd1, or one label such as B5. The catalogue page is
     regenerated whenever any variant is built.
 .PARAMETER SkipShots
     Build the variant documents without taking their screenshots. The pictures
@@ -47,7 +47,7 @@
 
     Rebuilds every labelled 3D variant, its screenshot, and the catalogue page.
 .EXAMPLE
-    pwsh -NoProfile -File examples/Build-Examples.ps1 -Variant E1
+    pwsh -NoProfile -File examples/Build-Examples.ps1 -Variant B5
 
     Rebuilds one variant and the catalogue page that indexes it.
 #>

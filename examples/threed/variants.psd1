@@ -54,9 +54,11 @@
 
     Variants = @(
 
-        # -- A: shape and size -------------------------------------------
-        # What an item IS, and how big. The channel this backend did not have
-        # before v0.16.0: one geometry, one size, for everything.
+        # -- A: the origins, and the shape channel -----------------------
+        # A0 is what ships. A5 is what shipped BEFORE it, kept as a row rather
+        # than as a paragraph so the promotion at v0.17.0 can be looked at
+        # instead of read about. Between them, what an item IS and how big -
+        # the channel this backend did not have before v0.16.0.
         @{
             Label = 'A0'; Family = 'A'
             Name = 'The default'
@@ -87,27 +89,56 @@
             Caption = 'KindShape empty, so every item takes NodeShapeFallback. What the backend drew before v0.16.0, on the new scene.'
             Overlay = @{ KindShape = '' }
         }
+        @{
+            Label = 'A5'; Family = 'A'
+            Name = 'The v0.16.0 default'
+            Caption = 'The look this backend shipped before v0.17.0 promoted the composed one: flat ground, no environment, no panel, a wider softer glow and a torus on exported items.'
+            Overlay = @{
+                # THE PREVIOUS ORIGIN, kept whole. Every value here was a
+                # default until v0.17.0, so this row is the reversal: an
+                # operator who preferred the old look can read what to move
+                # back rather than reconstruct it from a changelog.
+                #
+                # It is also the honest comparison. A0 and A5 draw the same
+                # payload through the same generator, so the difference between
+                # the two pictures is exactly what this pass changed and
+                # nothing else.
+                BackgroundStyle = 'flat'; BackgroundGlowColor = '#16304d'
+                GridStyle = 'none'
+                ShowControlPanel = 'none'
+                NodeSize = 14
+                GlowStrength = 0.3; GlowSize = 1.55; GlowOpacity = 0.16
+                ExportedEmphasis = 'glow'
+                EdgeColor = '#57657a'; EdgeOpacity = 0.42; EdgeWidth = 1.0
+                ParticleCount = 2; ParticleWidth = 1.6; ParticleColor = '#7fd4ff'
+                KindColor = @{ Function = '#4da3ff'; Class = '#c78bff'; Enum = '#ffb84d'; Script = '#5ad1a5' }
+                KindColorFallback = '#8895a7'
+                FitPadding = 70
+            }
+        }
 
-        # -- B: colour and mood ------------------------------------------
-        # The scene the items sit in. B1 and B2 are the environment the
-        # canvas-growth floor keeps out of the default - see Config/theme.psd1
-        # for the measurement that decided it.
+        # -- B: colour, mood, and what the graph sits in -----------------
+        # The scene the items sit in. B1 and B2 are the backgrounds the default
+        # is NOT, now that the default IS a vignette - which it could not be
+        # until part 1 of pass 0052 replaced the byte-ratio floor a painted
+        # background blinded. B5 and B6 are the other two environments.
+        # Config/theme.psd1 carries both measurements.
         @{
             Label = 'B1'; Family = 'B'
-            Name = 'Vignette'
-            Caption = 'BackgroundStyle = vignette. A centred glow behind the graph, so it sits IN something rather than against it.'
-            Overlay = @{ BackgroundStyle = 'vignette' }
+            Name = 'Flat ground'
+            Caption = 'BackgroundStyle vignette -> flat. One unbroken colour behind the graph - what shipped as the default until v0.17.0.'
+            Overlay = @{ BackgroundStyle = 'flat' }
         }
         @{
             Label = 'B2'; Family = 'B'
             Name = 'Top-lit gradient'
-            Caption = 'BackgroundStyle = gradient. The same environment lit from above rather than from behind.'
+            Caption = 'BackgroundStyle vignette -> gradient. The same environment lit from above rather than from behind.'
             Overlay = @{ BackgroundStyle = 'gradient' }
         }
         @{
             Label = 'B3'; Family = 'B'
             Name = 'Ember'
-            Caption = 'A warm palette and a much stronger glow: GlowStrength 0.3 -> 1.4, GlowOpacity 0.16 -> 0.42, and warm KindColor.'
+            Caption = 'A warm palette and a much stronger glow: GlowStrength 0.4 -> 1.4, GlowOpacity 0.1 -> 0.42, and warm KindColor.'
             Overlay = @{
                 GlowStrength = 1.4; GlowOpacity = 0.42; GlowSize = 1.9
                 ParticleColor = '#ffcf8a'
@@ -127,19 +158,31 @@
                 KindColorFallback = '#4a6070'
             }
         }
+        @{
+            Label = 'B5'; Family = 'B'
+            Name = 'Enclosure'
+            Caption = 'GridStyle floor -> room. Ruled on all six sides, so there is a reference whichever way the reader turns - which a floor stops giving at eye level.'
+            Overlay = @{ GridStyle = 'room' }
+        }
+        @{
+            Label = 'B6'; Family = 'B'
+            Name = 'Ungrounded'
+            Caption = 'GridStyle floor -> none. The graph with nothing at a known distance behind it - the complaint that prompted the environment, kept as a picture.'
+            Overlay = @{ GridStyle = 'none' }
+        }
 
         # -- C: connectors ------------------------------------------------
         # The links, which carry both direction and the producer's confidence.
         @{
             Label = 'C1'; Family = 'C'
             Name = 'Dense particles'
-            Caption = 'ParticleCount 2 -> 6 and faster. Direction becomes the loudest thing on the page.'
+            Caption = 'ParticleCount 3 -> 6 and faster. Direction becomes the loudest thing on the page.'
             Overlay = @{ ParticleCount = 6; ParticleSpeed = 0.012; ParticleWidth = 2.2 }
         }
         @{
             Label = 'C2'; Family = 'C'
             Name = 'Heavy connectors'
-            Caption = 'EdgeWidth 1.0 -> 3.0 and EdgeOpacity 0.42 -> 0.8, with no particles. Structure over motion.'
+            Caption = 'EdgeWidth 1.4 -> 3.0 and EdgeOpacity 0.62 -> 0.8, with no particles. Structure over motion.'
             Overlay = @{ EdgeWidth = 3.0; EdgeOpacity = 0.8; ParticleCount = 0; ArrowSize = 7 }
         }
         @{
@@ -177,31 +220,33 @@
         @{
             Label = 'D3'; Family = 'D'
             Name = 'Names always on'
-            Caption = 'ShowLabels hover -> always. Every item names itself, positioned over the canvas from its projected coordinates.'
+            Caption = 'ShowLabels hover -> always. Every item names itself, positioned over the canvas from its projected coordinates - which it did not actually do until v0.17.0.'
             Overlay = @{ ShowLabels = 'always' }
+        }
+        @{
+            Label = 'D4'; Family = 'D'
+            Name = 'No controls at all'
+            Caption = 'ShowControlPanel open -> none. The panel is removed from the document rather than hidden - for a report built for print, or for a wall nobody can press.'
+            Overlay = @{ ShowControlPanel = 'none' }
         }
 
         # -- E: composed looks --------------------------------------------
-        # A whole aesthetic rather than one channel. These are the ones to
-        # judge: the pass's own answer to "make it look modern" is E1, and any
-        # of them can be promoted to the default by moving its values into
-        # Config/theme.psd1 - which is the point of writing them as overlays.
-        @{
-            Label = 'E1'; Family = 'E'
-            Name = 'Nebula - the recommended look'
-            Caption = 'The whole scene at once: vignette environment, every classification shaped, a slightly warmer palette, and a ring on everything the module exports.'
-            Overlay = @{
-                BackgroundStyle = 'vignette'; BackgroundGlowColor = '#173553'
-                KindShape = 'Function=sphere; Script=cone; Config=box; Contract=octahedron'
-                KindColor = @{ Function = '#4ea8ff'; Class = '#c78bff'; Enum = '#ffc55c'; Script = '#4fd6a8' }
-                KindColorFallback = '#7c8ba1'
-                GlowStrength = 0.32; GlowSize = 1.45; GlowOpacity = 0.14
-                ExportedEmphasis = 'ring'
-                ParticleCount = 3; ParticleWidth = 1.9; ParticleColor = '#9fe6ff'
-                EdgeOpacity = 0.5; EdgeWidth = 1.2
-                NodeSize = 12
-            }
-        }
+        # A whole aesthetic rather than one channel. Any of them can be
+        # promoted to the default by moving its values into Config/theme.psd1,
+        # which is the point of writing them as overlays.
+        #
+        # E1 IS GONE FROM THIS TABLE BECAUSE IT WON. "Nebula - the recommended
+        # look" was pass 0051's answer to "make it look modern"; v0.17.0 moved
+        # its treatments into Config/theme.psd1 and added the environment and
+        # the panel on top, so E1 is now what A0 draws. A row for it would be a
+        # second picture of the default, and rule 4 - one caption saying what
+        # this changes FROM DEFAULT - cannot be written for a variant that
+        # changes nothing.
+        #
+        # THE COORDINATE IS RETIRED RATHER THAN REUSED. A label is a thing the
+        # operator points with, and a pointer that quietly starts meaning
+        # something else is worse than one that is gone. E1 means "the look
+        # that became the default at v0.17.0", and it means that permanently.
         @{
             Label = 'E2'; Family = 'E'
             Name = 'Atlas - built to be read'
@@ -218,11 +263,11 @@
         @{
             Label = 'E3'; Family = 'E'
             Name = 'Schematic - no atmosphere at all'
-            Caption = 'Everything atmospheric off: no glow, no fog, no particles, flat ground. Three dimensions drawn as a diagram.'
+            Caption = 'Everything atmospheric off: no glow, no fog, no particles, no environment, flat ground. Three dimensions drawn as a diagram.'
             Overlay = @{
                 GlowStrength = 0; GlowSize = 1; GlowOpacity = 0
                 FogDensity = 0; ParticleCount = 0
-                BackgroundStyle = 'flat'; ToneMappingExposure = 1.0
+                BackgroundStyle = 'flat'; GridStyle = 'none'; ToneMappingExposure = 1.0
                 EdgeOpacity = 0.7; EdgeWidth = 1.4
                 KindShape = 'Function=sphere; Script=cone; Config=box; Contract=octahedron'
                 ExportedEmphasis = 'ring'

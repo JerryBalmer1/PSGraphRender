@@ -24,11 +24,25 @@ html, body {
    floated over a full-bleed canvas and it deliberately does not: the smoke
    gate screenshots this container and compares it against the same container
    in an EMPTY render, and anything else painted inside that rectangle is in
-   both numbers. Chrome over the canvas does not make a blank page look drawn,
-   but it makes a drawn page look less drawn - the floor stops discriminating
-   long before it stops passing. Measured on one payload with everything else
-   held still: 3.07 with the bar inside the capture, 3.95 with it above, and
-   the empty render fell from 9,252 bytes to 5,168. */
+   both pictures. Measured on one payload with everything else held still:
+   3.07 with the bar inside the capture, 3.95 with it above, and the empty
+   render fell from 9,252 bytes to 5,168.
+
+   THIS PARAGRAPH USED TO BE THE WHOLE GATE, and it said so in prose: "chrome
+   over the canvas does not make a blank page look drawn, but it makes a drawn
+   page look less drawn - the floor stops discriminating long before it stops
+   passing." Nothing turned that sentence into a check, so the next thing
+   painted in the rectangle was found by reading a 1.05 off a page that was
+   drawing perfectly. That is finding 67.
+
+   It is checked now, in two places, and the sentence is history rather than a
+   warning. templateset.psd1 declares CanvasDelta - the fraction of this
+   rectangle whose pixels the payload CHANGED - so anything painted here is in
+   both pictures and cancels instead of dominating. And tests/browser/smoke.cjs
+   refuses to accept a byte-ratio floor at all once the empty capture stops
+   being nearly blank, by measuring its PNG bytes per pixel. A layout change
+   that put chrome back inside this container would still cost contrast; it can
+   no longer quietly cost the gate. */
 body {
   display: flex;
   flex-direction: column;
@@ -47,10 +61,22 @@ body {
    what the first version of this file did, and it was found by two variants
    screenshotting to the same bytes. graph.js sets the attribute from the same
    setting. */
-#fg {
+/* The stage owns the LAYOUT and the positioning context; #fg is the library's
+   and holds nothing else.
+
+   That split is not tidiness. ForceGraph3D empties the container it is handed,
+   so anything this template nested inside #fg was gone the moment the graph
+   initialised - which is how ShowLabels = 'always' shipped at v0.16.0 and never
+   drew a label. partials/graph.html carries the full account. */
+#fg-stage {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+#fg {
+  position: absolute;
+  inset: 0;
   background: var(--PageBackground, #080b12);
 }
 
@@ -231,6 +257,211 @@ body {
   color: var(--MutedColor, #8b949e);
 }
 
+/* The control panel. A second stylesheet rather than more of base.css,
+   because the two answer different questions: base.css is the document and
+   the drawing, this is one component that sits over it. Same split the
+   reference backend makes between base, components and overlays.
+
+   Every colour names a custom property that bootstrap.js writes onto :root
+   from theme data, so a palette change is a data change. The fallbacks are
+   what a raw, unsubstituted template looks like - not a second palette to
+   keep in step.
+
+   IT LIVES IN #fg-stage AND NOT IN #fg, because the library empties the
+   container it is handed - base.css and partials/graph.html carry the account
+   of the shipped feature that lesson cost. So it is positioned against the
+   stage and sits OUTSIDE the rectangle the smoke gate captures, which is the
+   arrangement to want anyway: the floor measures the drawing and nothing
+   else. */
+
+#fg-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  /* Narrower than the item panel and capped against the frame: a control
+     surface that grew with the viewport would be a column, and a column is
+     the thing this deliberately is not. */
+  width: min(248px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ChromeBorder, #1f2937);
+  border-radius: 10px;
+  /* Translucent, so the drawing continues underneath rather than stopping at
+     an opaque rectangle. The blur is what keeps the text legible over it; a
+     browser without it falls back to the colour alone, which is why the
+     colour is not fully transparent. */
+  background: color-mix(in srgb, var(--ChromeBackground, #0e1420) 88%, transparent);
+  backdrop-filter: blur(9px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* The header IS the toggle. A separate chevron button beside a title is two
+   targets for one action, and the header is the biggest thing to aim at. */
+#fg-controls-toggle {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--BodyColor, #e6edf3);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+#fg-controls-toggle:hover {
+  background: color-mix(in srgb, var(--AccentColor, #58a6ff) 12%, transparent);
+}
+
+/* Drawn rather than typed, so it needs no glyph and no font that has one. */
+#fg-controls-chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--MutedColor, #8b949e);
+  border-bottom: 1.5px solid var(--MutedColor, #8b949e);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 120ms ease;
+}
+
+#fg-controls[data-collapsed="true"] #fg-controls-chevron {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+#fg-controls-body {
+  overflow-y: auto;
+  padding: 2px 12px 12px;
+}
+
+/* Same lesson base.css states once for every element that is sometimes
+   hidden: setting `display` on one beats the user agent's [hidden] rule and
+   the attribute stops working. */
+#fg-controls[hidden],
+#fg-controls-body[hidden],
+.fg-group[hidden] {
+  display: none;
+}
+
+.fg-group {
+  padding-top: 10px;
+}
+
+.fg-group + .fg-group {
+  margin-top: 4px;
+  border-top: 1px solid var(--ChromeBorder, #1f2937);
+}
+
+.fg-group h2 {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--MutedColor, #8b949e);
+}
+
+/* Label on the left, current value on the right, over the slider that moves
+   it. The number is there because a slider with no readout cannot be set back
+   to a value somebody wrote down. */
+.fg-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+
+.fg-row output {
+  color: var(--AccentColor, #58a6ff);
+  font-variant-numeric: tabular-nums;
+}
+
+.fg-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 5px 0;
+  cursor: pointer;
+  /* A classification is free text from a producer and one of them is
+     eventually very long. Wrapping rather than ellipsising, for the reason
+     #fg-name wraps: a truncated identifier is worse than a tall row. */
+  overflow-wrap: anywhere;
+}
+
+.fg-check input:disabled,
+.fg-check:has(input:disabled) {
+  cursor: default;
+  color: var(--MutedColor, #8b949e);
+}
+
+#fg-controls input[type="range"] {
+  width: 100%;
+  margin: 0 0 4px;
+  accent-color: var(--AccentColor, #58a6ff);
+}
+
+#fg-controls input[type="checkbox"] {
+  accent-color: var(--AccentColor, #58a6ff);
+  flex: 0 0 auto;
+}
+
+#fg-controls select {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  font: inherit;
+  color: var(--BodyColor, #e6edf3);
+  background: var(--PageBackground, #080b12);
+  border: 1px solid var(--ChromeBorder, #1f2937);
+  border-radius: 4px;
+}
+
+.fg-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.fg-buttons button {
+  flex: 1 1 auto;
+  font: inherit;
+  color: var(--AccentColor, #58a6ff);
+  background: none;
+  border: 1px solid var(--ChromeBorder, #1f2937);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.fg-buttons button:hover {
+  background: color-mix(in srgb, var(--AccentColor, #58a6ff) 14%, transparent);
+}
+
+/* A toggle that is ON says so by looking pressed, not only by what it did.
+   aria-pressed is the state a screen reader gets; this is the same fact for
+   everyone else. */
+.fg-buttons button[aria-pressed="true"] {
+  color: var(--PageBackground, #080b12);
+  background: var(--AccentColor, #58a6ff);
+  border-color: var(--AccentColor, #58a6ff);
+}
+
+/* Keyboard focus is visible on every control. The panel is the one part of
+   this page that can be driven without a pointer at all, and a canvas cannot
+   be. */
+#fg-controls :focus-visible {
+  outline: 2px solid var(--AccentColor, #58a6ff);
+  outline-offset: 2px;
+}
+
 </style>
 </head>
 <body>
@@ -245,11 +476,96 @@ body {
     <span id="fg-hint"></span>
   </div>
 
-  <div id="fg">
+  <!-- THE STAGE, and it exists because the library OWNS #fg exclusively.
+       ForceGraph3D empties the container it is handed, so anything this
+       template put inside #fg was removed the moment the graph initialised.
+
+       That was not a theory. ShowLabels = 'always' shipped at v0.16.0 with
+       #fg-labels nested inside #fg, and it never drew a single label: the
+       layer was deleted before startLabels looked for it, getElementById
+       returned null, and the function returned silently. D3 and E2 in the
+       catalogue are pictures of the feature NOT happening, captioned as
+       though it were. Found in v0.17.0 by the control panel disappearing the
+       same way.
+
+       So the library gets a container with nothing else in it, and everything
+       drawn OVER the canvas is a sibling inside this stage. The smoke gate
+       still captures #fg, which is now exactly the drawing and no chrome. -->
+  <div id="fg-stage">
+    <div id="fg"></div>
+
     <!-- Always-on item names, positioned over the canvas from projected
          coordinates. Empty and hidden unless ShowLabels asks for it; every
          label in it is a span carrying textContent, never markup. -->
     <div id="fg-labels" hidden></div>
+
+    <!-- THE CONTROL PANEL. Every label in it is filled from Config/strings.psd1
+         by scripts/panel.js, never written here: this file ships one <span> per
+         piece of text and no English at all. The 2D backend's sidebar does the
+         opposite - "Order", "Search", "Kinds" are literals in its markup - and
+         that is the half of it this panel deliberately did not copy.
+
+         OVER the canvas rather than in it. The library owns #fg and empties it,
+         so the panel is a sibling in #fg-stage - see the comment on the stage
+         for the shipped feature that lesson cost. It therefore sits OUTSIDE the
+         rectangle the smoke gate captures, which is the honest arrangement: the
+         floor measures the drawing and nothing else.
+
+         Rows are declared here and their controls are wired by name, so a
+         control that loses its handler is a control that visibly does nothing
+         rather than one that silently does. -->
+    <div id="fg-controls" hidden>
+      <button type="button" id="fg-controls-toggle" aria-expanded="true" aria-controls="fg-controls-body">
+        <span id="fg-controls-title"></span>
+        <span id="fg-controls-chevron" aria-hidden="true"></span>
+      </button>
+
+      <div id="fg-controls-body">
+        <section class="fg-group">
+          <h2 id="fg-g-view"></h2>
+          <label class="fg-row" for="fg-zoom-speed">
+            <span id="fg-l-zoom"></span>
+            <output id="fg-zoom-speed-out"></output>
+          </label>
+          <input type="range" id="fg-zoom-speed" min="0.1" max="5" step="0.05">
+          <div class="fg-buttons">
+            <button type="button" id="fg-fit"></button>
+            <button type="button" id="fg-rotate" aria-pressed="false"></button>
+          </div>
+        </section>
+
+        <section class="fg-group">
+          <h2 id="fg-g-depth"></h2>
+          <label class="fg-row" for="fg-fog">
+            <span id="fg-l-fog"></span>
+            <output id="fg-fog-out"></output>
+          </label>
+          <input type="range" id="fg-fog" min="0" max="0.02" step="0.0002">
+          <label class="fg-row" for="fg-grid"><span id="fg-l-grid"></span></label>
+          <select id="fg-grid"></select>
+          <label class="fg-check"><input type="checkbox" id="fg-focus"> <span id="fg-l-focus"></span></label>
+        </section>
+
+        <section class="fg-group">
+          <h2 id="fg-g-display"></h2>
+          <label class="fg-check"><input type="checkbox" id="fg-labels-on"> <span id="fg-l-labels"></span></label>
+          <label class="fg-check"><input type="checkbox" id="fg-particles"> <span id="fg-l-particles"></span></label>
+          <label class="fg-row" for="fg-glow">
+            <span id="fg-l-glow"></span>
+            <output id="fg-glow-out"></output>
+          </label>
+          <input type="range" id="fg-glow" min="0" max="3" step="0.05">
+        </section>
+
+        <section class="fg-group" id="fg-g-kinds-section">
+          <h2 id="fg-g-kinds"></h2>
+          <!-- One checkbox per classification the PAYLOAD carries, built at
+               runtime. Nothing here names one: the renderer does not know what
+               the kinds are and neither does its markup. -->
+          <div id="fg-kinds"></div>
+        </section>
+      </div>
+    </div>
   </div>
 
   <!-- What the page RESOLVED, for a check to read. Same argument as the counts
@@ -900,23 +1216,36 @@ const META = {
 const CONFIG = {
   "AccentColor": "#58a6ff",
   "ArrowSize": 4.0,
-  "BackgroundGlowColor": "#16304d",
-  "BackgroundStyle": "flat",
+  "AutoRotate": false,
+  "AutoRotateSpeed": 0.12,
+  "BackgroundGlowColor": "#173553",
+  "BackgroundStyle": "vignette",
   "BodyColor": "#e6edf3",
   "BodyFont": "system-ui, -apple-system, Segoe UI, sans-serif",
   "ChromeBackground": "#0e1420",
   "ChromeBorder": "#1f2937",
   "CooldownTicks": 160,
-  "EdgeColor": "#57657a",
-  "EdgeOpacity": 0.42,
-  "EdgeWidth": 1.0,
-  "ExportedEmphasis": "glow",
-  "FitPadding": 70.0,
+  "EdgeColor": "#6d8199",
+  "EdgeOpacity": 0.62,
+  "EdgeWidth": 1.4,
+  "ExportedEmphasis": "ring",
+  "FitPadding": 110.0,
+  "FocusDistance": 2.2,
+  "FocusOnClick": true,
+  "FocusTransitionMs": 700,
   "FogColor": "#0a0503",
   "FogDensity": 0.0016,
   "GlowOpacity": 0.42,
   "GlowSize": 1.9,
   "GlowStrength": 1.4,
+  "GridColor": "#2b4a6b",
+  "GridDivisions": 14,
+  "GridDrop": 0.16,
+  "GridExtent": 1.7,
+  "GridGlow": 0.55,
+  "GridLineWidth": 0.004,
+  "GridOpacity": 0.5,
+  "GridStyle": "floor",
   "HoverMode": "neighbors",
   "HoverTooltip": "labelAndKind",
   "KindColor": {
@@ -937,16 +1266,17 @@ const CONFIG = {
   "NodeActionButton": "left",
   "NodeOpacity": 1.0,
   "NodeShapeFallback": "sphere",
-  "NodeSize": 14.0,
+  "NodeSize": 12.0,
   "NodeSizeMetric": "",
   "NodeSizeMetricMax": 2.6,
   "PageBackground": "#0f0805",
   "PanelWidth": 340.0,
   "ParticleColor": "#ffcf8a",
-  "ParticleCount": 2,
+  "ParticleCount": 3,
   "ParticleSpeed": 0.006,
-  "ParticleWidth": 1.6,
+  "ParticleWidth": 1.9,
   "RotateSpeed": 0.85,
+  "ShowControlPanel": "open",
   "ShowLabels": "hover",
   "ToneMappingExposure": 1.0,
   "UnresolvedColor": "#ff7043",
@@ -956,8 +1286,27 @@ const CONFIG = {
 };
 const STRINGS = {
   "At": "{path}:{line}",
+  "AutoRotateLabel": "Auto-rotate",
+  "ControlsCollapse": "Hide controls",
+  "ControlsExpand": "Show controls",
+  "ControlsTitle": "Controls",
+  "DepthGroup": "Depth",
+  "DisplayGroup": "Display",
+  "FitLabel": "Fit to view",
+  "FocusLabel": "Fly to an item on click",
+  "FogLabel": "Depth falloff",
   "Generated": "Generated {generatedAt}",
+  "GlowLabel": "Glow",
+  "GridFloor": "Ground plane",
+  "GridLabel": "Environment",
+  "GridNone": "None",
+  "GridRoom": "Enclosure",
   "Hint": "Drag to rotate, scroll to zoom, click an item for what it is",
+  "KindsGroup": "Classifications",
+  "KindsInvented": "Not in the payload",
+  "KindsUnclassified": "Unclassified",
+  "LabelsLabel": "Names",
+  "LabelsUnavailable": "Too many items to name them all",
   "LibraryMissing": "The drawing library did not load, so there is nothing to show. The report is assembled with it inside; a document missing it was not assembled completely.",
   "LinksLabel": "links",
   "MenuCopyEditorLink": "Copy Editor Link",
@@ -967,11 +1316,14 @@ const STRINGS = {
   "NodesLabel": "items",
   "NoFile": "No file recorded",
   "PanelClose": "Close",
+  "ParticlesLabel": "Direction marks",
   "ReasonEmbedded": "An embedded viewer cannot follow this link. Copy it instead.",
   "ReasonNoFile": "This item records no file",
   "ReasonNoRootPath": "The payload states no root path, so there is nothing to open",
   "ReasonNoTemplate": "LinkHrefTemplate is not set",
-  "TemplateNotice": "This is the raw template. It becomes a report when something renders a payload into it."
+  "TemplateNotice": "This is the raw template. It becomes a report when something renders a payload into it.",
+  "ViewGroup": "View",
+  "ZoomSpeedLabel": "Zoom speed"
 };
 
 (function () {
@@ -1015,6 +1367,15 @@ const STRINGS = {
     function cfgText(key, fallback) {
         var value = CONFIG ? CONFIG[key] : null;
         return typeof value === 'string' ? value : fallback;
+    }
+
+    // Strictly a boolean, never a truthiness test. PowerShell writes $true and
+    // $false into CONFIG as JSON booleans, so anything else here is a key that
+    // did not arrive - and `!!undefined` would silently answer "false" for a
+    // setting whose declared default is true.
+    function cfgBool(key, fallback) {
+        var value = CONFIG ? CONFIG[key] : null;
+        return typeof value === 'boolean' ? value : fallback;
     }
 
     function str(key, fallback) {
@@ -1507,6 +1868,111 @@ const STRINGS = {
         return Object.prototype.hasOwnProperty.call(SHAPE_BUILDERS, name);
     }
 
+    // -- the environment ---------------------------------------------------
+    //
+    // The graph needed something to sit ON. Until v0.17.0 a fitted view put a
+    // cloud of items in the middle of an unbroken rectangle, and a cloud with
+    // no reference has no near and no far: fog said "this one is further" and
+    // nothing said how much further, because there was nothing at a known
+    // distance to compare it against. A ruled surface is what supplies that,
+    // and it is the oldest trick in the drawing of three dimensions.
+    //
+    // QUADS RATHER THAN LINES, and that is forced rather than chosen. The
+    // vendored bundle draws every link as a CYLINDER whenever EdgeWidth is
+    // above zero, so at runtime there is no Line constructor anywhere in the
+    // scene to harvest one from - traversed and confirmed, every
+    // __graphObjType in the scene is a Mesh. Reading a constructor off an
+    // instance only ever reaches the classes the library itself used, which is
+    // the same tree-shaking limit that made the shape vocabulary explicit
+    // vertices in the first place.
+    //
+    // ONE MESH FOR THE WHOLE ENVIRONMENT, built into a single geometry. A
+    // `room` at sixteen divisions is 204 quads; as 204 objects that is 204
+    // draw calls on every frame of a view whose whole job is to stay smooth
+    // under a drag.
+
+    function gridPoint(o, u, v, a, b) {
+        return [
+            o[0] + u[0] * a + v[0] * b,
+            o[1] + u[1] * a + v[1] * b,
+            o[2] + u[2] * a + v[2] * b
+        ];
+    }
+
+    // One ruled line, as a quad lying IN the plane its two axes span.
+    function pushGridLine(out, o, u, v, a0, a1, b0, b1) {
+        pushFace(out, [
+            gridPoint(o, u, v, a0, b0),
+            gridPoint(o, u, v, a1, b0),
+            gridPoint(o, u, v, a1, b1),
+            gridPoint(o, u, v, a0, b1)
+        ]);
+    }
+
+    // A ruled plane centred on `origin`, spanned by two unit axes.
+    function pushGridPlane(out, origin, u, v, halfU, halfV, divisions, width) {
+        var half = width / 2;
+        var i, t;
+        for (i = 0; i <= divisions; i++) {
+            t = -halfU + 2 * halfU * (i / divisions);
+            pushGridLine(out, origin, u, v, t - half, t + half, -halfV, halfV);
+        }
+        for (i = 0; i <= divisions; i++) {
+            t = -halfV + 2 * halfV * (i / divisions);
+            pushGridLine(out, origin, u, v, -halfU, halfU, t - half, t + half);
+        }
+    }
+
+    var X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1];
+
+    // The vocabulary, and the only place it is written down as buildable
+    // geometry - the same rule SHAPE_BUILDERS follows. settings.schema.psd1
+    // lists these names as the Values of GridStyle; a name in one and not the
+    // other draws nothing rather than throwing.
+    //
+    //   floor  one ruled plane under the graph. The classic, and the one that
+    //          answers "how far down is that item" without adding anything
+    //          the reader has to look past.
+    //   room   floor, ceiling and four walls. Reads from EVERY angle, which a
+    //          floor does not: rotate a floor-only scene to eye level and the
+    //          reference disappears exactly when the parallax is best.
+    var GRID_BUILDERS = {
+        // A ground plane sits just under the LOWEST item rather than a whole
+        // extent below the centre, which is where a floor is. Placed a full
+        // reach down it reads as a separate object in the distance and stops
+        // answering the question it is there for - how far down is that.
+        floor: function (out, c, r, d, w, floorY) {
+            pushGridPlane(out, [c[0], floorY, c[2]], X, Z, r, r, d, w);
+        },
+        // The enclosure is centred on the graph on all six sides, because the
+        // whole point of it is that there is a reference whichever way the
+        // reader turns.
+        room: function (out, c, r, d, w) {
+            pushGridPlane(out, [c[0], c[1] - r, c[2]], X, Z, r, r, d, w);
+            pushGridPlane(out, [c[0], c[1] + r, c[2]], X, Z, r, r, d, w);
+            pushGridPlane(out, [c[0], c[1], c[2] - r], X, Y, r, r, d, w);
+            pushGridPlane(out, [c[0], c[1], c[2] + r], X, Y, r, r, d, w);
+            pushGridPlane(out, [c[0] - r, c[1], c[2]], Z, Y, r, r, d, w);
+            pushGridPlane(out, [c[0] + r, c[1], c[2]], Z, Y, r, r, d, w);
+        }
+    };
+
+    function isBuildableGrid(name) {
+        return Object.prototype.hasOwnProperty.call(GRID_BUILDERS, name);
+    }
+
+    // `centre` and `reach` come from the graph's own bounding box, so the
+    // environment is the size of the thing it is drawn around rather than a
+    // number that happened to suit one payload. A grid built to a constant is
+    // a grid that is either inside a large graph or a speck under a small one.
+    function buildGridGeometry(style, centre, reach, divisions, width, floorY) {
+        if (!THREE_CTOR || !isBuildableGrid(style)) { return null; }
+        var out = [];
+        GRID_BUILDERS[style](out, centre, reach, divisions, width, floorY);
+        if (!out.length) { return null; }
+        return geometryFrom(out);
+    }
+
     // -- the mapping -------------------------------------------------------
     //
     // `kind=shape` pairs, separated by `;` or `,`. A String rather than a map
@@ -1638,8 +2104,20 @@ const STRINGS = {
     // of the graph, about 9% at the near face and about 34% at the far one.
     // That is a depth cue a reader can see and read through, which is the whole
     // requirement.
+
+    // The panel's live value, or null while nobody has moved the slider. Kept
+    // as an OVERRIDE rather than by writing into CONFIG: CONFIG is what the
+    // document was rendered with, tests/browser/look.cjs compares against it,
+    // and a page that edited its own configuration would make the two
+    // indistinguishable.
+    var FOG_OVERRIDE = null;
+
+    function configuredFogDensity() {
+        return FOG_OVERRIDE === null ? cfgNumber('FogDensity', 0.0016) : FOG_OVERRIDE;
+    }
+
     function fogDensityFor(graph) {
-        var configured = cfgNumber('FogDensity', 0.0016);
+        var configured = configuredFogDensity();
         if (configured <= 0) { return 0; }
 
         var box = graph.getGraphBbox();
@@ -1665,8 +2143,195 @@ const STRINGS = {
             : null;
     }
 
+    // -- the environment ---------------------------------------------------
+    //
+    // What the graph sits IN. Until v0.17.0 there was nothing: a fitted view
+    // put a cloud of items in the middle of an unbroken rectangle, and a cloud
+    // with no reference has no near and no far. Fog said "this one is further
+    // away" and nothing said how much further, because nothing was at a known
+    // distance to compare against.
+    //
+    // IT COULD NOT SHIP BEFORE THE FLOOR WAS REPAIRED, and that is the whole
+    // reason this pass has two halves in one order. The smoke gate screenshots
+    // #fg and used to divide by the same element in an EMPTY render, so
+    // anything drawn in that rectangle for both payloads sat in the numerator
+    // and the denominator together - which is what took a vignette from 4.32
+    // to 1.05. The gate is a changed-pixel fraction now, so an environment
+    // cancels instead of blinding it. See templateset.psd1.
+    //
+    // A GRID IS SCENE GEOMETRY AND NOT A CSS BACKDROP, unlike BackgroundStyle,
+    // and the difference is the one that matters here: it has to rotate with
+    // the camera. A perspective floor painted in CSS looks right in a
+    // screenshot and reads as broken the instant a reader drags, because the
+    // one thing a ground plane has to do is stay where the ground is.
+    var GRID_MESH = null;
+
+    // The panel's live choice, or null while nobody has changed it. Same
+    // argument as FOG_OVERRIDE: CONFIG stays what the document was rendered
+    // with.
+    var GRID_OVERRIDE = null;
+
+    // Emissive rather than lit, for the reason the item cores are: a Lambert
+    // surface on a dark ground with one directional light is nearly black
+    // wherever it faces away, and half of a room faces away by construction.
+    //
+    // side 2 is DoubleSide - a floor has to be visible from under it, and an
+    // enclosure from both.
+    //
+    // depthWrite off, and this is worth stating exactly because the first
+    // version of this comment claimed more than it bought. It means the
+    // environment writes no depth, so its own quads never occlude each other
+    // and never hide an item that is BEHIND them in the sort. It does NOT mean
+    // the environment can never be in front of an item, because sometimes it
+    // is: `room` rules all six sides and the graph is inside it, so the near
+    // wall is genuinely between the camera and the items and depth testing
+    // draws it there. Picture it in B5 - the ruling crosses the spheres.
+    //
+    // That is the honest reason `floor` is the default rather than `room`: a
+    // ground plane is never between the reader and the thing being read, and
+    // an enclosure is, from any angle that is not inside it. Filed as a
+    // finding rather than fixed here - culling the near faces means giving six
+    // hand-built planes a consistent outward winding, which is shipped
+    // geometry and wants a red of its own.
+    //
+    // FOG APPLIES TO IT, and that is the point rather than a side effect. The
+    // far edge of a ruled plane fades at a rate the reader can read, which is
+    // what turns fog from "things get dimmer" into a measurable distance.
+    function gridMaterial() {
+        var color = new THREE_CTOR.Color(cfgText('GridColor', '#2b4a6b'));
+        return new THREE_CTOR.Material({
+            color: color,
+            emissive: color,
+            emissiveIntensity: cfgNumber('GridGlow', 0.55),
+            transparent: true,
+            opacity: cfgNumber('GridOpacity', 0.5),
+            side: 2,
+            depthWrite: false
+        });
+    }
+
+    function gridStyle() {
+        var style = GRID_OVERRIDE === null ? cfgText('GridStyle', 'floor') : GRID_OVERRIDE;
+        return isBuildableGrid(style) ? style : 'none';
+    }
+
+    // Rebuilt rather than scaled, because the graph's extent changes twice -
+    // once when warmup ends and once when the simulation settles - and a grid
+    // sized to the first is the wrong size for the second.
+    function applyEnvironment(graph) {
+        if (!THREE_CTOR) { return; }
+        var scene = graph.scene();
+
+        if (GRID_MESH) {
+            scene.remove(GRID_MESH);
+            // Disposed by hand: this runs again on every fit, and a page that
+            // dropped a geometry per fit would leak GPU memory for as long as
+            // it is open.
+            if (GRID_MESH.geometry) { GRID_MESH.geometry.dispose(); }
+            if (GRID_MESH.material) { GRID_MESH.material.dispose(); }
+            GRID_MESH = null;
+        }
+
+        var style = gridStyle();
+        if (style === 'none') { return; }
+
+        var box = graph.getGraphBbox();
+        if (!box) { return; }
+
+        var centre = [
+            (box.x[0] + box.x[1]) / 2,
+            (box.y[0] + box.y[1]) / 2,
+            (box.z[0] + box.z[1]) / 2
+        ];
+        // Half the widest span, times the room the theme asks for. Sized to
+        // the graph rather than to a constant: a grid built to a fixed number
+        // is either inside a large payload or a speck under a small one.
+        var widest = Math.max(
+            box.x[1] - box.x[0], box.y[1] - box.y[0], box.z[1] - box.z[0], cfgNumber('NodeSize', 14) * 4);
+        var reach = (widest / 2) * cfgNumber('GridExtent', 1.7);
+
+        var geometry = buildGridGeometry(
+            style, centre, reach,
+            Math.max(2, Math.round(cfgNumber('GridDivisions', 14))),
+            // Line width scales with the grid, so the ruling reads the same
+            // whatever size the payload is. A constant width is a hairline on
+            // a large graph and a stripe on a small one.
+            reach * cfgNumber('GridLineWidth', 0.004),
+            // Where a GROUND plane goes: just under the lowest item, by a
+            // fraction of the graph rather than a fixed distance.
+            box.y[0] - widest * cfgNumber('GridDrop', 0.16));
+        if (!geometry) { return; }
+
+        GRID_MESH = new THREE_CTOR.Mesh(geometry, gridMaterial());
+        // Behind everything, so a translucent environment never sorts in
+        // front of an item it is supposed to sit behind.
+        GRID_MESH.renderOrder = -1;
+        scene.add(GRID_MESH);
+    }
+
+    // -- the camera, turning by itself -------------------------------------
+    //
+    // BY HAND, because the controls the library builds are TrackballControls
+    // and TrackballControls has no autoRotate - that is OrbitControls, and the
+    // bundle ships one of the two. Read off the live object rather than
+    // assumed: its own keys are rotateSpeed, zoomSpeed, panSpeed, noRotate,
+    // staticMoving, dynamicDampingFactor and target, and there is no
+    // autoRotate among them.
+    //
+    // So the camera is moved around the controls' own target, which is the
+    // point they already orbit, and the controls follow rather than fight.
+    // OFF BY DEFAULT and deliberately: a report that spins on its own cannot
+    // be screenshotted twice the same way, and this repository's catalogue,
+    // its pixel gate and its floor all compare two pictures.
+    var AUTO_ROTATE = false;
+    var AUTO_ROTATE_FRAME = null;
+
+    function autoRotateStep() {
+        if (!AUTO_ROTATE) { AUTO_ROTATE_FRAME = null; return; }
+        try {
+            var camera = graph.cameraPosition();
+            var target = graph.controls().target;
+            var dx = camera.x - target.x;
+            var dz = camera.z - target.z;
+            var angle = cfgNumber('AutoRotateSpeed', 0.12) * Math.PI / 180;
+            var cos = Math.cos(angle), sin = Math.sin(angle);
+            graph.cameraPosition({
+                x: target.x + dx * cos - dz * sin,
+                y: camera.y,
+                z: target.z + dx * sin + dz * cos
+            });
+        }
+        catch (err) {
+            // A camera that cannot be driven is not worth a broken page.
+            AUTO_ROTATE = false;
+            AUTO_ROTATE_FRAME = null;
+            return;
+        }
+        AUTO_ROTATE_FRAME = window.requestAnimationFrame(autoRotateStep);
+    }
+
+    function setAutoRotate(on) {
+        AUTO_ROTATE = !!on;
+        if (AUTO_ROTATE && AUTO_ROTATE_FRAME === null) {
+            AUTO_ROTATE_FRAME = window.requestAnimationFrame(autoRotateStep);
+        }
+        publishLive();
+    }
+
+    function isAutoRotating() { return AUTO_ROTATE; }
+
+    // How many objects the environment actually put in the scene, counted off
+    // the scene rather than inferred from the setting. `floor` is one mesh and
+    // `none` is nought, and a page that resolved a style and built nothing
+    // reports the difference here instead of looking identical to one that
+    // did. tests/browser/look.cjs reads it.
+    function gridMeshCount() {
+        return GRID_MESH ? 1 : 0;
+    }
+
     function applyScene(graph) {
         applyFog(graph);
+        applyEnvironment(graph);
 
         // The scene is emissive material on a dark ground, so its histogram
         // sits low and a flat exposure leaves it muddy. 4 is ACESFilmic, whose
@@ -1699,6 +2364,50 @@ const STRINGS = {
         catch (err) {
             // Nothing else depends on this having worked.
         }
+    }
+
+    // -- what the control panel moves --------------------------------------
+    //
+    // Every one of these writes to the SAME object the corresponding setting
+    // in Config/ writes to at render time. That is the panel's whole contract:
+    // it adjusts at runtime what configuration decides at assembly, so a
+    // reader who moves a slider and a caller who sets a value are changing one
+    // thing and not two.
+    //
+    // Which is also why they are here rather than in the panel. The panel
+    // knows what a reader asked for; this file knows what consumes it.
+
+    // EVERY ONE OF THESE REPUBLISHES, and that is not bookkeeping. #fg-live is
+    // how a check reads what the scene actually holds, and a setter that moved
+    // the scene without republishing leaves the page reporting the value it had
+    // before - which reads exactly like a control that does nothing. Four of
+    // these five shipped without it for the length of one test run and the look
+    // gate caught all four by name; that is what the gate is for.
+
+    function setZoomSpeed(value) {
+        try { graph.controls().zoomSpeed = value; }
+        catch (err) { /* a page whose controls will not take a number still draws */ }
+        publishLive();
+    }
+
+    function setFogDensity(value) {
+        FOG_OVERRIDE = value;
+        applyFog(graph);
+        publishLive();
+    }
+
+    function setGridStyle(style) {
+        // Written through CONFIG's reader rather than into CONFIG, for the
+        // reason FOG_OVERRIDE exists. An unbuildable name draws nothing, the
+        // same answer the render-time path gives.
+        GRID_OVERRIDE = isBuildableGrid(style) || style === 'none' ? style : null;
+        applyEnvironment(graph);
+        publishLive();
+    }
+
+    function fitNow() {
+        fitView();
+        publishLive();
     }
 
     // -- item materials ----------------------------------------------------
@@ -1750,25 +2459,43 @@ const STRINGS = {
         });
     }
 
-    // The ring an exported item wears when ExportedEmphasis says so, and it
+    // The rim an exported item wears when ExportedEmphasis says so, and it
     // gets its OWN material rather than borrowing the glow shell's.
     //
     // Borrowing was the first version and it was wrong in a way only a picture
     // showed: the shell's opacity is GlowOpacity, so a look that turns the glow
-    // off turns the ring off with it - and E3 in the catalogue is exactly that
+    // off turns the mark off with it - and E3 in the catalogue is exactly that
     // look, a schematic with no atmosphere at all, which is also the look where
-    // a crisp ring is most useful. Two channels the theme controls separately
+    // a crisp mark is most useful. Two channels the theme controls separately
     // must not be one channel here.
     //
-    // Solid rather than additive, for the same reason: a ring is a MARK, and a
-    // mark that brightens what is behind it disappears against a bright item.
-    function ringMaterial(color) {
+    // AN INVERTED HULL, not a torus, and v0.17.0 changed that because a picture
+    // showed the torus was wrong too. A ring is a shape in a PLANE: it lies
+    // flat through the item, reads as a saucer from most angles and vanishes
+    // edge-on - and this view's whole premise is that the reader is turning it.
+    // The old geometry was also the `torus` NODE shape, sized to have a
+    // sphere's visual mass, so its tube was wider than the item's own radius.
+    //
+    // A slightly larger copy of the item's OWN shape, drawn back-face only,
+    // shows exactly where the silhouette is and nowhere else: the item is
+    // opaque and occludes the hull's far wall everywhere they overlap, so what
+    // survives is a thin outline around the edge. It follows the silhouette
+    // from every angle, it costs one mesh, and it is the "rim rather than a
+    // washed halo" this pass was asked for.
+    //
+    // Solid rather than additive: a mark that brightens what is behind it
+    // disappears against a bright item.
+    function rimMaterial(color) {
         return new THREE_CTOR.Material({
             color: color,
             emissive: new THREE_CTOR.Color(color),
-            emissiveIntensity: 0.6,
+            emissiveIntensity: 0.9,
             transparent: true,
-            opacity: 0.85,
+            opacity: 0.9,
+            // side 1 is BackSide. depthWrite off so the hull never occludes
+            // the item it outlines, and depth TESTING - which stays on - is
+            // what makes only the rim survive.
+            side: 1,
             depthWrite: false
         });
     }
@@ -2010,17 +2737,30 @@ const STRINGS = {
         var glowOpacity = cfgNumber('GlowOpacity', 0.22);
         if (glowSize > 1 && glowOpacity > 0) {
             var shell = geometryFor(shape, radius * glowSize);
-            if (shell) { mesh.add(new THREE_CTOR.Mesh(shell, glowMaterial(color, emphasis))); }
+            if (shell) {
+                var halo = new THREE_CTOR.Mesh(shell, glowMaterial(color, emphasis));
+                // Tagged, because an item may now carry TWO extra meshes and
+                // the glow slider must move only one of them. Glow and the
+                // exported rim are separate channels in the theme and a
+                // control that scaled both would silently join them.
+                halo.material.__isGlowShell = true;
+                mesh.add(halo);
+            }
         }
 
-        // A ring is a second silhouette rather than a brighter one, for a
+        // A rim is a sharpened silhouette rather than a brighter item, for a
         // caller who wants exported items called out without spending the
-        // brightness channel. Its own material, deliberately: see
-        // ringMaterial - a ring drawn out of the glow shell's opacity vanishes
+        // brightness channel. The item's OWN shape, slightly larger, drawn
+        // back-face only - see rimMaterial for why that yields an outline and
+        // why the torus it replaced was wrong. Its own material,
+        // deliberately: a mark drawn out of the glow shell's opacity vanishes
         // in exactly the looks that have the glow turned off.
+        //
+        // 1.12 is small on purpose. It is a line around the edge, and a hull
+        // far enough out to read as a second object has stopped being one.
         if (node.isExported && cfgText('ExportedEmphasis', 'glow') === 'ring') {
-            var ring = geometryFor('torus', radius * 1.45);
-            if (ring) { mesh.add(new THREE_CTOR.Mesh(ring, ringMaterial(color))); }
+            var rim = geometryFor(shape, radius * 1.12);
+            if (rim) { mesh.add(new THREE_CTOR.Mesh(rim, rimMaterial(color))); }
         }
 
         MESH_BY_ID[node.id] = mesh;
@@ -2215,6 +2955,33 @@ const STRINGS = {
         // tests/browser/look.cjs does exactly that with two documents.
         try { var fog = graph.scene().fog; live.fogDensity = fog ? fog.density : 0; }
         catch (err) { live.fogDensity = null; }
+
+        // -- what the control panel moves, read back off the scene ---------
+        //
+        // Same rule as everything above it: off the object that consumes the
+        // value, never echoed from CONFIG. A panel control that changes a
+        // variable and not the drawing is exactly the failure this element
+        // exists to catch, and it is the failure a panel is most prone to.
+        live.gridStyle = gridStyle();
+        live.gridMeshes = gridMeshCount();
+        live.autoRotate = isAutoRotating();
+        live.glowScale = GLOW_SCALE;
+        live.labelsPossible = labelsPossible();
+        live.labelsVisible = labelsVisible();
+        live.kinds = kindBuckets().map(function (b) { return b.key; });
+        live.visibleKinds = visibleKindCount();
+        live.focusOnClick = focusOnClickEnabled();
+        try {
+            var drawn = graph.graphData();
+            // What the library will actually DRAW, which is the filter's whole
+            // claim. Counting the payload would report the same number with
+            // every classification unchecked.
+            live.visibleNodes = drawn.nodes.filter(isNodeVisible).length;
+            live.visibleLinks = drawn.links.filter(isLinkVisible).length;
+        }
+        catch (err) { live.visibleNodes = null; live.visibleLinks = null; }
+        live.panel = panelState();
+
         el.setAttribute('data-live', JSON.stringify(live));
     }
 
@@ -2241,6 +3008,12 @@ const STRINGS = {
         noteNeighbors(links);
         buildMetricRank(laidOut);
         SHAPE_MAP = parseShapeMap(cfgText('KindShape', ''));
+
+        // The classifications the panel offers as filters, and the index the
+        // filter needs to resolve a link's ends before the simulation has
+        // replaced them with objects.
+        noteKinds(laidOut);
+        for (var n = 0; n < laidOut.length; n++) { NODE_BY_ID[laidOut[n].id] = laidOut[n]; }
 
         applyBackgroundAttribute();
 
@@ -2275,6 +3048,12 @@ const STRINGS = {
             .onNodeHover(onHover)
             .onBackgroundClick(clearSelection)
 
+            // Declared up front rather than only when a filter is first used,
+            // so the accessors the library caches are the ones the panel will
+            // move. Both answer true until something is unchecked.
+            .nodeVisibility(isNodeVisible)
+            .linkVisibility(isLinkVisible)
+
             // The simulation is BOUNDED, and that is not a performance tweak.
             // The library stops on a timer that defaults to fifteen seconds,
             // which is longer than any gate here waits and longer than a reader
@@ -2302,6 +3081,13 @@ const STRINGS = {
 
         applyScene(graph);
         applyControls(graph);
+
+        // AutoRotate is a SETTING and not only a button, so it is applied
+        // here rather than left for the panel to switch on. A value declared
+        // in Config that only a click can reach is a setting in name only -
+        // the exact failure #fg-live exists to catch - and a report built
+        // with ShowControlPanel = none has no button at all.
+        setAutoRotate(cfgBool('AutoRotate', false));
 
         // The canvas is sized from the container EXPLICITLY. Left to itself the
         // library opened a 1280x900 drawing buffer inside an 859px-tall box and
@@ -2405,11 +3191,226 @@ const STRINGS = {
         applyFog(graph);
     }
 
+    // -- what the control panel moves --------------------------------------
+    //
+    // The panel adjusts at runtime what Config/ decides at render time, so
+    // every setter below writes to the same thing its setting writes to. What
+    // lives HERE rather than in scene.js is whatever needs the payload: the
+    // meshes, the classifications, and the neighbour index.
+    //
+    // Nothing here writes into CONFIG. CONFIG is what the document was
+    // rendered with, tests/browser/look.cjs reads settings back against it, and
+    // a page that edited its own configuration would make "declared" and
+    // "changed by a reader" the same fact.
+
+    // Every classification the payload carries, in the order it first appears.
+    // Built from the DATA and never from a list: the renderer does not know
+    // what the kinds are, which is the rule the whole colour and shape channel
+    // is built on.
+    var KINDS = [];
+    var KIND_HIDDEN = {};
+    var HAS_INVENTED = false;
+
+    // The bucket an INVENTED item goes in, and it is deliberately not a
+    // classification: no producer sends one, so it cannot collide with a
+    // producer's word. The leading space is what makes that true - a
+    // classification is a JSON string from a payload and every one of them is
+    // trimmed by the time it arrives here, so no real kind can be ' invented'.
+    var INVENTED_BUCKET = ' invented';
+
+    function noteKinds(nodeList) {
+        var seen = {};
+        KINDS = [];
+        HAS_INVENTED = false;
+        for (var i = 0; i < nodeList.length; i++) {
+            if (nodeList[i].invented) { HAS_INVENTED = true; continue; }
+            var kind = nodeList[i].kind || null;
+            var key = kind === null ? '' : kind;
+            if (!Object.prototype.hasOwnProperty.call(seen, key)) {
+                seen[key] = true;
+                KINDS.push(kind);
+            }
+        }
+    }
+
+    // The key a classification is filtered by. PREFIXED, and that is what
+    // makes it collision-proof rather than merely unlikely: every word a
+    // producer sends gets `k:`, so the bucket for an item the renderer
+    // INVENTED cannot be reached by any classification at all. An invented
+    // item is not a classification - no producer sends one - and giving it a
+    // row that a producer could also land in would be the page claiming
+    // otherwise.
+    var INVENTED_KEY = 'x:invented';
+
+    function kindKey(node) {
+        return node.invented ? INVENTED_KEY : ('k:' + (node.kind || ''));
+    }
+
+    function hasInvented() { return HAS_INVENTED; }
+
+    // The rows the panel offers, as data: one per classification the payload
+    // carries, plus the invented bucket when anything was invented. Built
+    // here rather than in the panel, because it is the PAYLOAD that decides
+    // them and the panel does not know what a payload is.
+    function kindBuckets() {
+        var out = [];
+        for (var i = 0; i < KINDS.length; i++) {
+            out.push({ key: 'k:' + (KINDS[i] === null ? '' : KINDS[i]), kind: KINDS[i], invented: false });
+        }
+        if (HAS_INVENTED) { out.push({ key: INVENTED_KEY, kind: null, invented: true }); }
+        return out;
+    }
+
+    function isNodeVisible(node) {
+        return !KIND_HIDDEN[kindKey(node)];
+    }
+
+    // A link whose either end is hidden goes with it. Leaving it would draw a
+    // connector to nothing, which reads as a bug rather than as a filter - the
+    // same rule the reference backend's own filter follows.
+    function isLinkVisible(link) {
+        var s = link.source, t = link.target;
+        var sn = (s && s.id !== undefined) ? s : NODE_BY_ID[s];
+        var tn = (t && t.id !== undefined) ? t : NODE_BY_ID[t];
+        if (!sn || !tn) { return true; }
+        return isNodeVisible(sn) && isNodeVisible(tn);
+    }
+
+    var NODE_BY_ID = {};
+
+    // Takes a BUCKET KEY, never a producer's word. The panel is handed the
+    // keys by kindBuckets and hands one back, so no caller has to know how a
+    // classification becomes a key - which is the only place the two could
+    // ever disagree.
+    function setKindHidden(key, hidden) {
+        if (hidden) { KIND_HIDDEN[key] = true; }
+        else { delete KIND_HIDDEN[key]; }
+        // Re-asserted rather than walked: the library re-reads both accessors,
+        // so one call applies the whole filter and the scene is never
+        // traversed by this file.
+        graph.nodeVisibility(isNodeVisible).linkVisibility(isLinkVisible);
+        publishLive();
+    }
+
+    function visibleKindCount() {
+        var buckets = kindBuckets();
+        var n = 0;
+        for (var i = 0; i < buckets.length; i++) { if (!KIND_HIDDEN[buckets[i].key]) { n++; } }
+        return n;
+    }
+
+    // Glow is baked into each item's material when the mesh is built, so
+    // moving it means walking the meshes rather than re-reading a setting.
+    // __baseEmissive is the hover code's own record of what a material started
+    // at; it is updated here too, or a hover after a slider move would restore
+    // the value the slider replaced.
+    var GLOW_SCALE = 1;
+
+    function setGlowScale(scale) {
+        GLOW_SCALE = scale;
+        for (var key in MESH_BY_ID) {
+            if (!Object.prototype.hasOwnProperty.call(MESH_BY_ID, key)) { continue; }
+            var mesh = MESH_BY_ID[key];
+            var material = mesh.material;
+            if (material.__configEmissive === undefined) {
+                material.__configEmissive = material.__baseEmissive === undefined
+                    ? material.emissiveIntensity : material.__baseEmissive;
+            }
+            material.__baseEmissive = material.__configEmissive * scale;
+            material.emissiveIntensity = material.__baseEmissive;
+            for (var c = 0; c < mesh.children.length; c++) {
+                var shell = mesh.children[c].material;
+                if (!shell.__isGlowShell) { continue; }
+                if (shell.__configOpacity === undefined) {
+                    shell.__configOpacity = shell.__baseOpacity === undefined
+                        ? shell.opacity : shell.__baseOpacity;
+                }
+                shell.__baseOpacity = shell.__configOpacity * scale;
+                shell.opacity = shell.__baseOpacity;
+            }
+        }
+        // Whatever the pointer is currently over stays highlighted through the
+        // change, rather than the slider quietly clearing a hover.
+        applyHighlight(HIGHLIGHTED);
+        publishLive();
+    }
+
+    function setParticleCount(count) {
+        graph.linkDirectionalParticles(count);
+        publishLive();
+    }
+
+    // -- focus -------------------------------------------------------------
+    //
+    // Fly the camera to an item and its immediate neighbourhood. The library's
+    // own cameraPosition takes a destination, a point to look at and a
+    // transition, and it sets the controls' target for us - read off the
+    // vendored bundle's API surface rather than assumed.
+    //
+    // THIS IS NOT DEPTH OF FIELD, and the distinction is worth stating where
+    // somebody will look for one. A real focus pull needs a post-processing
+    // pass; the vendored bundle ships no BokehPass and no ShaderPass, and
+    // adding one means a second copy of three.js in the page. So "focus" here
+    // is the camera and the fog, which is the honest version of it and the
+    // same trade the glow shells are. See Config/theme.psd1.
+    // The panel's switch, or null while nobody has touched it. Same argument
+    // as FOG_OVERRIDE in scene.js: CONFIG stays what the document was rendered
+    // with.
+    var FOCUS_OVERRIDE = null;
+
+    function focusOnClickEnabled() {
+        return FOCUS_OVERRIDE === null ? cfgBool('FocusOnClick', true) : FOCUS_OVERRIDE;
+    }
+
+    function setFocusOnClick(on) {
+        FOCUS_OVERRIDE = !!on;
+        publishLive();
+    }
+
+    function focusOn(node) {
+        if (node.x === undefined) { return; }
+
+        // Far enough back to hold the item AND what it links to. A camera
+        // dropped at a fixed distance frames a leaf perfectly and puts a hub's
+        // neighbours off every edge.
+        var near = NEIGHBORS[node.id] || {};
+        var reach = cfgNumber('NodeSize', 14) * 3;
+        for (var id in near) {
+            if (!Object.prototype.hasOwnProperty.call(near, id)) { continue; }
+            var other = MESH_BY_ID[id];
+            if (!other || other.position === undefined) { continue; }
+            var dx = other.position.x - node.x, dy = other.position.y - node.y, dz = other.position.z - node.z;
+            reach = Math.max(reach, Math.sqrt(dx * dx + dy * dy + dz * dz));
+        }
+        var distance = reach * cfgNumber('FocusDistance', 2.2) + cfgNumber('NodeSize', 14);
+
+        // Along the line the camera is already on, so the flight is a
+        // approach rather than a jump to the other side of the graph.
+        var camera = graph.cameraPosition();
+        var vx = camera.x - node.x, vy = camera.y - node.y, vz = camera.z - node.z;
+        var length = Math.sqrt(vx * vx + vy * vy + vz * vz) || 1;
+
+        graph.cameraPosition(
+            {
+                x: node.x + vx / length * distance,
+                y: node.y + vy / length * distance,
+                z: node.z + vz / length * distance
+            },
+            { x: node.x, y: node.y, z: node.z },
+            cfgNumber('FocusTransitionMs', 700));
+    }
+
     function clearSelection() {
         byId('fg-panel').hidden = true;
     }
 
     function selectNode(node) {
+        // The camera goes with the panel when FocusOnClick asks for it. One
+        // gesture rather than two: a reader who clicks an item in a cloud of
+        // items wants to SEE it, and making that a second control would mean
+        // clicking twice for the thing the click was for.
+        if (focusOnClickEnabled()) { focusOn(node); }
+
         byId('fg-name').textContent = node.name || node.id;
         byId('fg-where').textContent = node.path
             ? fmt('At', { path: node.path, line: node.startLine || 1 })
@@ -2451,24 +3452,35 @@ const STRINGS = {
     var LABEL_LAYER = null;
     var LABEL_ENTRIES = [];
 
+    // Whether the ceiling permits always-on labels at all, and whether they
+    // are currently showing. Two facts rather than one, because the control
+    // panel has to be able to say WHY a switch is unavailable: "this payload
+    // is too big for it" and "you turned it off" are different answers and a
+    // single boolean can only give one of them.
+    var LABELS_POSSIBLE = false;
+    var LABELS_ON = false;
+
     function startLabels(graph) {
         var layer = document.getElementById('fg-labels');
         if (!layer) { return; }
 
-        var mode = cfgText('ShowLabels', 'hover');
         var drawn = graph.graphData().nodes;
 
-        // Above the ceiling this falls back to hover labels and says nothing
-        // about it. A message would be chrome inside the rectangle the
-        // canvas-growth floor measures; the setting's own description is where
-        // the behaviour is documented.
-        if (mode !== 'always' || drawn.length > cfgNumber('LabelMaxNodes', 60)) {
+        // Above the ceiling, always-on labels are not offered. A message would
+        // be chrome inside the rectangle the smoke gate measures; the
+        // setting's own description is where the behaviour is documented, and
+        // the panel disables the switch rather than letting a reader flip
+        // something that will not happen.
+        LABELS_POSSIBLE = drawn.length <= cfgNumber('LabelMaxNodes', 60);
+        LABELS_ON = LABELS_POSSIBLE && cfgText('ShowLabels', 'hover') === 'always';
+
+        if (!LABELS_POSSIBLE) {
             layer.hidden = true;
             return;
         }
 
         LABEL_LAYER = layer;
-        layer.hidden = false;
+        layer.hidden = !LABELS_ON;
         while (layer.firstChild) { layer.removeChild(layer.firstChild); }
 
         LABEL_ENTRIES = [];
@@ -2498,8 +3510,21 @@ const STRINGS = {
         }());
     }
 
+    // The panel's switch. Entries are built once and hidden as a layer rather
+    // than rebuilt: a reader toggling names on and off is doing it to compare
+    // two views of the same drawing, and rebuilding N spans on each flip would
+    // put a stall in exactly that comparison.
+    function setLabelsVisible(on) {
+        LABELS_ON = LABELS_POSSIBLE && !!on;
+        if (LABEL_LAYER) { LABEL_LAYER.hidden = !LABELS_ON; }
+        publishLive();
+    }
+
+    function labelsPossible() { return LABELS_POSSIBLE; }
+    function labelsVisible() { return LABELS_ON; }
+
     function positionLabels(graph) {
-        if (!LABEL_LAYER) { return; }
+        if (!LABEL_LAYER || !LABELS_ON) { return; }
         var box = LABEL_LAYER.getBoundingClientRect();
         for (var i = 0; i < LABEL_ENTRIES.length; i++) {
             var entry = LABEL_ENTRIES[i];
@@ -2519,11 +3544,275 @@ const STRINGS = {
         }
     }
 
+    // The control panel: what a reader can move without re-rendering.
+    //
+    // ITS ONE CONTRACT. Every control here adjusts at RUNTIME the same thing a
+    // setting in Config/ decides at RENDER TIME, and each one opens at the
+    // position that setting shipped. So a reader who drags a slider and a
+    // caller who writes a value are changing one thing rather than two, and
+    // "what does this document do" has one answer whichever end you read it
+    // from. Spot-check SC2 is that assertion, driven against a scratch set
+    // with the settings flipped.
+    //
+    // WHAT IT DELIBERATELY IS NOT. It is not the 2D backend's sidebar moved
+    // across. That sidebar is a column beside the drawing with its labels
+    // written into the markup in English; this is a collapsible card over the
+    // drawing whose every word comes from Config/strings.psd1. The 3D view has
+    // one thing worth looking at and it fills the frame - a permanent column
+    // would spend a fifth of the picture on chrome that is read once.
+    //
+    // WHERE IT LIVES, AND THE DEFECT THAT DECIDED IT. In #fg-stage, beside the
+    // canvas rather than inside it: ForceGraph3D empties the container it is
+    // handed, so a panel nested in #fg is deleted the instant the graph
+    // initialises. That is not a hypothetical - ShowLabels = 'always' shipped
+    // at v0.16.0 with its label layer inside #fg and never drew a label, and
+    // this panel vanishing the same way is how it was found.
+    //
+    // NO STRING IN THIS FILE IS SHOWN TO ANYBODY. Every visible word is
+    // str(...), and every one of them is set with textContent.
 
-    // Everything above declares; this runs. Order matters exactly once: the
-    // panel has to exist before a click can fill it.
+    function panelReady() {
+        var root = byId('fg-controls');
+        if (!root) { return; }
+
+        var mode = cfgText('ShowControlPanel', 'open');
+        if (mode === 'none') {
+            // Absent rather than hidden. A report built for a wall display or
+            // for print has no reader to press anything, and chrome nobody can
+            // use is chrome in the way.
+            root.remove();
+            return;
+        }
+
+        fillPanelText();
+        buildKindFilters();
+        wirePanel();
+        setCollapsed(mode === 'collapsed');
+        root.hidden = false;
+        publishLive();
+    }
+
+    // -- text --------------------------------------------------------------
+
+    function setText(id, key) {
+        var el = byId(id);
+        if (el) { el.textContent = str(key); }
+    }
+
+    function fillPanelText() {
+        setText('fg-controls-title', 'ControlsTitle');
+        setText('fg-g-view', 'ViewGroup');
+        setText('fg-l-zoom', 'ZoomSpeedLabel');
+        setText('fg-fit', 'FitLabel');
+        setText('fg-rotate', 'AutoRotateLabel');
+        setText('fg-g-depth', 'DepthGroup');
+        setText('fg-l-fog', 'FogLabel');
+        setText('fg-l-grid', 'GridLabel');
+        setText('fg-l-focus', 'FocusLabel');
+        setText('fg-g-display', 'DisplayGroup');
+        setText('fg-l-labels', 'LabelsLabel');
+        setText('fg-l-particles', 'ParticlesLabel');
+        setText('fg-l-glow', 'GlowLabel');
+        setText('fg-g-kinds', 'KindsGroup');
+
+        // The environment choices. The VALUES come from the page's own
+        // vocabulary of buildable grids, and each one's word comes from
+        // strings.psd1 - so a grid this build cannot draw is never offered,
+        // and a grid it can draw is never offered without a name.
+        var select = byId('fg-grid');
+        if (!select) { return; }
+        var choices = [
+            { value: 'none', key: 'GridNone' },
+            { value: 'floor', key: 'GridFloor' },
+            { value: 'room', key: 'GridRoom' }
+        ];
+        for (var i = 0; i < choices.length; i++) {
+            if (choices[i].value !== 'none' && !isBuildableGrid(choices[i].value)) { continue; }
+            var option = document.createElement('option');
+            option.value = choices[i].value;
+            option.textContent = str(choices[i].key);
+            select.appendChild(option);
+        }
+    }
+
+    // -- the classification filters ----------------------------------------
+    //
+    // One row per classification the PAYLOAD carries, built from the data. No
+    // list, no vocabulary, nothing in this file that knows what a kind is -
+    // the same rule colorFor and shapeFor are built on. An item the renderer
+    // INVENTED gets a row of its own, because it is not a classification and
+    // filtering it with one would be the page claiming a producer sent it.
+    function buildKindFilters() {
+        var host = byId('fg-kinds');
+        var section = byId('fg-g-kinds-section');
+        if (!host) { return; }
+        while (host.firstChild) { host.removeChild(host.firstChild); }
+
+        var buckets = kindBuckets();
+        for (var i = 0; i < buckets.length; i++) { host.appendChild(kindRow(buckets[i])); }
+
+        // A payload with one bucket has nothing to filter, and a group of one
+        // checkbox that can only ever empty the page is a control that offers
+        // a mistake. An empty payload has none at all.
+        if (section) { section.hidden = buckets.length < 2; }
+    }
+
+    function kindRow(bucket) {
+        var label = document.createElement('label');
+        label.className = 'fg-check';
+
+        var box = document.createElement('input');
+        box.type = 'checkbox';
+        box.checked = true;
+        // The BUCKET KEY, so a check can find a row without knowing how a
+        // classification becomes one.
+        box.setAttribute('data-bucket', bucket.key);
+        box.addEventListener('change', function () {
+            setKindHidden(bucket.key, !box.checked);
+        });
+
+        var text = document.createElement('span');
+        // A classification is free text from a producer, so it goes in as
+        // textContent and never as markup - the same property the tooltip and
+        // the labels have. The two synthetic buckets take their words from
+        // strings.psd1 instead, because they are the renderer's own idea and
+        // not a producer's.
+        if (bucket.invented) { text.textContent = str('KindsInvented'); }
+        else if (!bucket.kind) { text.textContent = str('KindsUnclassified'); }
+        else { text.textContent = bucket.kind; }
+
+        label.appendChild(box);
+        label.appendChild(text);
+        return label;
+    }
+
+    // -- wiring ------------------------------------------------------------
+    //
+    // Each control is set to what CONFIG says BEFORE its listener is attached,
+    // so the opening position is the shipped value rather than whatever the
+    // markup's min happened to be - and attaching after means setting it does
+    // not fire the handler and re-apply a value that is already applied.
+
+    function wirePanel() {
+        var toggle = byId('fg-controls-toggle');
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                setCollapsed(byId('fg-controls').getAttribute('data-collapsed') !== 'true');
+            });
+        }
+
+        bindRange('fg-zoom-speed', 'fg-zoom-speed-out', cfgNumber('ZoomSpeed', 0.9), 2, setZoomSpeed);
+        bindRange('fg-fog', 'fg-fog-out', cfgNumber('FogDensity', 0.0016), 4, setFogDensity);
+        bindRange('fg-glow', 'fg-glow-out', 1, 2, setGlowScale);
+
+        var fit = byId('fg-fit');
+        if (fit) { fit.addEventListener('click', fitNow); }
+
+        var rotate = byId('fg-rotate');
+        if (rotate) {
+            rotate.addEventListener('click', function () {
+                var on = rotate.getAttribute('aria-pressed') !== 'true';
+                rotate.setAttribute('aria-pressed', on ? 'true' : 'false');
+                setAutoRotate(on);
+            });
+            // Off the LIVE state rather than off CONFIG, because drawGraph has
+            // already applied the setting by now and the button has to agree
+            // with the camera rather than with the file.
+            rotate.setAttribute('aria-pressed', isAutoRotating() ? 'true' : 'false');
+        }
+
+        var grid = byId('fg-grid');
+        if (grid) {
+            grid.value = gridStyle();
+            grid.addEventListener('change', function () { setGridStyle(grid.value); });
+        }
+
+        var focus = byId('fg-focus');
+        if (focus) {
+            focus.checked = cfgBool('FocusOnClick', true);
+            focus.addEventListener('change', function () { setFocusOnClick(focus.checked); });
+        }
+
+        var labels = byId('fg-labels-on');
+        if (labels) {
+            labels.checked = labelsVisible();
+            // Disabled rather than absent when the payload is over the ceiling,
+            // and it SAYS why. A missing switch and a switch that does nothing
+            // look the same to a reader; a disabled one with a reason does not.
+            labels.disabled = !labelsPossible();
+            if (!labelsPossible()) { labels.parentNode.title = str('LabelsUnavailable'); }
+            labels.addEventListener('change', function () { setLabelsVisible(labels.checked); });
+        }
+
+        var particles = byId('fg-particles');
+        if (particles) {
+            particles.checked = cfgNumber('ParticleCount', 2) > 0;
+            particles.addEventListener('change', function () {
+                // Back to the CONFIGURED count rather than to one. Turning a
+                // thing off and on again should give back what was there, and
+                // a page that restored a different number would be a page that
+                // quietly overrode its own theme.
+                setParticleCount(particles.checked ? cfgNumber('ParticleCount', 2) : 0);
+            });
+        }
+    }
+
+    function bindRange(inputId, outputId, value, places, apply) {
+        var input = byId(inputId);
+        if (!input) { return; }
+        var output = byId(outputId);
+
+        function show() {
+            if (output) { output.textContent = Number(input.value).toFixed(places); }
+        }
+
+        input.value = value;
+        show();
+        input.addEventListener('input', function () {
+            apply(Number(input.value));
+            show();
+        });
+    }
+
+    function setCollapsed(collapsed) {
+        var root = byId('fg-controls');
+        var toggle = byId('fg-controls-toggle');
+        var body = byId('fg-controls-body');
+        if (!root) { return; }
+        root.setAttribute('data-collapsed', collapsed ? 'true' : 'false');
+        if (body) { body.hidden = collapsed; }
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            // The button's accessible name says what pressing it will DO,
+            // which is the opposite of the current state.
+            toggle.setAttribute('aria-label', str(collapsed ? 'ControlsExpand' : 'ControlsCollapse'));
+        }
+        publishLive();
+    }
+
+    // What a check can read about the panel, for the same reason #fg-resolved
+    // exists: whether a control is THERE and whether it is OPEN cannot be read
+    // off a screenshot, and a panel is the one part of this page whose whole
+    // job is to be interactive.
+    function panelState() {
+        var root = byId('fg-controls');
+        if (!root) { return { present: false }; }
+        return {
+            present: true,
+            collapsed: root.getAttribute('data-collapsed') === 'true',
+            controls: root.querySelectorAll('input, select, button').length
+        };
+    }
+
+
+    // Everything above declares; this runs. Order matters twice now. The item
+    // panel has to exist before a click can fill it, and the CONTROL panel
+    // has to be built after the drawing: its classification filters are one
+    // row per kind the payload carries, and nothing knows what those are
+    // until the graph has been laid out.
     fillStatus();
     drawGraph();
+    panelReady();
 }());
 
 </script>
