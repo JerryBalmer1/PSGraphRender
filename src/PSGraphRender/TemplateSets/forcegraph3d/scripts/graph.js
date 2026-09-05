@@ -239,10 +239,12 @@
 
         // A ring is a second silhouette rather than a brighter one, for a
         // caller who wants exported items called out without spending the
-        // brightness channel.
+        // brightness channel. Its own material, deliberately: see
+        // ringMaterial - a ring drawn out of the glow shell's opacity vanishes
+        // in exactly the looks that have the glow turned off.
         if (node.isExported && cfgText('ExportedEmphasis', 'glow') === 'ring') {
-            var ring = geometryFor('torus', radius * 1.5);
-            if (ring) { mesh.add(new THREE_CTOR.Mesh(ring, glowMaterial(color, 2.2))); }
+            var ring = geometryFor('torus', radius * 1.45);
+            if (ring) { mesh.add(new THREE_CTOR.Mesh(ring, ringMaterial(color))); }
         }
 
         MESH_BY_ID[node.id] = mesh;

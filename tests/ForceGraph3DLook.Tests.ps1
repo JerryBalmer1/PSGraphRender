@@ -281,8 +281,24 @@ Describe 'Acceptance D: the catalogue is real' {
 
     It 'ships a catalogue page that fetches nothing and inlines no library' {
         $html = [System.IO.File]::ReadAllText((Join-Path $script:ExamplesRoot 'threed/catalog.html'))
+
+        # Offline is absolute, and a catalogue page is an artifact like any
+        # other: relative paths to the pictures beside it, and nothing fetched.
         $html | Should-NotMatchString 'https?://' -Because 'offline is absolute, and a catalogue page is an artifact like any other'
-        $html | Should-NotMatchString 'ForceGraph3D' -Because 'the catalogue is a grid of links and pictures; it draws no graph'
+
+        # NO SCRIPT AT ALL, which is the property that matters. Naming the
+        # library's global here was the first version of this check and it was
+        # wrong twice over: Pester's string match is case-insensitive, and the
+        # page's own title says `forcegraph3d`, so it failed on a page that was
+        # entirely correct. The right assertion is not "the library's name is
+        # absent" - it is "there is no code here", and that is checkable
+        # directly.
+        $html | Should-NotMatchString '<script' -Because 'the catalogue is a grid of links and pictures; it runs nothing and draws no graph'
+
+        # And it is a page, not a report. A catalogue that had inlined the 1.3 MB
+        # drawing library would pass both checks above if the library ever
+        # stopped naming itself.
+        $html.Length | Should-BeLessThan 200000 -Because 'a catalogue that inlined anything would not be this size'
     }
 
     It 'declares A0 as the shipped default, so every conversation has a fixed origin' {
@@ -290,6 +306,28 @@ Describe 'Acceptance D: the catalogue is real' {
         $a0 = @($table.Variants | Where-Object { $_.Label -eq 'A0' })
         @($a0).Count | Should-Be 1
         @($a0[0].Overlay.Keys).Count | Should-Be 0 -Because 'A0 IS the default: an overlay with anything in it is a different look'
+    }
+
+    It 'renders A0 identically to a no-overlay render of the shipped backend' {
+        # The declaration above says A0 has no overlay. This says the COMMITTED
+        # A0 is what no overlay actually produces - which is the half that can
+        # rot, because the file was generated once and the backend moves.
+        #
+        # Line endings normalised before comparing, and only line endings.
+        # .gitattributes stores every text file as LF and the generator writes
+        # whatever the assembled parts carry, so a byte comparison of a
+        # committed file against a fresh render measures git's normalisation
+        # rather than the renderer. The examples have worked this way since
+        # they existed; see examples/Build-Examples.ps1.
+        $table = Get-VariantTable
+        $payload = Get-Content -LiteralPath (Join-Path $script:ExamplesRoot $table.Input) -Raw | ConvertFrom-Json
+        $fresh = New-RenderDocument -ViewModel $payload.data -Meta $payload.meta `
+            -Title ($table.Title -replace '\{label\}', 'A0') -TemplateSet $script:SetName
+
+        $committed = [System.IO.File]::ReadAllText((Join-Path $script:CatalogRoot 'A0.html'))
+        $normalise = { param($t) $t -replace "`r`n", "`n" }
+
+        (& $normalise $committed) | Should-Be (& $normalise $fresh) -Because 'the catalogue''s fixed origin has to be the thing that actually ships'
     }
 
     It 'keeps every variant to one overlay diff, touching only settings and theme' {

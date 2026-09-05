@@ -211,3 +211,27 @@
             depthWrite: false
         });
     }
+
+    // The ring an exported item wears when ExportedEmphasis says so, and it
+    // gets its OWN material rather than borrowing the glow shell's.
+    //
+    // Borrowing was the first version and it was wrong in a way only a picture
+    // showed: the shell's opacity is GlowOpacity, so a look that turns the glow
+    // off turns the ring off with it - and E3 in the catalogue is exactly that
+    // look, a schematic with no atmosphere at all, which is also the look where
+    // a crisp ring is most useful. Two channels the theme controls separately
+    // must not be one channel here.
+    //
+    // Solid rather than additive, for the same reason: a ring is a MARK, and a
+    // mark that brightens what is behind it disappears against a bright item.
+    function ringMaterial(color) {
+        return new THREE_CTOR.Material({
+            color: color,
+            emissive: new THREE_CTOR.Color(color),
+            emissiveIntensity: 0.6,
+            transparent: true,
+            opacity: 0.85,
+            depthWrite: false
+        });
+    }
+
