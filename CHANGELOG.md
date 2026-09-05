@@ -27,6 +27,12 @@ gets depth, menus, and the composed look as its default. **MINOR**: new setting
 types are added — fourteen of them — and no contract change. No `.ps1` under
 `src/` edited; `cytoscape`, `plain` and `index.psd1` byte-identical to v0.16.0.
 
+`AutoRotate` and `FocusOnClick` are the first `Boolean` settings this backend
+declares. That is **not** a new schema type: `Boolean` was already a validated
+case in `Private/Config/Test-RenderSettingValue.ps1`, which is untouched. A
+backend using a type it had not used before is a data change; a type the module
+cannot validate would need a validator, and therefore a `.ps1` edit.
+
 Two halves in one pass, in a hard order: **the instrument was repaired before
 anything that would have blinded the old one was built.** Every feature in the
 second half was unshippable as a default under the floor the first half
