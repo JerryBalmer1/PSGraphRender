@@ -234,17 +234,30 @@
         var glowOpacity = cfgNumber('GlowOpacity', 0.22);
         if (glowSize > 1 && glowOpacity > 0) {
             var shell = geometryFor(shape, radius * glowSize);
-            if (shell) { mesh.add(new THREE_CTOR.Mesh(shell, glowMaterial(color, emphasis))); }
+            if (shell) {
+                var halo = new THREE_CTOR.Mesh(shell, glowMaterial(color, emphasis));
+                // Tagged, because an item may now carry TWO extra meshes and
+                // the glow slider must move only one of them. Glow and the
+                // exported rim are separate channels in the theme and a
+                // control that scaled both would silently join them.
+                halo.material.__isGlowShell = true;
+                mesh.add(halo);
+            }
         }
 
-        // A ring is a second silhouette rather than a brighter one, for a
+        // A rim is a sharpened silhouette rather than a brighter item, for a
         // caller who wants exported items called out without spending the
-        // brightness channel. Its own material, deliberately: see
-        // ringMaterial - a ring drawn out of the glow shell's opacity vanishes
+        // brightness channel. The item's OWN shape, slightly larger, drawn
+        // back-face only - see rimMaterial for why that yields an outline and
+        // why the torus it replaced was wrong. Its own material,
+        // deliberately: a mark drawn out of the glow shell's opacity vanishes
         // in exactly the looks that have the glow turned off.
+        //
+        // 1.12 is small on purpose. It is a line around the edge, and a hull
+        // far enough out to read as a second object has stopped being one.
         if (node.isExported && cfgText('ExportedEmphasis', 'glow') === 'ring') {
-            var ring = geometryFor('torus', radius * 1.45);
-            if (ring) { mesh.add(new THREE_CTOR.Mesh(ring, ringMaterial(color))); }
+            var rim = geometryFor(shape, radius * 1.12);
+            if (rim) { mesh.add(new THREE_CTOR.Mesh(rim, rimMaterial(color))); }
         }
 
         MESH_BY_ID[node.id] = mesh;

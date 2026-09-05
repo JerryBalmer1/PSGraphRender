@@ -51,10 +51,15 @@ BeforeAll {
     $script:Entries = $script:Schema.Entries
     $script:Manifest = Import-PowerShellDataFile -LiteralPath $script:ManifestPath
 
-    # The base this pass is measured against. Recorded as a REF rather than as a
-    # copy of the files, so "byte-identical to base" is decided by git and not by
-    # a snapshot this suite could take of a tree it had already changed.
-    $script:BaseRef = 'e7bbfca'
+    # The base the CURRENT pass is measured against. Recorded as a REF rather
+    # than as a copy of the files, so "byte-identical to base" is decided by git
+    # and not by a snapshot this suite could take of a tree it had already
+    # changed.
+    #
+    # Moved e7bbfca -> dba1f4d at v0.17.0. A control still comparing against the
+    # base of the pass before last goes green over everything the last pass did,
+    # which is the one thing it exists to catch.
+    $script:BaseRef = 'dba1f4d'
 
     $script:Scratch = Join-Path ([System.IO.Path]::GetTempPath()) "psgraphrender-look-$PID"
     New-Item -ItemType Directory -Path $script:Scratch -Force | Out-Null
@@ -125,6 +130,17 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'ParticleColor'; Type = 'Color' }
         @{ Key = 'LinkResolutionColor'; Type = 'ColorMap' }
         @{ Key = 'ToneMappingExposure'; Type = 'Number' }
+
+        # v0.17.0: the environment the graph sits in. Scene geometry rather than
+        # a CSS backdrop, so it turns with the camera - see Config/theme.psd1.
+        @{ Key = 'GridStyle'; Type = 'Enum' }
+        @{ Key = 'GridColor'; Type = 'Color' }
+        @{ Key = 'GridOpacity'; Type = 'Number' }
+        @{ Key = 'GridGlow'; Type = 'Number' }
+        @{ Key = 'GridDivisions'; Type = 'Integer' }
+        @{ Key = 'GridExtent'; Type = 'Number' }
+        @{ Key = 'GridDrop'; Type = 'Number' }
+        @{ Key = 'GridLineWidth'; Type = 'Number' }
     ) {
         $entry = Get-SchemaEntry -Key $Key
         $entry | Should-NotBeNull -Because "$Key is an option this pass promised and the schema is where an option becomes real"
@@ -139,6 +155,8 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'NodeSizeMetricMax' }, @{ Key = 'GlowStrength' }, @{ Key = 'GlowSize' }
         @{ Key = 'GlowOpacity' }, @{ Key = 'FogDensity' }, @{ Key = 'ParticleCount' }
         @{ Key = 'ParticleSpeed' }, @{ Key = 'ParticleWidth' }, @{ Key = 'ToneMappingExposure' }
+        @{ Key = 'GridOpacity' }, @{ Key = 'GridGlow' }, @{ Key = 'GridDivisions' }
+        @{ Key = 'GridExtent' }, @{ Key = 'GridDrop' }, @{ Key = 'GridLineWidth' }
     ) {
         $entry = Get-SchemaEntry -Key $Key
         $entry | Should-NotBeNull
@@ -173,6 +191,14 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'ParticleColor'; File = 'theme.psd1' }
         @{ Key = 'LinkResolutionColor'; File = 'theme.psd1' }
         @{ Key = 'ToneMappingExposure'; File = 'theme.psd1' }
+        @{ Key = 'GridStyle'; File = 'theme.psd1' }
+        @{ Key = 'GridColor'; File = 'theme.psd1' }
+        @{ Key = 'GridOpacity'; File = 'theme.psd1' }
+        @{ Key = 'GridGlow'; File = 'theme.psd1' }
+        @{ Key = 'GridDivisions'; File = 'theme.psd1' }
+        @{ Key = 'GridExtent'; File = 'theme.psd1' }
+        @{ Key = 'GridDrop'; File = 'theme.psd1' }
+        @{ Key = 'GridLineWidth'; File = 'theme.psd1' }
     ) {
         # A schema entry with no shipped value renders the default and warns at
         # nobody, which is the quiet half of a setting that does not exist.

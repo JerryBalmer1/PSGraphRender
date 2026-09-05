@@ -24,7 +24,7 @@
 
     # Item geometry. Radius is nodeRelSize in the library's terms: the size of
     # an item of unit value.
-    NodeSize            = 14
+    NodeSize            = 12
     NodeOpacity         = 1
 
     # -- Shape ---------------------------------------------------------------
@@ -85,7 +85,7 @@
     # spoken for by NodeSizeMetric and would collide with it the moment both
     # are set, and a ring is a second silhouette competing with the shape.
     # Brightness is the one channel nothing else here uses.
-    ExportedEmphasis    = 'glow'
+    ExportedEmphasis    = 'ring'
 
     # -- Glow ----------------------------------------------------------------
     # Emissive material plus an additively-blended back-face shell, which is
@@ -102,14 +102,14 @@
     # correctly against items in front of it, and it costs one extra mesh per
     # item instead of three full-frame passes. What it cannot do is bleed
     # across the whole frame the way a real bloom does, and that is the trade.
-    GlowStrength        = 0.3
+    GlowStrength        = 0.4
     # Shell radius as a multiple of the item's own. Below about 1.4 it reads as
     # a rim light rather than a glow; above about 2.5 neighbouring items merge
     # into one cloud at the densities this renderer sees.
-    GlowSize            = 1.55
+    GlowSize            = 1.3
     # Faint on purpose. The shells are additive, so they SUM where they
     # overlap: a value that looks right on one item is a white blob on six.
-    GlowOpacity         = 0.16
+    GlowOpacity         = 0.1
 
     # -- Depth ---------------------------------------------------------------
     # Exponential fog, which is the depth cue that makes a cloud of items read
@@ -127,46 +127,107 @@
     FogColor            = '#05070d'
 
     # -- Environment ---------------------------------------------------------
-    # What is behind the graph, and the one value here that is NOT the choice
-    # this pass would have made on looks alone.
+    # What is behind the graph, and the entry in this file with the longest
+    # history: it is the value v0.16.0 could not ship and v0.17.0 could.
     #
-    # 'vignette' is better looking and it was the default until it was
-    # measured. The canvas-growth floor in templateset.psd1 screenshots this
-    # element and compares it against the SAME element in an empty render, and
-    # a gradient is in both pictures - so it does not move the ratio, it
-    # removes it. Measured on sample-module at 1280x900, everything else held
-    # still:
+    # THE ARGUMENT THAT KEPT IT AT 'flat', KEPT because the reversal is only
+    # legible beside it. The canvas floor screenshotted #fg and divided by the
+    # SAME element in an empty render, and a gradient is in both pictures - so
+    # it did not move the ratio, it removed it. Measured on sample-module at
+    # 1280x900, everything else held still:
     #
     #   BackgroundStyle   empty px     drawn px   ratio
     #   flat                 5,168       19,586    3.79
     #   gradient           313,384      329,766    1.05
     #   vignette           313,384      329,766    1.05
     #
-    # And it is not a matter of degree. A gradient whose two colours differ by
+    # And it was not a matter of degree. A gradient whose two colours differ by
     # two steps per channel - #0a0e18 against #080b12, invisible in a
-    # screenshot - still costs 122,355 bytes of empty render and still scores
-    # 1.14. PNG cannot compress a gradient, and the floor is the ONLY thing
-    # that can tell a drawn 3D view from a blank one: every DOM assertion in
-    # the Smoke block passes just as happily over an empty rectangle.
+    # screenshot - still cost 122,355 bytes of empty render and still scored
+    # 1.14. PNG cannot compress a gradient, and that floor was the ONLY thing
+    # that could tell a drawn 3D view from a blank one.
     #
-    # So the trade is a background against the gate that proves the page draws,
-    # and the gate wins. The environment is not gone - it is declared, it is
-    # implemented, and B1 and B2 in the catalogue are what it looks like. An
-    # operator who wants it as the default is choosing to weaken that gate, and
-    # this comment is so that choice is made rather than inherited.
-    BackgroundStyle     = 'flat'
+    # The comment then said: "An operator who wants it as the default is
+    # choosing to weaken that gate, and this comment is so that choice is made
+    # rather than inherited."
+    #
+    # WHAT CHANGED IS THE GATE, NOT THE APPETITE FOR RISK. v0.17.0 replaced the
+    # ratio with a changed-pixel fraction between the two pictures, so a
+    # background is identical in both and contributes nothing. Measured on the
+    # same document under both metrics:
+    #
+    #   BackgroundStyle   old ratio   new fraction
+    #   flat                 4.32        0.0295
+    #   vignette             1.05        0.0258
+    #
+    # The floor lost nothing and the default gained the environment. That is
+    # the whole reason pass 0052 repaired the instrument before it built
+    # anything that would have blinded the old one - see templateset.psd1 and
+    # tests/browser/smoke.cjs. B1 and B2 in the catalogue are the OTHER
+    # backgrounds now, and A5 is the flat look this replaced, so reversing this
+    # is still one line.
+    BackgroundStyle     = 'vignette'
     # The tint the vignette lifts toward its centre. A cold blue, well below
     # the accent, so it reads as distance rather than as a coloured light
     # somebody would look for the source of.
-    BackgroundGlowColor = '#16304d'
+    BackgroundGlowColor = '#173553'
+
+    # -- The grid ------------------------------------------------------------
+    # What the graph sits ON, and the answer to the complaint that started this
+    # pass: a cloud of items in an unbroken rectangle has no near and no far.
+    # Fog said "that one is further away" and nothing said how much further,
+    # because nothing was at a known distance to compare it against. A ruled
+    # surface supplies exactly that, and it is the oldest trick in the drawing
+    # of three dimensions.
+    #
+    # SCENE GEOMETRY, NOT A CSS BACKDROP - unlike BackgroundStyle above, and
+    # the difference is the one that decides it. A perspective floor painted in
+    # CSS costs nothing and looks right in a screenshot; it reads as broken the
+    # instant a reader drags, because the one thing a ground plane has to do is
+    # stay where the ground is.
+    #
+    # It is built from quads rather than from lines, and that is forced rather
+    # than chosen: the vendored bundle draws every link as a cylinder whenever
+    # EdgeWidth is above zero, so there is no Line constructor anywhere in the
+    # live scene to harvest. Verified by traversing it - every __graphObjType
+    # in the scene is a Mesh. Same tree-shaking limit that made the shape
+    # vocabulary explicit vertices. See scripts/shapes.js.
+    #
+    # 'floor' rather than 'room' as the default: a ground plane answers "how
+    # far down is that" without adding anything a reader has to look past, and
+    # the enclosure - which reads better at eye level - is one line away and is
+    # B5 in the catalogue.
+    GridStyle           = 'floor'
+    # Well below the accent. The environment is a reference and has to read as
+    # being BEHIND the graph; a ruling in the accent competes with the items.
+    GridColor           = '#2b4a6b'
+    GridOpacity         = 0.5
+    GridGlow            = 0.55
+    # Past about 24 the ruling reads as a texture rather than as a measure,
+    # which is the opposite of what it is for.
+    GridDivisions       = 14
+    # How far it reaches past the graph, as a multiple of the graph's own
+    # half-extent. At 1 the outermost items sit on the edge of it.
+    GridExtent          = 1.7
+    # And how far BELOW the lowest item a ground plane sits, as a fraction of
+    # the graph's widest span. Only 'floor' reads it: an enclosure is centred
+    # on the graph on all six sides by construction. A floor placed a whole
+    # extent down reads as a separate object in the distance and stops
+    # answering the question it is there for.
+    GridDrop            = 0.16
+    # A FRACTION of that reach rather than a length in scene units, and that is
+    # the one number here that had to be relative. A constant width is a
+    # hairline under a large payload and a stripe under a small one, because
+    # the grid is sized to the graph and the graph is whatever arrived.
+    GridLineWidth       = 0.004
 
     # -- Connectors ----------------------------------------------------------
     # Thin and translucent on purpose: in three dimensions every link crosses
     # every other one somewhere, and opaque lines at cytoscape's weight read as
     # a solid mesh from most angles.
-    EdgeColor           = '#57657a'
-    EdgeOpacity         = 0.42
-    EdgeWidth           = 1.0
+    EdgeColor           = '#6d8199'
+    EdgeOpacity         = 0.62
+    EdgeWidth           = 1.4
     ArrowSize           = 4
 
     # Moving particles along each link, which is the one thing on this page
@@ -178,10 +239,10 @@
     # Zero is a real setting and C3 in the catalogue is what it looks like -
     # a still page, which is the right choice for a report that will be read
     # beside something else.
-    ParticleCount       = 2
+    ParticleCount       = 3
     ParticleSpeed       = 0.006
-    ParticleWidth       = 1.6
-    ParticleColor       = '#7fd4ff'
+    ParticleWidth       = 1.9
+    ParticleColor       = '#9fe6ff'
 
     # -- Link confidence -----------------------------------------------------
     # links[].resolution is a field the payload already carries and nothing
@@ -202,12 +263,12 @@
     # the renderer does not know them and must not. Same values as the reference
     # backend ships, so the same payload reads the same way in both.
     KindColor           = @{
-        Function = '#4da3ff'
+        Function = '#4ea8ff'
         Class    = '#c78bff'
-        Enum     = '#ffb84d'
-        Script   = '#5ad1a5'
+        Enum     = '#ffc55c'
+        Script   = '#4fd6a8'
     }
-    KindColorFallback   = '#8895a7'
+    KindColorFallback   = '#7c8ba1'
 
     # For an item the renderer invented because a link named a target the
     # payload does not contain. Not a classification: no producer sends it.
@@ -230,5 +291,5 @@
     # far as the item it wraps, so the old padding put the outermost items'
     # haloes off the bottom of the frame. Measured by looking - the fit was
     # correct for the data and wrong for the drawing.
-    FitPadding          = 70
+    FitPadding          = 110
 }

@@ -264,6 +264,111 @@
         return Object.prototype.hasOwnProperty.call(SHAPE_BUILDERS, name);
     }
 
+    // -- the environment ---------------------------------------------------
+    //
+    // The graph needed something to sit ON. Until v0.17.0 a fitted view put a
+    // cloud of items in the middle of an unbroken rectangle, and a cloud with
+    // no reference has no near and no far: fog said "this one is further" and
+    // nothing said how much further, because there was nothing at a known
+    // distance to compare it against. A ruled surface is what supplies that,
+    // and it is the oldest trick in the drawing of three dimensions.
+    //
+    // QUADS RATHER THAN LINES, and that is forced rather than chosen. The
+    // vendored bundle draws every link as a CYLINDER whenever EdgeWidth is
+    // above zero, so at runtime there is no Line constructor anywhere in the
+    // scene to harvest one from - traversed and confirmed, every
+    // __graphObjType in the scene is a Mesh. Reading a constructor off an
+    // instance only ever reaches the classes the library itself used, which is
+    // the same tree-shaking limit that made the shape vocabulary explicit
+    // vertices in the first place.
+    //
+    // ONE MESH FOR THE WHOLE ENVIRONMENT, built into a single geometry. A
+    // `room` at sixteen divisions is 204 quads; as 204 objects that is 204
+    // draw calls on every frame of a view whose whole job is to stay smooth
+    // under a drag.
+
+    function gridPoint(o, u, v, a, b) {
+        return [
+            o[0] + u[0] * a + v[0] * b,
+            o[1] + u[1] * a + v[1] * b,
+            o[2] + u[2] * a + v[2] * b
+        ];
+    }
+
+    // One ruled line, as a quad lying IN the plane its two axes span.
+    function pushGridLine(out, o, u, v, a0, a1, b0, b1) {
+        pushFace(out, [
+            gridPoint(o, u, v, a0, b0),
+            gridPoint(o, u, v, a1, b0),
+            gridPoint(o, u, v, a1, b1),
+            gridPoint(o, u, v, a0, b1)
+        ]);
+    }
+
+    // A ruled plane centred on `origin`, spanned by two unit axes.
+    function pushGridPlane(out, origin, u, v, halfU, halfV, divisions, width) {
+        var half = width / 2;
+        var i, t;
+        for (i = 0; i <= divisions; i++) {
+            t = -halfU + 2 * halfU * (i / divisions);
+            pushGridLine(out, origin, u, v, t - half, t + half, -halfV, halfV);
+        }
+        for (i = 0; i <= divisions; i++) {
+            t = -halfV + 2 * halfV * (i / divisions);
+            pushGridLine(out, origin, u, v, -halfU, halfU, t - half, t + half);
+        }
+    }
+
+    var X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1];
+
+    // The vocabulary, and the only place it is written down as buildable
+    // geometry - the same rule SHAPE_BUILDERS follows. settings.schema.psd1
+    // lists these names as the Values of GridStyle; a name in one and not the
+    // other draws nothing rather than throwing.
+    //
+    //   floor  one ruled plane under the graph. The classic, and the one that
+    //          answers "how far down is that item" without adding anything
+    //          the reader has to look past.
+    //   room   floor, ceiling and four walls. Reads from EVERY angle, which a
+    //          floor does not: rotate a floor-only scene to eye level and the
+    //          reference disappears exactly when the parallax is best.
+    var GRID_BUILDERS = {
+        // A ground plane sits just under the LOWEST item rather than a whole
+        // extent below the centre, which is where a floor is. Placed a full
+        // reach down it reads as a separate object in the distance and stops
+        // answering the question it is there for - how far down is that.
+        floor: function (out, c, r, d, w, floorY) {
+            pushGridPlane(out, [c[0], floorY, c[2]], X, Z, r, r, d, w);
+        },
+        // The enclosure is centred on the graph on all six sides, because the
+        // whole point of it is that there is a reference whichever way the
+        // reader turns.
+        room: function (out, c, r, d, w) {
+            pushGridPlane(out, [c[0], c[1] - r, c[2]], X, Z, r, r, d, w);
+            pushGridPlane(out, [c[0], c[1] + r, c[2]], X, Z, r, r, d, w);
+            pushGridPlane(out, [c[0], c[1], c[2] - r], X, Y, r, r, d, w);
+            pushGridPlane(out, [c[0], c[1], c[2] + r], X, Y, r, r, d, w);
+            pushGridPlane(out, [c[0] - r, c[1], c[2]], Z, Y, r, r, d, w);
+            pushGridPlane(out, [c[0] + r, c[1], c[2]], Z, Y, r, r, d, w);
+        }
+    };
+
+    function isBuildableGrid(name) {
+        return Object.prototype.hasOwnProperty.call(GRID_BUILDERS, name);
+    }
+
+    // `centre` and `reach` come from the graph's own bounding box, so the
+    // environment is the size of the thing it is drawn around rather than a
+    // number that happened to suit one payload. A grid built to a constant is
+    // a grid that is either inside a large graph or a speck under a small one.
+    function buildGridGeometry(style, centre, reach, divisions, width, floorY) {
+        if (!THREE_CTOR || !isBuildableGrid(style)) { return null; }
+        var out = [];
+        GRID_BUILDERS[style](out, centre, reach, divisions, width, floorY);
+        if (!out.length) { return null; }
+        return geometryFrom(out);
+    }
+
     // -- the mapping -------------------------------------------------------
     //
     // `kind=shape` pairs, separated by `;` or `,`. A String rather than a map

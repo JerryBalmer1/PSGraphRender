@@ -282,6 +282,53 @@
             In = 'Theme'; Group = 'Environment'
             Description = 'The tint a gradient or vignette lifts toward. Ignored when BackgroundStyle is flat.'
         }
+
+        # -- The grid ------------------------------------------------------
+        # Scene geometry rather than a CSS backdrop, unlike BackgroundStyle,
+        # and the difference is the one that matters: it has to rotate with
+        # the camera. A perspective floor painted in CSS looks right in a
+        # screenshot and reads as broken the instant a reader drags.
+        GridStyle           = @{
+            Type = 'Enum'; Default = 'floor'
+            Values = @('none', 'floor', 'room')
+            In = 'Theme'; Group = 'Environment'
+            Description = 'What the graph sits in. floor rules one plane beneath it; room encloses it on six sides, which is the one that still reads at eye level. Sized to the graph''s own extent, so it fits any payload.'
+        }
+        GridColor           = @{
+            Type = 'Color'; Default = '#2b4a6b'
+            In = 'Theme'; Group = 'Environment'
+            Description = 'The ruling''s colour. Well below the accent, so the environment reads as behind the graph rather than as part of it.'
+        }
+        GridOpacity         = @{
+            Type = 'Number'; Default = 0.5; Min = 0; Max = 1
+            In = 'Theme'; Group = 'Environment'
+            Description = 'How solid the ruling is. It never occludes an item whatever this says: the environment is a reference, and a reference that hides what it references is scenery.'
+        }
+        GridGlow            = @{
+            Type = 'Number'; Default = 0.55; Min = 0; Max = 3
+            In = 'Theme'; Group = 'Environment'
+            Description = 'How brightly the ruling lights itself. Emissive rather than lit, because half of a room faces away from the light by construction.'
+        }
+        GridDivisions       = @{
+            Type = 'Integer'; Default = 14; Min = 2; Max = 64
+            In = 'Theme'; Group = 'Environment'
+            Description = 'Cells across each ruled plane. Past about 24 the ruling reads as a texture rather than as a measure, which is the opposite of what it is for.'
+        }
+        GridExtent          = @{
+            Type = 'Number'; Default = 1.7; Min = 1; Max = 6
+            In = 'Theme'; Group = 'Environment'
+            Description = 'How far the environment reaches past the graph, as a multiple of the graph''s own half-extent. At 1 the outermost items touch it.'
+        }
+        GridDrop            = @{
+            Type = 'Number'; Default = 0.16; Min = 0; Max = 3
+            In = 'Theme'; Group = 'Environment'
+            Description = 'How far below the lowest item a ground plane sits, as a fraction of the graph''s widest span. Read by floor only: an enclosure is centred on the graph by construction.'
+        }
+        GridLineWidth       = @{
+            Type = 'Number'; Default = 0.004; Min = 0.0005; Max = 0.05
+            In = 'Theme'; Group = 'Environment'
+            Description = 'Thickness of one ruled line, as a fraction of the environment''s reach. A fraction rather than a length, so the ruling reads the same on a payload of six items and one of six hundred.'
+        }
         ToneMappingExposure = @{
             Type = 'Number'; Default = 1.0; Min = 0.2; Max = 3
             In = 'Theme'; Group = 'Environment'

@@ -799,6 +799,22 @@ task TestLook Build, {
                     other = (New-LookDocument -Name 'fog-low' -Setting @{ FogDensity = 0.004 } -Backend $p.Name)
                 }
 
+                # -- C: the environment reached the DRAWING. A declared grid
+                #       style that resolved into the DOM and never into a
+                #       triangle is exactly the failure the shapes case
+                #       above exists to catch, one channel over.
+                @{
+                    kind = 'pixels'; backend = $p.Name; name = 'grid-drawn'; probe = $p.Probe
+                    what = 'an enclosure environment against none'
+                    path = (New-LookDocument -Name 'grid-room' -Setting @{ GridStyle = 'room' } -Backend $p.Name)
+                    other = (New-LookDocument -Name 'grid-none' -Setting @{ GridStyle = 'none' } -Backend $p.Name)
+                }
+                @{
+                    kind = 'live'; backend = $p.Name; name = 'live-grid-meshes'; probe = $p.Probe
+                    field = 'gridMeshes'; expect = @{ value = 0 }
+                    path = (New-LookDocument -Name 'grid-off' -Setting @{ GridStyle = 'none' } -Backend $p.Name)
+                }
+
                 # -- C: hover does what the setting says, driven through a real
                 #       pointer. Three modes, three different numbers.
                 foreach ($hover in @(
