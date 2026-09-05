@@ -5,8 +5,9 @@ produced it, a screenshot, and the exact command that rebuilds it. Nothing in
 this directory was hand-edited after generation.
 
 Plus a **[variant catalogue](threed/catalog.html)** for the 3D backend, added at
-v0.16.0: nineteen labelled looks in five families, each one overlay of declared
-settings away from the default. See [below](#the-variant-catalogue).
+v0.16.0 and grown at v0.17.0: twenty-two labelled looks in five families, each
+one overlay of declared settings away from the default. See
+[below](#the-variant-catalogue).
 
 Open any `.html` file straight from a clone — the reports are self-contained.
 There is no build step, no server and no network fetch: every library each
@@ -105,33 +106,45 @@ configuration, and all of it one overlay away from something else in
 
 ## The variant catalogue
 
-[`threed/catalog.html`](threed/catalog.html) — **nineteen labelled looks** for
+[`threed/catalog.html`](threed/catalog.html) — **twenty-two labelled looks** for
 the `forcegraph3d` backend, in five families:
 
 | Family | What it varies | Members |
 | --- | --- | --- |
-| **A** | shape and size | A0 – A4 |
-| **B** | colour and mood | B1 – B4 |
+| **A** | the origins, and the shape channel | A0 – A5 |
+| **B** | colour, mood, and what the graph sits in | B1 – B6 |
 | **C** | connectors | C1 – C4 |
-| **D** | interaction | D1 – D3 |
-| **E** | composed looks | E1 – E3 |
+| **D** | interaction | D1 – D4 |
+| **E** | composed looks | E2 – E3 |
 
 **`A0` is the default** — what `New-RenderDocument -TemplateSet forcegraph3d`
 produces with no overlay at all — so every other variant is a diff from a fixed
 origin, and `tests/ForceGraph3DLook.Tests.ps1` asserts the committed `A0.html`
-is byte-identical to a fresh no-overlay render. **`E1` is the pass's own answer
-to "make it look modern"**, and the E family is the one to judge: any of them
-can become the default by moving its values into
+is byte-identical to a fresh no-overlay render.
+
+**`A5` is the default it replaced**, kept whole rather than described, so the
+change v0.17.0 made can be looked at instead of read about. A0 and A5 draw the
+same payload through the same generator, which makes the difference between the
+two pictures exactly what that release changed and nothing else.
+
+**`E1` is not here, because it won.** "Nebula — the recommended look" was
+v0.16.0's answer to "make it look modern"; v0.17.0 moved its treatments into
 [`Config/theme.psd1`](../src/PSGraphRender/TemplateSets/forcegraph3d/Config/theme.psd1),
-which is the point of writing them as overlays rather than as forks.
+added the environment and the control panel, and `A0` is what it draws now. A
+row for it would be a second picture of the default. **The coordinate is retired
+rather than reused** — a label is a thing you point with, and a pointer that
+quietly starts meaning something else is worse than one that is gone.
+
+Any variant can still become the default the same way, by moving its values into
+that file, which is the point of writing them as overlays rather than as forks.
 
 Every variant is **one overlay of declared settings** and nothing else. A
 variant that needed a script edit would not be a variant, it would be a fork,
 and the whole claim of v0.16.0 is that this backend's look is configuration.
 
 ```powershell
-pwsh -NoProfile -File examples/Build-Examples.ps1 -Variant all   # all nineteen
-pwsh -NoProfile -File examples/Build-Examples.ps1 -Variant E1    # one of them
+pwsh -NoProfile -File examples/Build-Examples.ps1 -Variant all   # all twenty-two
+pwsh -NoProfile -File examples/Build-Examples.ps1 -Variant B5    # one of them
 pwsh -NoProfile -File examples/Build-Examples.ps1 -Variant all -SkipShots
 ```
 
@@ -149,22 +162,37 @@ touched would silently drop every row it did not. So a variant is in the
 catalogue because it is in the table, and drift is not prevented by discipline;
 it is impossible.
 
-**All nineteen draw the same payload**, `input/ecosystem-viewmodel.json`, so the
-only difference between any two pictures is the overlay named under them.
+**All twenty-two draw the same payload**, `input/ecosystem-viewmodel.json`, so
+the only difference between any two pictures is the overlay named under them.
 
 ### What a screenshot cannot show
 
 The **D family is interaction** — a zoom speed, a hover mode, which button opens
 an item's actions — and none of that photographs. Its pictures show the parts
-that do (the tooltip, the highlight, the labels) and its captions carry the
-rest. Open the pages to use them.
+that do (the tooltip, the highlight, the labels, and since v0.17.0 the control
+panel) and its captions carry the rest. Open the pages to use them.
 
-### Why it costs 26 MB on disk and about 3.7 MB in the repository
+**The panel is the part worth opening a page for.** Every picture in the
+catalogue except `A5` and `D4` shows it, but a screenshot of a slider is a
+picture of a slider — what it does is change the scene while you watch, and the
+browser gate is what asserts that rather than the catalogue.
 
-Nineteen documents that each inline the same 1.3 MB vendored library. They
-delta-compress against each other almost perfectly, so the packed cost is a
-seventh of the on-disk size. Recorded here rather than hidden, the same way the
-126 KB → 607 KB cost of vendoring was.
+### Why it costs 31 MB on disk, and where the packed cost actually goes
+
+Twenty-two documents that each inline the same 1.3 MB vendored library — 31 MB
+of HTML. They delta-compress against each other almost perfectly, so that part
+is nearly free: the whole repository packs to **20.1 MiB** after v0.17.0, up
+from 10.6 MiB at v0.16.0.
+
+**And the growth is not the HTML.** It is the 22 screenshots — 8.3 MB of PNG,
+which is already-compressed data and deltas against nothing — plus the
+operator's design references under `claude-examples/`. Three documents of
+inlined HTML that share no history with anything here. Worth stating because
+finding 68 in the harness ledger recorded the on-disk figure as "seven times the
+real cost", and that ratio holds for the documents and not for the pictures.
+
+Recorded here rather than hidden, the same way the 126 KB → 607 KB cost of
+vendoring was.
 
 ## How a setting reaches the renderer
 
