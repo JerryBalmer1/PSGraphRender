@@ -1,0 +1,204 @@
+/* The control panel. A second stylesheet rather than more of base.css,
+   because the two answer different questions: base.css is the document and
+   the drawing, this is one component that sits over it. Same split the
+   reference backend makes between base, components and overlays.
+
+   Every colour names a custom property that bootstrap.js writes onto :root
+   from theme data, so a palette change is a data change. The fallbacks are
+   what a raw, unsubstituted template looks like - not a second palette to
+   keep in step.
+
+   IT LIVES IN #fg-stage AND NOT IN #fg, because the library empties the
+   container it is handed - base.css and partials/graph.html carry the account
+   of the shipped feature that lesson cost. So it is positioned against the
+   stage and sits OUTSIDE the rectangle the smoke gate captures, which is the
+   arrangement to want anyway: the floor measures the drawing and nothing
+   else. */
+
+#fg-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  /* Narrower than the item panel and capped against the frame: a control
+     surface that grew with the viewport would be a column, and a column is
+     the thing this deliberately is not. */
+  width: min(248px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ChromeBorder, #1f2937);
+  border-radius: 10px;
+  /* Translucent, so the drawing continues underneath rather than stopping at
+     an opaque rectangle. The blur is what keeps the text legible over it; a
+     browser without it falls back to the colour alone, which is why the
+     colour is not fully transparent. */
+  background: color-mix(in srgb, var(--ChromeBackground, #0e1420) 88%, transparent);
+  backdrop-filter: blur(9px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+/* The header IS the toggle. A separate chevron button beside a title is two
+   targets for one action, and the header is the biggest thing to aim at. */
+#fg-controls-toggle {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--BodyColor, #e6edf3);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+#fg-controls-toggle:hover {
+  background: color-mix(in srgb, var(--AccentColor, #58a6ff) 12%, transparent);
+}
+
+/* Drawn rather than typed, so it needs no glyph and no font that has one. */
+#fg-controls-chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--MutedColor, #8b949e);
+  border-bottom: 1.5px solid var(--MutedColor, #8b949e);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 120ms ease;
+}
+
+#fg-controls[data-collapsed="true"] #fg-controls-chevron {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+#fg-controls-body {
+  overflow-y: auto;
+  padding: 2px 12px 12px;
+}
+
+/* Same lesson base.css states once for every element that is sometimes
+   hidden: setting `display` on one beats the user agent's [hidden] rule and
+   the attribute stops working. */
+#fg-controls[hidden],
+#fg-controls-body[hidden],
+.fg-group[hidden] {
+  display: none;
+}
+
+.fg-group {
+  padding-top: 10px;
+}
+
+.fg-group + .fg-group {
+  margin-top: 4px;
+  border-top: 1px solid var(--ChromeBorder, #1f2937);
+}
+
+.fg-group h2 {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--MutedColor, #8b949e);
+}
+
+/* Label on the left, current value on the right, over the slider that moves
+   it. The number is there because a slider with no readout cannot be set back
+   to a value somebody wrote down. */
+.fg-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+
+.fg-row output {
+  color: var(--AccentColor, #58a6ff);
+  font-variant-numeric: tabular-nums;
+}
+
+.fg-check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 5px 0;
+  cursor: pointer;
+  /* A classification is free text from a producer and one of them is
+     eventually very long. Wrapping rather than ellipsising, for the reason
+     #fg-name wraps: a truncated identifier is worse than a tall row. */
+  overflow-wrap: anywhere;
+}
+
+.fg-check input:disabled,
+.fg-check:has(input:disabled) {
+  cursor: default;
+  color: var(--MutedColor, #8b949e);
+}
+
+#fg-controls input[type="range"] {
+  width: 100%;
+  margin: 0 0 4px;
+  accent-color: var(--AccentColor, #58a6ff);
+}
+
+#fg-controls input[type="checkbox"] {
+  accent-color: var(--AccentColor, #58a6ff);
+  flex: 0 0 auto;
+}
+
+#fg-controls select {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  font: inherit;
+  color: var(--BodyColor, #e6edf3);
+  background: var(--PageBackground, #080b12);
+  border: 1px solid var(--ChromeBorder, #1f2937);
+  border-radius: 4px;
+}
+
+.fg-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.fg-buttons button {
+  flex: 1 1 auto;
+  font: inherit;
+  color: var(--AccentColor, #58a6ff);
+  background: none;
+  border: 1px solid var(--ChromeBorder, #1f2937);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.fg-buttons button:hover {
+  background: color-mix(in srgb, var(--AccentColor, #58a6ff) 14%, transparent);
+}
+
+/* A toggle that is ON says so by looking pressed, not only by what it did.
+   aria-pressed is the state a screen reader gets; this is the same fact for
+   everyone else. */
+.fg-buttons button[aria-pressed="true"] {
+  color: var(--PageBackground, #080b12);
+  background: var(--AccentColor, #58a6ff);
+  border-color: var(--AccentColor, #58a6ff);
+}
+
+/* Keyboard focus is visible on every control. The panel is the one part of
+   this page that can be driven without a pointer at all, and a canvas cannot
+   be. */
+#fg-controls :focus-visible {
+  outline: 2px solid var(--AccentColor, #58a6ff);
+  outline-offset: 2px;
+}

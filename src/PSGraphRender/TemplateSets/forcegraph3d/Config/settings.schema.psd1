@@ -109,6 +109,46 @@
             Description = 'Which button opens an item''s actions. The LinkProbe block in templateset.psd1 reads this value, so the browser gate drives whatever ships.'
         }
 
+        # -- Controls ------------------------------------------------------
+        # The in-page panel. Every control it carries moves one of the values
+        # in this file at RUNTIME, which is the panel's whole contract: a
+        # reader dragging a slider and a caller setting a value are changing
+        # one thing rather than two, and each control opens at the position
+        # its setting shipped.
+        ShowControlPanel    = @{
+            Type = 'Enum'; Default = 'open'
+            Values = @('open', 'collapsed', 'none')
+            In = 'Settings'; Group = 'Controls'
+            Description = 'The in-page control panel. open shows it expanded, collapsed shows only its header, none removes it from the document entirely - for a report nobody can press.'
+        }
+        AutoRotate          = @{
+            Type = 'Boolean'; Default = $false
+            In = 'Settings'; Group = 'Controls'
+            Description = 'Whether the camera turns by itself on load. Off by default because a moving view cannot be screenshotted twice the same way, and the catalogue, the look gate and the smoke floor all compare two pictures.'
+        }
+        AutoRotateSpeed     = @{
+            Type = 'Number'; Default = 0.12; Min = 0.01; Max = 3
+            In = 'Settings'; Group = 'Controls'
+            Description = 'Degrees per frame when it does. At 60fps, 0.12 is a revolution in about fifty seconds - a drift rather than a carousel.'
+        }
+
+        # -- Focus ---------------------------------------------------------
+        FocusOnClick        = @{
+            Type = 'Boolean'; Default = $true
+            In = 'Settings'; Group = 'Focus'
+            Description = 'Whether clicking an item flies the camera to it and its neighbourhood. Camera and fog, not depth of field: the vendored library ships no post-processing pass.'
+        }
+        FocusDistance       = @{
+            Type = 'Number'; Default = 2.2; Min = 1; Max = 8
+            In = 'Settings'; Group = 'Focus'
+            Description = 'Where the camera stops, as a multiple of the reach of the item''s own neighbourhood. Sized to what it must frame, so a hub and a leaf are both held.'
+        }
+        FocusTransitionMs   = @{
+            Type = 'Integer'; Default = 700; Min = 0; Max = 5000
+            In = 'Settings'; Group = 'Focus'
+            Description = 'How long that flight takes, in milliseconds. Zero is a cut.'
+        }
+
         # -- Labels --------------------------------------------------------
         ShowLabels          = @{
             Type = 'Enum'; Default = 'hover'

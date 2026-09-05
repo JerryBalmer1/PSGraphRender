@@ -46,6 +46,15 @@ const STRINGS = /*__STRINGS__*/ null;
         return typeof value === 'string' ? value : fallback;
     }
 
+    // Strictly a boolean, never a truthiness test. PowerShell writes $true and
+    // $false into CONFIG as JSON booleans, so anything else here is a key that
+    // did not arrive - and `!!undefined` would silently answer "false" for a
+    // setting whose declared default is true.
+    function cfgBool(key, fallback) {
+        var value = CONFIG ? CONFIG[key] : null;
+        return typeof value === 'boolean' ? value : fallback;
+    }
+
     function str(key, fallback) {
         var value = STRINGS && STRINGS[key];
         return typeof value === 'string' ? value : (fallback !== undefined ? fallback : key);
@@ -91,9 +100,14 @@ const STRINGS = /*__STRINGS__*/ null;
 /*__SLOT_SCRIPT_SCENE__*/
 /*__SLOT_SCRIPT_GRAPH__*/
 /*__SLOT_SCRIPT_LABELS__*/
+/*__SLOT_SCRIPT_PANEL__*/
 
-    // Everything above declares; this runs. Order matters exactly once: the
-    // panel has to exist before a click can fill it.
+    // Everything above declares; this runs. Order matters twice now. The item
+    // panel has to exist before a click can fill it, and the CONTROL panel
+    // has to be built after the drawing: its classification filters are one
+    // row per kind the payload carries, and nothing knows what those are
+    // until the graph has been laid out.
     fillStatus();
     drawGraph();
+    panelReady();
 }());

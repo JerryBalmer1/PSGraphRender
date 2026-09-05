@@ -72,6 +72,49 @@
     # drives whatever ships rather than whatever was true when it was written.
     NodeActionButton = 'left'
 
+    # -- Controls ------------------------------------------------------------
+    # The in-page control panel: what a reader can move without re-rendering.
+    #
+    # 'open' rather than 'collapsed', and that is a deliberate reversal of what
+    # a cautious default would be. The complaint this pass answers is that the
+    # 3D report had "nothing but a little extra" while the 2D one ships a full
+    # sidebar - and a panel that opens closed is a panel most readers never
+    # find. It is 248px in the top-right corner of a 1280-wide frame; the cost
+    # is small and the discoverability is the whole point.
+    #
+    # 'none' removes it from the document rather than hiding it, for a report
+    # built for print or for a wall display where nobody can press anything.
+    ShowControlPanel = 'open'
+
+    # Off, and this one IS the cautious default - for a measured reason rather
+    # than a taste. A view that turns by itself cannot be screenshotted twice
+    # the same way, and three things in this repository compare two pictures of
+    # one document: the catalogue, the look gate's pixel cases and the smoke
+    # floor. The panel's toggle is how a reader starts it.
+    AutoRotate       = $false
+    # Degrees per frame. At 60fps 0.12 is a revolution in about fifty seconds,
+    # which reads as a drift rather than as a carousel.
+    AutoRotateSpeed  = 0.12
+
+    # -- Focus ---------------------------------------------------------------
+    # Clicking an item flies the camera to it and its immediate neighbourhood.
+    # On by default: a reader who clicks an item in a cloud of items wants to
+    # SEE it, and in three dimensions the thing they clicked is routinely
+    # behind something else.
+    #
+    # NOT depth of field. A real focus pull needs a post-processing pass and
+    # the vendored bundle ships none - see Config/theme.psd1's note on glow for
+    # the same trade. This is the camera and the fog, which is the honest
+    # version of it.
+    FocusOnClick     = $true
+    # How far back the camera stops, as a multiple of the reach of the item's
+    # own neighbourhood. Below about 1.6 the neighbours are outside the frame;
+    # above about 3 the flight barely changes anything.
+    FocusDistance    = 2.2
+    # Milliseconds. Long enough to read as a move rather than a cut, short
+    # enough that a reader clicking through several items is not waiting.
+    FocusTransitionMs = 700
+
     # -- Labels ------------------------------------------------------------
     # 'hover' rather than 'always', and this is a density decision rather than
     # a taste one. Labels are DOM elements positioned over the canvas from

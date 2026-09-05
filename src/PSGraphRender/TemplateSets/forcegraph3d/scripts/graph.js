@@ -452,6 +452,33 @@
         // tests/browser/look.cjs does exactly that with two documents.
         try { var fog = graph.scene().fog; live.fogDensity = fog ? fog.density : 0; }
         catch (err) { live.fogDensity = null; }
+
+        // -- what the control panel moves, read back off the scene ---------
+        //
+        // Same rule as everything above it: off the object that consumes the
+        // value, never echoed from CONFIG. A panel control that changes a
+        // variable and not the drawing is exactly the failure this element
+        // exists to catch, and it is the failure a panel is most prone to.
+        live.gridStyle = gridStyle();
+        live.gridMeshes = gridMeshCount();
+        live.autoRotate = isAutoRotating();
+        live.glowScale = GLOW_SCALE;
+        live.labelsPossible = labelsPossible();
+        live.labelsVisible = labelsVisible();
+        live.kinds = kindBuckets().map(function (b) { return b.key; });
+        live.visibleKinds = visibleKindCount();
+        live.focusOnClick = focusOnClickEnabled();
+        try {
+            var drawn = graph.graphData();
+            // What the library will actually DRAW, which is the filter's whole
+            // claim. Counting the payload would report the same number with
+            // every classification unchecked.
+            live.visibleNodes = drawn.nodes.filter(isNodeVisible).length;
+            live.visibleLinks = drawn.links.filter(isLinkVisible).length;
+        }
+        catch (err) { live.visibleNodes = null; live.visibleLinks = null; }
+        live.panel = panelState();
+
         el.setAttribute('data-live', JSON.stringify(live));
     }
 
@@ -478,6 +505,12 @@
         noteNeighbors(links);
         buildMetricRank(laidOut);
         SHAPE_MAP = parseShapeMap(cfgText('KindShape', ''));
+
+        // The classifications the panel offers as filters, and the index the
+        // filter needs to resolve a link's ends before the simulation has
+        // replaced them with objects.
+        noteKinds(laidOut);
+        for (var n = 0; n < laidOut.length; n++) { NODE_BY_ID[laidOut[n].id] = laidOut[n]; }
 
         applyBackgroundAttribute();
 
@@ -512,6 +545,12 @@
             .onNodeHover(onHover)
             .onBackgroundClick(clearSelection)
 
+            // Declared up front rather than only when a filter is first used,
+            // so the accessors the library caches are the ones the panel will
+            // move. Both answer true until something is unchecked.
+            .nodeVisibility(isNodeVisible)
+            .linkVisibility(isLinkVisible)
+
             // The simulation is BOUNDED, and that is not a performance tweak.
             // The library stops on a timer that defaults to fifteen seconds,
             // which is longer than any gate here waits and longer than a reader
@@ -539,6 +578,13 @@
 
         applyScene(graph);
         applyControls(graph);
+
+        // AutoRotate is a SETTING and not only a button, so it is applied
+        // here rather than left for the panel to switch on. A value declared
+        // in Config that only a click can reach is a setting in name only -
+        // the exact failure #fg-live exists to catch - and a report built
+        // with ShowControlPanel = none has no button at all.
+        setAutoRotate(cfgBool('AutoRotate', false));
 
         // The canvas is sized from the container EXPLICITLY. Left to itself the
         // library opened a 1280x900 drawing buffer inside an 859px-tall box and
@@ -642,11 +688,226 @@
         applyFog(graph);
     }
 
+    // -- what the control panel moves --------------------------------------
+    //
+    // The panel adjusts at runtime what Config/ decides at render time, so
+    // every setter below writes to the same thing its setting writes to. What
+    // lives HERE rather than in scene.js is whatever needs the payload: the
+    // meshes, the classifications, and the neighbour index.
+    //
+    // Nothing here writes into CONFIG. CONFIG is what the document was
+    // rendered with, tests/browser/look.cjs reads settings back against it, and
+    // a page that edited its own configuration would make "declared" and
+    // "changed by a reader" the same fact.
+
+    // Every classification the payload carries, in the order it first appears.
+    // Built from the DATA and never from a list: the renderer does not know
+    // what the kinds are, which is the rule the whole colour and shape channel
+    // is built on.
+    var KINDS = [];
+    var KIND_HIDDEN = {};
+    var HAS_INVENTED = false;
+
+    // The bucket an INVENTED item goes in, and it is deliberately not a
+    // classification: no producer sends one, so it cannot collide with a
+    // producer's word. The leading space is what makes that true - a
+    // classification is a JSON string from a payload and every one of them is
+    // trimmed by the time it arrives here, so no real kind can be ' invented'.
+    var INVENTED_BUCKET = ' invented';
+
+    function noteKinds(nodeList) {
+        var seen = {};
+        KINDS = [];
+        HAS_INVENTED = false;
+        for (var i = 0; i < nodeList.length; i++) {
+            if (nodeList[i].invented) { HAS_INVENTED = true; continue; }
+            var kind = nodeList[i].kind || null;
+            var key = kind === null ? '' : kind;
+            if (!Object.prototype.hasOwnProperty.call(seen, key)) {
+                seen[key] = true;
+                KINDS.push(kind);
+            }
+        }
+    }
+
+    // The key a classification is filtered by. PREFIXED, and that is what
+    // makes it collision-proof rather than merely unlikely: every word a
+    // producer sends gets `k:`, so the bucket for an item the renderer
+    // INVENTED cannot be reached by any classification at all. An invented
+    // item is not a classification - no producer sends one - and giving it a
+    // row that a producer could also land in would be the page claiming
+    // otherwise.
+    var INVENTED_KEY = 'x:invented';
+
+    function kindKey(node) {
+        return node.invented ? INVENTED_KEY : ('k:' + (node.kind || ''));
+    }
+
+    function hasInvented() { return HAS_INVENTED; }
+
+    // The rows the panel offers, as data: one per classification the payload
+    // carries, plus the invented bucket when anything was invented. Built
+    // here rather than in the panel, because it is the PAYLOAD that decides
+    // them and the panel does not know what a payload is.
+    function kindBuckets() {
+        var out = [];
+        for (var i = 0; i < KINDS.length; i++) {
+            out.push({ key: 'k:' + (KINDS[i] === null ? '' : KINDS[i]), kind: KINDS[i], invented: false });
+        }
+        if (HAS_INVENTED) { out.push({ key: INVENTED_KEY, kind: null, invented: true }); }
+        return out;
+    }
+
+    function isNodeVisible(node) {
+        return !KIND_HIDDEN[kindKey(node)];
+    }
+
+    // A link whose either end is hidden goes with it. Leaving it would draw a
+    // connector to nothing, which reads as a bug rather than as a filter - the
+    // same rule the reference backend's own filter follows.
+    function isLinkVisible(link) {
+        var s = link.source, t = link.target;
+        var sn = (s && s.id !== undefined) ? s : NODE_BY_ID[s];
+        var tn = (t && t.id !== undefined) ? t : NODE_BY_ID[t];
+        if (!sn || !tn) { return true; }
+        return isNodeVisible(sn) && isNodeVisible(tn);
+    }
+
+    var NODE_BY_ID = {};
+
+    // Takes a BUCKET KEY, never a producer's word. The panel is handed the
+    // keys by kindBuckets and hands one back, so no caller has to know how a
+    // classification becomes a key - which is the only place the two could
+    // ever disagree.
+    function setKindHidden(key, hidden) {
+        if (hidden) { KIND_HIDDEN[key] = true; }
+        else { delete KIND_HIDDEN[key]; }
+        // Re-asserted rather than walked: the library re-reads both accessors,
+        // so one call applies the whole filter and the scene is never
+        // traversed by this file.
+        graph.nodeVisibility(isNodeVisible).linkVisibility(isLinkVisible);
+        publishLive();
+    }
+
+    function visibleKindCount() {
+        var buckets = kindBuckets();
+        var n = 0;
+        for (var i = 0; i < buckets.length; i++) { if (!KIND_HIDDEN[buckets[i].key]) { n++; } }
+        return n;
+    }
+
+    // Glow is baked into each item's material when the mesh is built, so
+    // moving it means walking the meshes rather than re-reading a setting.
+    // __baseEmissive is the hover code's own record of what a material started
+    // at; it is updated here too, or a hover after a slider move would restore
+    // the value the slider replaced.
+    var GLOW_SCALE = 1;
+
+    function setGlowScale(scale) {
+        GLOW_SCALE = scale;
+        for (var key in MESH_BY_ID) {
+            if (!Object.prototype.hasOwnProperty.call(MESH_BY_ID, key)) { continue; }
+            var mesh = MESH_BY_ID[key];
+            var material = mesh.material;
+            if (material.__configEmissive === undefined) {
+                material.__configEmissive = material.__baseEmissive === undefined
+                    ? material.emissiveIntensity : material.__baseEmissive;
+            }
+            material.__baseEmissive = material.__configEmissive * scale;
+            material.emissiveIntensity = material.__baseEmissive;
+            for (var c = 0; c < mesh.children.length; c++) {
+                var shell = mesh.children[c].material;
+                if (!shell.__isGlowShell) { continue; }
+                if (shell.__configOpacity === undefined) {
+                    shell.__configOpacity = shell.__baseOpacity === undefined
+                        ? shell.opacity : shell.__baseOpacity;
+                }
+                shell.__baseOpacity = shell.__configOpacity * scale;
+                shell.opacity = shell.__baseOpacity;
+            }
+        }
+        // Whatever the pointer is currently over stays highlighted through the
+        // change, rather than the slider quietly clearing a hover.
+        applyHighlight(HIGHLIGHTED);
+        publishLive();
+    }
+
+    function setParticleCount(count) {
+        graph.linkDirectionalParticles(count);
+        publishLive();
+    }
+
+    // -- focus -------------------------------------------------------------
+    //
+    // Fly the camera to an item and its immediate neighbourhood. The library's
+    // own cameraPosition takes a destination, a point to look at and a
+    // transition, and it sets the controls' target for us - read off the
+    // vendored bundle's API surface rather than assumed.
+    //
+    // THIS IS NOT DEPTH OF FIELD, and the distinction is worth stating where
+    // somebody will look for one. A real focus pull needs a post-processing
+    // pass; the vendored bundle ships no BokehPass and no ShaderPass, and
+    // adding one means a second copy of three.js in the page. So "focus" here
+    // is the camera and the fog, which is the honest version of it and the
+    // same trade the glow shells are. See Config/theme.psd1.
+    // The panel's switch, or null while nobody has touched it. Same argument
+    // as FOG_OVERRIDE in scene.js: CONFIG stays what the document was rendered
+    // with.
+    var FOCUS_OVERRIDE = null;
+
+    function focusOnClickEnabled() {
+        return FOCUS_OVERRIDE === null ? cfgBool('FocusOnClick', true) : FOCUS_OVERRIDE;
+    }
+
+    function setFocusOnClick(on) {
+        FOCUS_OVERRIDE = !!on;
+        publishLive();
+    }
+
+    function focusOn(node) {
+        if (node.x === undefined) { return; }
+
+        // Far enough back to hold the item AND what it links to. A camera
+        // dropped at a fixed distance frames a leaf perfectly and puts a hub's
+        // neighbours off every edge.
+        var near = NEIGHBORS[node.id] || {};
+        var reach = cfgNumber('NodeSize', 14) * 3;
+        for (var id in near) {
+            if (!Object.prototype.hasOwnProperty.call(near, id)) { continue; }
+            var other = MESH_BY_ID[id];
+            if (!other || other.position === undefined) { continue; }
+            var dx = other.position.x - node.x, dy = other.position.y - node.y, dz = other.position.z - node.z;
+            reach = Math.max(reach, Math.sqrt(dx * dx + dy * dy + dz * dz));
+        }
+        var distance = reach * cfgNumber('FocusDistance', 2.2) + cfgNumber('NodeSize', 14);
+
+        // Along the line the camera is already on, so the flight is a
+        // approach rather than a jump to the other side of the graph.
+        var camera = graph.cameraPosition();
+        var vx = camera.x - node.x, vy = camera.y - node.y, vz = camera.z - node.z;
+        var length = Math.sqrt(vx * vx + vy * vy + vz * vz) || 1;
+
+        graph.cameraPosition(
+            {
+                x: node.x + vx / length * distance,
+                y: node.y + vy / length * distance,
+                z: node.z + vz / length * distance
+            },
+            { x: node.x, y: node.y, z: node.z },
+            cfgNumber('FocusTransitionMs', 700));
+    }
+
     function clearSelection() {
         byId('fg-panel').hidden = true;
     }
 
     function selectNode(node) {
+        // The camera goes with the panel when FocusOnClick asks for it. One
+        // gesture rather than two: a reader who clicks an item in a cloud of
+        // items wants to SEE it, and making that a second control would mean
+        // clicking twice for the thing the click was for.
+        if (focusOnClickEnabled()) { focusOn(node); }
+
         byId('fg-name').textContent = node.name || node.id;
         byId('fg-where').textContent = node.path
             ? fmt('At', { path: node.path, line: node.startLine || 1 })

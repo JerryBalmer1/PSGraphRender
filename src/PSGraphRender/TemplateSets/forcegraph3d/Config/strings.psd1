@@ -29,6 +29,47 @@
     MenuOpenLink         = 'Open Link'
     MenuCopyLink         = 'Copy Link'
 
+    # -- The control panel ---------------------------------------------------
+    # Every word the panel shows, including the group headings. partials/graph.html
+    # ships one empty <span> per label and no English at all, unlike the 2D
+    # backend's sidebar - which has "Order", "Search" and "Kinds" written into
+    # its markup and cannot be translated without editing a partial.
+    #
+    # Nothing here names what the payload describes. `KindsGroup` says
+    # "Classifications" rather than anything about what is being classified,
+    # for the same reason NodesLabel says "items": the renderer has never seen
+    # this payload and may not claim to know what is in it.
+    ControlsTitle        = 'Controls'
+    ControlsExpand       = 'Show controls'
+    ControlsCollapse     = 'Hide controls'
+
+    ViewGroup            = 'View'
+    ZoomSpeedLabel       = 'Zoom speed'
+    FitLabel             = 'Fit to view'
+    AutoRotateLabel      = 'Auto-rotate'
+
+    DepthGroup           = 'Depth'
+    FogLabel             = 'Depth falloff'
+    GridLabel            = 'Environment'
+    FocusLabel           = 'Fly to an item on click'
+
+    DisplayGroup         = 'Display'
+    LabelsLabel          = 'Names'
+    LabelsUnavailable    = 'Too many items to name them all'
+    ParticlesLabel       = 'Direction marks'
+    GlowLabel            = 'Glow'
+
+    KindsGroup           = 'Classifications'
+    KindsUnclassified    = 'Unclassified'
+    KindsInvented        = 'Not in the payload'
+
+    # The environment names, as a reader sees them. The KEYS these correspond
+    # to are the GridStyle enum's values; the words are here because the schema
+    # is not user-visible text.
+    GridNone             = 'None'
+    GridFloor            = 'Ground plane'
+    GridRoom             = 'Enclosure'
+
     # Why an action is offered but cannot run. Present and explaining itself
     # rather than absent: an action missing because this item has no file looks
     # identical to a mode that ships no action at all, and those are different

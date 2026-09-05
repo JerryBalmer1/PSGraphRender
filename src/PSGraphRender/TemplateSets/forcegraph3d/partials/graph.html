@@ -9,11 +9,96 @@
     <span id="fg-hint"></span>
   </div>
 
-  <div id="fg">
+  <!-- THE STAGE, and it exists because the library OWNS #fg exclusively.
+       ForceGraph3D empties the container it is handed, so anything this
+       template put inside #fg was removed the moment the graph initialised.
+
+       That was not a theory. ShowLabels = 'always' shipped at v0.16.0 with
+       #fg-labels nested inside #fg, and it never drew a single label: the
+       layer was deleted before startLabels looked for it, getElementById
+       returned null, and the function returned silently. D3 and E2 in the
+       catalogue are pictures of the feature NOT happening, captioned as
+       though it were. Found in v0.17.0 by the control panel disappearing the
+       same way.
+
+       So the library gets a container with nothing else in it, and everything
+       drawn OVER the canvas is a sibling inside this stage. The smoke gate
+       still captures #fg, which is now exactly the drawing and no chrome. -->
+  <div id="fg-stage">
+    <div id="fg"></div>
+
     <!-- Always-on item names, positioned over the canvas from projected
          coordinates. Empty and hidden unless ShowLabels asks for it; every
          label in it is a span carrying textContent, never markup. -->
     <div id="fg-labels" hidden></div>
+
+    <!-- THE CONTROL PANEL. Every label in it is filled from Config/strings.psd1
+         by scripts/panel.js, never written here: this file ships one <span> per
+         piece of text and no English at all. The 2D backend's sidebar does the
+         opposite - "Order", "Search", "Kinds" are literals in its markup - and
+         that is the half of it this panel deliberately did not copy.
+
+         OVER the canvas rather than in it. The library owns #fg and empties it,
+         so the panel is a sibling in #fg-stage - see the comment on the stage
+         for the shipped feature that lesson cost. It therefore sits OUTSIDE the
+         rectangle the smoke gate captures, which is the honest arrangement: the
+         floor measures the drawing and nothing else.
+
+         Rows are declared here and their controls are wired by name, so a
+         control that loses its handler is a control that visibly does nothing
+         rather than one that silently does. -->
+    <div id="fg-controls" hidden>
+      <button type="button" id="fg-controls-toggle" aria-expanded="true" aria-controls="fg-controls-body">
+        <span id="fg-controls-title"></span>
+        <span id="fg-controls-chevron" aria-hidden="true"></span>
+      </button>
+
+      <div id="fg-controls-body">
+        <section class="fg-group">
+          <h2 id="fg-g-view"></h2>
+          <label class="fg-row" for="fg-zoom-speed">
+            <span id="fg-l-zoom"></span>
+            <output id="fg-zoom-speed-out"></output>
+          </label>
+          <input type="range" id="fg-zoom-speed" min="0.1" max="5" step="0.05">
+          <div class="fg-buttons">
+            <button type="button" id="fg-fit"></button>
+            <button type="button" id="fg-rotate" aria-pressed="false"></button>
+          </div>
+        </section>
+
+        <section class="fg-group">
+          <h2 id="fg-g-depth"></h2>
+          <label class="fg-row" for="fg-fog">
+            <span id="fg-l-fog"></span>
+            <output id="fg-fog-out"></output>
+          </label>
+          <input type="range" id="fg-fog" min="0" max="0.02" step="0.0002">
+          <label class="fg-row" for="fg-grid"><span id="fg-l-grid"></span></label>
+          <select id="fg-grid"></select>
+          <label class="fg-check"><input type="checkbox" id="fg-focus"> <span id="fg-l-focus"></span></label>
+        </section>
+
+        <section class="fg-group">
+          <h2 id="fg-g-display"></h2>
+          <label class="fg-check"><input type="checkbox" id="fg-labels-on"> <span id="fg-l-labels"></span></label>
+          <label class="fg-check"><input type="checkbox" id="fg-particles"> <span id="fg-l-particles"></span></label>
+          <label class="fg-row" for="fg-glow">
+            <span id="fg-l-glow"></span>
+            <output id="fg-glow-out"></output>
+          </label>
+          <input type="range" id="fg-glow" min="0" max="3" step="0.05">
+        </section>
+
+        <section class="fg-group" id="fg-g-kinds-section">
+          <h2 id="fg-g-kinds"></h2>
+          <!-- One checkbox per classification the PAYLOAD carries, built at
+               runtime. Nothing here names one: the renderer does not know what
+               the kinds are and neither does its markup. -->
+          <div id="fg-kinds"></div>
+        </section>
+      </div>
+    </div>
   </div>
 
   <!-- What the page RESOLVED, for a check to read. Same argument as the counts

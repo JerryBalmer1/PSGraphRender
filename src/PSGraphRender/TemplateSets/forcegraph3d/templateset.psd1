@@ -23,7 +23,10 @@
     # appear inside partials and inside scripts as well as in the layout;
     # substitution repeats until none are left.
     Slots  = @{
-        STYLES = @('styles/base.css')
+        # Two stylesheets rather than one, split the way the reference backend
+        # splits base from components: base.css is the document and the
+        # drawing, controls.css is the one component that sits over it.
+        STYLES = @('styles/base.css', 'styles/controls.css')
         GRAPH  = @('partials/graph.html')
 
         # The library, inlined so the page is one file that needs nothing. It is
@@ -45,6 +48,13 @@
         SCRIPT_SCENE     = @('scripts/scene.js')
         SCRIPT_GRAPH     = @('scripts/graph.js')
         SCRIPT_LABELS    = @('scripts/labels.js')
+
+        # The control panel, and it is last on purpose: it is the only file
+        # here that CONSUMES the others rather than declaring anything they
+        # need. It knows what a reader asked for; scene.js and graph.js know
+        # what consumes it, and every control is wired to the same object the
+        # matching setting in Config/ reaches at render time.
+        SCRIPT_PANEL     = @('scripts/panel.js')
 
         # Node links. These two are the DEFAULTS, and SlotsBySetting below
         # overrides them with whichever mode the render is configured for.

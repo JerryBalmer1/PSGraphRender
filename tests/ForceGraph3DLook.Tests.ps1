@@ -100,6 +100,14 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'NodeActionButton'; Type = 'Enum' }
         @{ Key = 'ShowLabels'; Type = 'Enum' }
         @{ Key = 'LabelMaxNodes'; Type = 'Integer' }
+
+        # v0.17.0: the control panel, and the camera flight a click starts.
+        @{ Key = 'ShowControlPanel'; Type = 'Enum' }
+        @{ Key = 'AutoRotate'; Type = 'Boolean' }
+        @{ Key = 'AutoRotateSpeed'; Type = 'Number' }
+        @{ Key = 'FocusOnClick'; Type = 'Boolean' }
+        @{ Key = 'FocusDistance'; Type = 'Number' }
+        @{ Key = 'FocusTransitionMs'; Type = 'Integer' }
     ) {
         $entry = Get-SchemaEntry -Key $Key
         $entry | Should-NotBeNull -Because "$Key is an option this pass promised and the schema is where an option becomes real"
@@ -155,6 +163,7 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'NodeSizeMetricMax' }, @{ Key = 'GlowStrength' }, @{ Key = 'GlowSize' }
         @{ Key = 'GlowOpacity' }, @{ Key = 'FogDensity' }, @{ Key = 'ParticleCount' }
         @{ Key = 'ParticleSpeed' }, @{ Key = 'ParticleWidth' }, @{ Key = 'ToneMappingExposure' }
+        @{ Key = 'AutoRotateSpeed' }, @{ Key = 'FocusDistance' }, @{ Key = 'FocusTransitionMs' }
         @{ Key = 'GridOpacity' }, @{ Key = 'GridGlow' }, @{ Key = 'GridDivisions' }
         @{ Key = 'GridExtent' }, @{ Key = 'GridDrop' }, @{ Key = 'GridLineWidth' }
     ) {
@@ -191,6 +200,12 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'ParticleColor'; File = 'theme.psd1' }
         @{ Key = 'LinkResolutionColor'; File = 'theme.psd1' }
         @{ Key = 'ToneMappingExposure'; File = 'theme.psd1' }
+        @{ Key = 'ShowControlPanel'; File = 'settings.psd1' }
+        @{ Key = 'AutoRotate'; File = 'settings.psd1' }
+        @{ Key = 'AutoRotateSpeed'; File = 'settings.psd1' }
+        @{ Key = 'FocusOnClick'; File = 'settings.psd1' }
+        @{ Key = 'FocusDistance'; File = 'settings.psd1' }
+        @{ Key = 'FocusTransitionMs'; File = 'settings.psd1' }
         @{ Key = 'GridStyle'; File = 'theme.psd1' }
         @{ Key = 'GridColor'; File = 'theme.psd1' }
         @{ Key = 'GridOpacity'; File = 'theme.psd1' }
@@ -249,6 +264,124 @@ Describe 'Acceptance A: every option is a declared setting' {
                 $atAssembly -notcontains $_
             })
         $unread | Should-BeNull -Because 'a declared setting nothing reads is a setting that does not exist'
+    }
+}
+
+# --- Acceptance C, the half a browser is not needed for -------------------
+#
+# Whether a control WORKS is decidable only in a browser and lives in
+# ./build.ps1 -Task TestLook. What is decidable from the tree is that the panel
+# is in the document at all, that every word it shows comes from data, and that
+# it never became the thing it was written not to be - a copy of the 2D
+# sidebar, with its English in the markup.
+
+Describe 'Acceptance C: the control panel is in the document, and says nothing of its own' {
+
+    BeforeAll {
+        $script:PanelMarkup = [System.IO.File]::ReadAllText(
+            (Join-Path $script:ShippedSet 'partials/graph.html'))
+        $script:PanelScript = [System.IO.File]::ReadAllText(
+            (Join-Path $script:ShippedSet 'scripts/panel.js'))
+        $script:Strings = Import-PowerShellDataFile -LiteralPath (
+            Join-Path $script:ShippedSet 'Config/strings.psd1')
+    }
+
+    It 'ships a panel the layout actually assembles' {
+        # A file no slot names never reaches the document, which is the shape of
+        # mistake bootstrap.js's library check exists to catch - and it would be
+        # invisible here without this, because every assertion below reads the
+        # SOURCE rather than a render.
+        $parts = @($script:Manifest.Slots.Values | ForEach-Object { $_ })
+        $parts | Should-ContainCollection 'scripts/panel.js' -Because 'a panel no slot assembles is a panel no reader gets'
+        $parts | Should-ContainCollection 'styles/controls.css'
+    }
+
+    It 'declares the panel container and its collapse control' {
+        foreach ($id in 'fg-controls', 'fg-controls-toggle', 'fg-controls-body') {
+            $script:PanelMarkup | Should-MatchString ([regex]::Escape("id=`"$id`"")) -Because "$id is what makes the panel collapsible"
+        }
+    }
+
+    It 'declares a control for <_>' -ForEach @(
+        'fg-zoom-speed', 'fg-fit', 'fg-rotate',
+        'fg-fog', 'fg-grid', 'fg-focus',
+        'fg-labels-on', 'fg-particles', 'fg-glow',
+        'fg-kinds'
+    ) {
+        # The prompt's minimum set, one row each, so a control that goes missing
+        # fails by its own name rather than as a count that came up short.
+        $script:PanelMarkup | Should-MatchString ([regex]::Escape("id=`"$_`""))
+    }
+
+    It 'wires every control it declares' {
+        # Presence is not consumption - the lesson pass 0050 paid for. A markup
+        # id with no script reading it is a control that visibly does nothing.
+        #
+        # `fg-controls-chevron` is excluded BY NAME rather than by narrowing the
+        # pattern until it passes. It is the only id in the panel that is
+        # deliberately unwired: it is drawn by the stylesheet and rotated from
+        # the [data-collapsed] attribute, so a script naming it would be a
+        # second place the collapse state is written down.
+        $ids = @([regex]::Matches($script:PanelMarkup, 'id="(fg-(?:controls|zoom|fit|rotate|fog|grid|focus|labels-on|particles|glow|kinds)[a-z-]*)"') |
+                ForEach-Object { $_.Groups[1].Value } |
+                Where-Object { $_ -ne 'fg-controls-chevron' } |
+                Sort-Object -Unique)
+        $ids.Count | Should-BeGreaterThan 8 -Because 'matching nothing would make the assertion below vacuous'
+
+        $unwired = @($ids | Where-Object { $script:PanelScript -notmatch [regex]::Escape($_) })
+        $unwired | Should-BeNull -Because 'a control the panel script never names is a control that does nothing'
+    }
+
+    It 'writes no user-visible word of its own into the markup' {
+        # THE HALF THE 2D SIDEBAR GETS WRONG, and the reason this panel is its
+        # own design rather than that one moved across: cytoscape's sidebar has
+        # "Order", "Search", "Kinds" and "Zoom speed" written into a partial,
+        # where nothing can translate them and strings.psd1 cannot see them.
+        #
+        # Every text node in the panel's region must be whitespace. The panel's
+        # own script fills each span with textContent from STRINGS.
+        #
+        # The region is taken between two ids rather than by matching a closing
+        # tag: markup nests, a lazy `.*?</div>` stops at the first inner one,
+        # and a greedy one runs to the end of the file. Both would pass while
+        # reading the wrong thing.
+        $withoutComments = [regex]::Replace($script:PanelMarkup, '(?s)<!--.*?-->', '')
+        $start = $withoutComments.IndexOf('<div id="fg-controls"')
+        $end = $withoutComments.IndexOf('<div id="fg-resolved"')
+        $start | Should-BeGreaterThan 0
+        $end | Should-BeGreaterThan $start -Because 'the panel region is bounded by the element that follows it'
+
+        $region = $withoutComments.Substring($start, $end - $start)
+        $text = ([regex]::Replace($region, '(?s)<[^>]*>', ' ')).Trim()
+        $text | Should-Be '' -Because "the panel markup shows text of its own: '$text'"
+    }
+
+    It 'takes every word it shows from strings.psd1' {
+        # Each string the panel asks for must be a key the backend ships, or the
+        # page falls back to printing the KEY at a reader - the quiet failure
+        # str()'s own fallback is designed to make visible, and which nothing
+        # else would catch.
+        #
+        # BOTH call shapes, because the panel has two: setText(id, key) fills a
+        # span, and str(key) is used where the word is not a span's whole
+        # content. A pattern that knew only one of them would have read three
+        # keys out of twenty-two and passed everything it did not look at.
+        $keys = @(
+            [regex]::Matches($script:PanelScript, "setText\('[a-z0-9-]+',\s*'([A-Za-z]+)'\)") +
+            [regex]::Matches($script:PanelScript, "str\('([A-Za-z]+)'\)") |
+                ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+        $keys.Count | Should-BeGreaterThan 12 -Because 'a panel that asked for no strings would pass this vacuously'
+
+        $missing = @($keys | Where-Object { -not $script:Strings.Contains($_) })
+        $missing | Should-BeNull -Because 'a string key the panel asks for and the backend does not ship is printed to the reader as its own key'
+    }
+
+    It 'names no classification anywhere in the panel' {
+        # The filter rows are built from the PAYLOAD. A vocabulary here would be
+        # the defect tests/NoProducerKinds.Tests.ps1 exists to find, arriving in
+        # the one file whose whole job is to list a producer's classifications.
+        $script:PanelScript | Should-MatchString ([regex]::Escape('kindBuckets()')) -Because 'the rows come from the data or they come from a list'
+        $script:PanelMarkup | Should-MatchString ([regex]::Escape('id="fg-kinds"'))
     }
 }
 

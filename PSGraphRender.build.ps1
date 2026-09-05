@@ -815,6 +815,76 @@ task TestLook Build, {
                     path = (New-LookDocument -Name 'grid-off' -Setting @{ GridStyle = 'none' } -Backend $p.Name)
                 }
 
+                # -- C: THE CONTROL PANEL. Presence and collapse first, then
+                #       every control in the prompt's minimum set, each one
+                #       DRIVEN through a real DOM event and read back off the
+                #       object that consumes it.
+                #
+                #       Two documents rather than one for the panel case,
+                #       because "opens expanded" and "opens collapsed" are the
+                #       assertion that the panel obeys its own setting - which
+                #       is the half a presence check cannot make.
+                @{
+                    kind = 'panel'; backend = $p.Name; name = 'panel-open'; probe = $p.Probe
+                    toggle = '#fg-controls-toggle'; expect = @{ collapsed = $false; controls = 10 }
+                    path = (New-LookDocument -Name 'panel-open' -Setting @{ ShowControlPanel = 'open' } -Backend $p.Name)
+                }
+                @{
+                    kind = 'panel'; backend = $p.Name; name = 'panel-collapsed'; probe = $p.Probe
+                    toggle = '#fg-controls-toggle'; expect = @{ collapsed = $true; controls = 10 }
+                    path = (New-LookDocument -Name 'panel-collapsed' -Setting @{ ShowControlPanel = 'collapsed' } -Backend $p.Name)
+                }
+
+                # The panel document every control case is driven against. One
+                # render, six controls: each case opens it fresh, so no case can
+                # be reading a state another one left behind.
+                $panelDoc = New-LookDocument -Name 'panel-controls' -Setting @{} -Backend $p.Name
+
+                foreach ($control in @(
+                        # Value ASSERTED where the control names one exactly,
+                        # and CHANGED where the page normalises it. Fog density
+                        # is scaled by camera distance, so the number that
+                        # reaches the scene is never the number on the slider -
+                        # the same reason live-fog-scales compares two
+                        # documents instead of one reading.
+                        @{ n = 'zoom-speed'; sel = '#fg-zoom-speed'; v = 2.4; f = 'zoomSpeed'; e = @{ value = 2.4 } }
+                        @{ n = 'fog'; sel = '#fg-fog'; v = 0.012; f = 'fogDensity'; e = @{ changed = $true } }
+                        @{ n = 'grid'; sel = '#fg-grid'; v = 'none'; f = 'gridMeshes'; e = @{ value = 0 } }
+                        @{ n = 'glow'; sel = '#fg-glow'; v = 2.5; f = 'glowScale'; e = @{ value = 2.5 } }
+                        @{ n = 'labels'; sel = '#fg-labels-on'; v = $true; f = 'labelsVisible'; e = @{ value = $true } }
+                        @{ n = 'particles'; sel = '#fg-particles'; v = $false; f = 'particleCount'; e = @{ value = 0 } }
+                        @{ n = 'auto-rotate'; sel = '#fg-rotate'; v = $null; f = 'autoRotate'; e = @{ value = $true } }
+                        @{ n = 'focus'; sel = '#fg-focus'; v = $false; f = 'focusOnClick'; e = @{ value = $false } }
+                    )) {
+                    @{
+                        kind = 'control'; backend = $p.Name; name = "control-$($control.n)"; probe = $p.Probe
+                        act = @{ selector = $control.sel; value = $control.v }
+                        field = $control.f; expect = $control.e
+                        path = $panelDoc
+                    }
+                }
+
+                # The parity feature the 2D sidebar has and this backend did
+                # not. Unchecking a classification must remove ITEMS and the
+                # links that then point at nothing - a filter that hid nodes
+                # and left their connectors would read as a defect rather than
+                # as a filter, so both counts are required to fall.
+                foreach ($side in @(
+                        @{ n = 'nodes'; f = 'visibleNodes' }
+                        @{ n = 'links'; f = 'visibleLinks' }
+                    )) {
+                    @{
+                        kind = 'control'; backend = $p.Name; name = "filter-drops-$($side.n)"; probe = $p.Probe
+                        # By POSITION, not by classification. A job naming a
+                        # kind would put a producer's vocabulary in the build
+                        # task, which is the defect the Smoke block exists to
+                        # prevent.
+                        act = @{ selector = '#fg-kinds input:first-of-type'; value = $false }
+                        field = $side.f; expect = @{ lessThan = $true }
+                        path = $panelDoc
+                    }
+                }
+
                 # -- C: hover does what the setting says, driven through a real
                 #       pointer. Three modes, three different numbers.
                 foreach ($hover in @(

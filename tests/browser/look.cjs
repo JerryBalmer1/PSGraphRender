@@ -72,6 +72,17 @@ async function readResolved(page, probe) {
   }, probe.Resolved);
 }
 
+// What the page's LIVE objects report, off the element the backend declares
+// for it. One reader, because four case kinds below want the same thing and a
+// second copy is a second place this shape is written down.
+async function readLive(page, probe) {
+  return page.evaluate(sel => {
+    const el = document.querySelector(sel);
+    if (!el) { return null; }
+    return JSON.parse(el.getAttribute('data-live') || 'null');
+  }, probe.Live);
+}
+
 async function shoot(page, selector) {
   const handle = await page.$(selector);
   if (!handle) { return null; }
@@ -248,6 +259,99 @@ async function run() {
             if (c.expect.tooltipContains === '' ? t !== '' : t.indexOf(c.expect.tooltipContains) < 0) {
               fail(results, id, 'HoverTooltip is ' + c.expect.tooltip + ' and the tooltip read '
                 + JSON.stringify(t) + ', which does not carry ' + JSON.stringify(c.expect.tooltipContains));
+            }
+          }
+          if (errors.length) { fail(results, id, errors.length + ' console error(s): ' + errors.slice(0, 3).join(' | ')); }
+        } finally { await context.close(); }
+      }
+
+      // ---- C: the control panel EXISTS, and collapses. Neither fact can be
+      //         read off a screenshot, and a panel is the one part of this
+      //         page whose whole job is to be interactive.
+      else if (c.kind === 'panel') {
+        const { context, page, errors } = await load(browser, probe, c.path);
+        try {
+          const before = await readLive(page, probe);
+          const state = before && before.panel;
+          if (!state || !state.present) {
+            fail(results, id, 'the page reports no control panel: ' + JSON.stringify(state));
+          } else if (state.controls < c.expect.controls) {
+            fail(results, id, 'the panel carries ' + state.controls + ' control(s) and '
+              + c.expect.controls + ' were required');
+          } else if (state.collapsed !== c.expect.collapsed) {
+            fail(results, id, 'the panel opened collapsed=' + state.collapsed
+              + ' and the shipped setting says ' + c.expect.collapsed);
+          } else {
+            // Collapse is driven through a REAL click on the header, not by
+            // calling the function: a handler that was never attached and a
+            // handler that does nothing look identical from the inside.
+            await page.click(c.toggle);
+            await page.waitForTimeout(120);
+            const after = await readLive(page, probe);
+            const flipped = after && after.panel && after.panel.collapsed;
+            if (flipped === state.collapsed) {
+              fail(results, id, 'clicking ' + c.toggle + ' left the panel at collapsed='
+                + flipped + ', so the collapse control is not wired');
+            } else {
+              notes.push({ case: id, controls: state.controls, collapsed: state.collapsed, afterClick: flipped });
+            }
+          }
+          if (errors.length) { fail(results, id, errors.length + ' console error(s): ' + errors.slice(0, 3).join(' | ')); }
+        } finally { await context.close(); }
+      }
+
+      // ---- C: one control, DRIVEN, and the live scene read back before and
+      //         after. This is the panel's whole contract - a control adjusts
+      //         at runtime what a setting decides at render time - and the
+      //         only way to establish it is to move the control and ask the
+      //         object that consumes it.
+      //
+      //         Driven through the DOM's own events rather than by calling the
+      //         page's functions, for the reason the collapse case is clicked:
+      //         a listener that was never attached is invisible to any check
+      //         that calls past it.
+      else if (c.kind === 'control') {
+        const { context, page, errors } = await load(browser, probe, c.path);
+        try {
+          const before = await readLive(page, probe);
+          const acted = await page.evaluate(a => {
+            const el = document.querySelector(a.selector);
+            if (!el) { return 'nothing matched ' + a.selector; }
+            if (a.value === null) { el.click(); return null; }
+            if (el.type === 'checkbox') {
+              if (el.checked !== a.value) { el.click(); }
+              return null;
+            }
+            el.value = String(a.value);
+            // `input` for a range so the readout follows the drag; `change`
+            // for a select, which is what a browser fires. Both, so a control
+            // wired to either is driven.
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            return null;
+          }, c.act);
+
+          if (acted) { fail(results, id, acted); }
+          else {
+            await page.waitForTimeout(c.settleMs || 400);
+            const after = await readLive(page, probe);
+            const was = before ? before[c.field] : undefined;
+            const now = after ? after[c.field] : undefined;
+
+            if (now === undefined) {
+              fail(results, id, 'the page reports no live value called ' + c.field);
+            } else if (c.expect.value !== undefined && String(now) !== String(c.expect.value)) {
+              fail(results, id, 'moving ' + c.act.selector + ' left ' + c.field + ' at '
+                + JSON.stringify(now) + ' and ' + JSON.stringify(c.expect.value) + ' was expected'
+                + ' (it was ' + JSON.stringify(was) + ' before)');
+            } else if (c.expect.changed && String(was) === String(now)) {
+              fail(results, id, 'moving ' + c.act.selector + ' left ' + c.field + ' at '
+                + JSON.stringify(now) + ', unchanged. The control reaches the DOM and not the scene.');
+            } else if (c.expect.lessThan !== undefined && !(Number(now) < Number(was))) {
+              fail(results, id, c.field + ' was ' + JSON.stringify(was) + ' and is ' + JSON.stringify(now)
+                + ' after ' + c.act.selector + '; it was required to fall');
+            } else {
+              notes.push({ case: id, field: c.field, before: was, after: now });
             }
           }
           if (errors.length) { fail(results, id, errors.length + ' console error(s): ' + errors.slice(0, 3).join(' | ')); }

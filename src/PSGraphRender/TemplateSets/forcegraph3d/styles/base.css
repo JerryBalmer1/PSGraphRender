@@ -54,10 +54,22 @@ body {
    what the first version of this file did, and it was found by two variants
    screenshotting to the same bytes. graph.js sets the attribute from the same
    setting. */
-#fg {
+/* The stage owns the LAYOUT and the positioning context; #fg is the library's
+   and holds nothing else.
+
+   That split is not tidiness. ForceGraph3D empties the container it is handed,
+   so anything this template nested inside #fg was gone the moment the graph
+   initialised - which is how ShowLabels = 'always' shipped at v0.16.0 and never
+   drew a label. partials/graph.html carries the full account. */
+#fg-stage {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+#fg {
+  position: absolute;
+  inset: 0;
   background: var(--PageBackground, #080b12);
 }
 

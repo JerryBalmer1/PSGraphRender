@@ -22,24 +22,35 @@
     var LABEL_LAYER = null;
     var LABEL_ENTRIES = [];
 
+    // Whether the ceiling permits always-on labels at all, and whether they
+    // are currently showing. Two facts rather than one, because the control
+    // panel has to be able to say WHY a switch is unavailable: "this payload
+    // is too big for it" and "you turned it off" are different answers and a
+    // single boolean can only give one of them.
+    var LABELS_POSSIBLE = false;
+    var LABELS_ON = false;
+
     function startLabels(graph) {
         var layer = document.getElementById('fg-labels');
         if (!layer) { return; }
 
-        var mode = cfgText('ShowLabels', 'hover');
         var drawn = graph.graphData().nodes;
 
-        // Above the ceiling this falls back to hover labels and says nothing
-        // about it. A message would be chrome inside the rectangle the
-        // canvas-growth floor measures; the setting's own description is where
-        // the behaviour is documented.
-        if (mode !== 'always' || drawn.length > cfgNumber('LabelMaxNodes', 60)) {
+        // Above the ceiling, always-on labels are not offered. A message would
+        // be chrome inside the rectangle the smoke gate measures; the
+        // setting's own description is where the behaviour is documented, and
+        // the panel disables the switch rather than letting a reader flip
+        // something that will not happen.
+        LABELS_POSSIBLE = drawn.length <= cfgNumber('LabelMaxNodes', 60);
+        LABELS_ON = LABELS_POSSIBLE && cfgText('ShowLabels', 'hover') === 'always';
+
+        if (!LABELS_POSSIBLE) {
             layer.hidden = true;
             return;
         }
 
         LABEL_LAYER = layer;
-        layer.hidden = false;
+        layer.hidden = !LABELS_ON;
         while (layer.firstChild) { layer.removeChild(layer.firstChild); }
 
         LABEL_ENTRIES = [];
@@ -69,8 +80,21 @@
         }());
     }
 
+    // The panel's switch. Entries are built once and hidden as a layer rather
+    // than rebuilt: a reader toggling names on and off is doing it to compare
+    // two views of the same drawing, and rebuilding N spans on each flip would
+    // put a stall in exactly that comparison.
+    function setLabelsVisible(on) {
+        LABELS_ON = LABELS_POSSIBLE && !!on;
+        if (LABEL_LAYER) { LABEL_LAYER.hidden = !LABELS_ON; }
+        publishLive();
+    }
+
+    function labelsPossible() { return LABELS_POSSIBLE; }
+    function labelsVisible() { return LABELS_ON; }
+
     function positionLabels(graph) {
-        if (!LABEL_LAYER) { return; }
+        if (!LABEL_LAYER || !LABELS_ON) { return; }
         var box = LABEL_LAYER.getBoundingClientRect();
         for (var i = 0; i < LABEL_ENTRIES.length; i++) {
             var entry = LABEL_ENTRIES[i];
