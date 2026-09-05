@@ -201,6 +201,10 @@
     # Well below the accent. The environment is a reference and has to read as
     # being BEHIND the graph; a ruling in the accent competes with the items.
     GridColor           = '#2b4a6b'
+    # How solid the ruling is. It never HIDES an item behind it - the
+    # environment writes no depth - but `room` is ruled on all six sides and
+    # its near wall does cross the items, which is what B5 shows and one of the
+    # reasons `floor` is the default. Lower this and the enclosure recedes.
     GridOpacity         = 0.5
     GridGlow            = 0.55
     # Past about 24 the ruling reads as a texture rather than as a measure,

@@ -171,10 +171,24 @@
     // surface on a dark ground with one directional light is nearly black
     // wherever it faces away, and half of a room faces away by construction.
     //
-    // side 2 is DoubleSide - a floor has to be visible from under it, and a
-    // room is seen from inside. depthWrite off so the environment never
-    // occludes an item: it is a reference, and a reference that hides the
-    // thing being referenced is scenery.
+    // side 2 is DoubleSide - a floor has to be visible from under it, and an
+    // enclosure from both.
+    //
+    // depthWrite off, and this is worth stating exactly because the first
+    // version of this comment claimed more than it bought. It means the
+    // environment writes no depth, so its own quads never occlude each other
+    // and never hide an item that is BEHIND them in the sort. It does NOT mean
+    // the environment can never be in front of an item, because sometimes it
+    // is: `room` rules all six sides and the graph is inside it, so the near
+    // wall is genuinely between the camera and the items and depth testing
+    // draws it there. Picture it in B5 - the ruling crosses the spheres.
+    //
+    // That is the honest reason `floor` is the default rather than `room`: a
+    // ground plane is never between the reader and the thing being read, and
+    // an enclosure is, from any angle that is not inside it. Filed as a
+    // finding rather than fixed here - culling the near faces means giving six
+    // hand-built planes a consistent outward winding, which is shipped
+    // geometry and wants a red of its own.
     //
     // FOG APPLIES TO IT, and that is the point rather than a side effect. The
     // far edge of a ruled plane fades at a rate the reader can read, which is

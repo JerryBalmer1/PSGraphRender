@@ -332,7 +332,7 @@
             Type = 'Enum'; Default = 'floor'
             Values = @('none', 'floor', 'room')
             In = 'Theme'; Group = 'Environment'
-            Description = 'What the graph sits in. floor rules one plane beneath it; room encloses it on six sides, which is the one that still reads at eye level. Sized to the graph''s own extent, so it fits any payload.'
+            Description = 'What the graph sits in. floor rules one plane beneath it and is never between the reader and an item; room encloses it on six sides, which still reads at eye level but rules its near wall across the graph. Sized to the graph''s own extent, so it fits any payload.'
         }
         GridColor           = @{
             Type = 'Color'; Default = '#2b4a6b'
@@ -342,7 +342,7 @@
         GridOpacity         = @{
             Type = 'Number'; Default = 0.5; Min = 0; Max = 1
             In = 'Theme'; Group = 'Environment'
-            Description = 'How solid the ruling is. It never occludes an item whatever this says: the environment is a reference, and a reference that hides what it references is scenery.'
+            Description = 'How solid the ruling is. The environment writes no depth, so it never hides an item behind it - but room is ruled on all six sides and its near wall does cross the items, which is one reason floor is the default.'
         }
         GridGlow            = @{
             Type = 'Number'; Default = 0.55; Min = 0; Max = 3
