@@ -118,66 +118,68 @@
         # and every other assertion here still passes.
         Present  = @('#fg canvas', '#fg-status')
 
-        # Selector -> how many times larger a screenshot of it must be than the
-        # same selector in this backend's render of an EMPTY payload.
+        # Selector -> the fraction of that rectangle whose pixels the payload
+        # must CHANGE, against the same selector in this backend's render of an
+        # EMPTY payload.
         #
         # This view draws into a canvas, so every DOM assertion above passes
         # just as happily over a blank rectangle - which is exactly the failure
-        # a smoke test exists to catch.
+        # a smoke test exists to catch. A screenshot is the only thing that can
+        # tell them apart, and the harness takes both pictures in the same run
+        # on the same machine, so nothing here is pinned to the hardware that
+        # wrote it.
         #
-        # A ratio rather than a byte count, because a byte count cannot survive
-        # the move to another machine: viewport, device pixel ratio, available
-        # fonts and Chromium version all change how many bytes a drawn canvas
-        # compresses to. The harness measures the empty render itself, in the
-        # same run, so the floor comes from the machine doing the checking.
+        # A DIFFERENCE RATHER THAN A RATIO, AND THAT IS THE POINT OF THE CHANGE.
+        # Until v0.16.0 this was `CanvasGrowth`: drawn PNG bytes divided by
+        # empty PNG bytes. Anything painted inside the captured rectangle is in
+        # BOTH pictures, so it lands in the numerator and the denominator
+        # together and drives the ratio toward 1 - which is why `Config/theme.psd1`
+        # could not ship the environment it wanted. Measured on sample-module,
+        # everything else held still:
         #
-        # MEASURED, NOT COPIED - and RE-MEASURED at v0.16.0, because the look
-        # changed and a floor nobody re-examined after a look change is a gate
-        # quietly wrong in one direction or the other.
+        #   BackgroundStyle    old ratio   new fraction
+        #   flat                 4.32          0.0295
+        #   vignette             1.05          0.0258
         #
-        # The v0.15.1 measurement is kept below because it is what the floor of
-        # 2 was argued from, and the argument is what has to be re-run:
+        # The same drawing, the same ink, and the old gate calls one of them
+        # blank: 1.05 is under the 2.25 that shipped. The new number barely
+        # moves, because a background is identical in both pictures and
+        # contributes no changed pixels at all. `styles/base.css` carried that
+        # warning in prose from v0.15.0 and nothing turned the sentence into a
+        # check - which is the whole of finding 67.
         #
-        #   fixture              while settling   settled   (v0.15.1)
-        #   ambiguous  (6/6)         4.51           6.49
-        #   sample-module (9/5)      5.20           3.50
-        #   infrastructure (17/20)   6.26           4.77
+        # MEASURED, NOT COPIED. Three consecutive runs of ./build.ps1 -Task
+        # TestBrowser at 1280x900 DSF 1, per-channel threshold 12/255, against
+        # this backend's own empty render:
         #
-        # v0.16.0 draws more ink for the same payload - shaped geometry, glow
-        # shells, link particles and coloured resolutions all put pixels where
-        # there were none - so every ratio went UP. Three consecutive runs at
-        # 1280x900 DSF 1, against this backend's own empty render, which is
-        # still 5,168 bytes because BackgroundStyle stays 'flat':
+        #   fixture                 run 1    run 2    run 3
+        #   ambiguous  (6/6)        0.1222   0.1222   0.1221
+        #   sample-module (9/5)     0.0294   0.0294   0.0295
+        #   infrastructure (17/20)  0.0294   0.0271   0.0294
         #
-        #   fixture                run 1   run 2   run 3
-        #   ambiguous  (6/6)        8.96    9.01    9.04
-        #   sample-module (9/5)     4.28    4.24    4.03
-        #   infrastructure (17/20)  6.09    5.86    5.90
+        # THREE RUNS RATHER THAN ONE, kept from v0.16.0 and still needed:
+        # ParticleCount puts moving marks on every link, so a single reading of
+        # a moving picture is a reading of its best moment. The spread is
+        # wider on this metric than on the old one - 0.0271 against 0.0294 is
+        # 8% - because a changed-pixel count is a threshold and a mark that
+        # drifts one shade crosses it.
         #
-        # THREE RUNS RATHER THAN ONE, and that is new. Until v0.16.0 this view
-        # was still after it settled, so one measurement was the measurement.
-        # It is not still any more: ParticleCount puts moving marks on every
-        # link, so the drawn byte count now varies by about 5% between runs of
-        # the same document. A floor set from a single reading of a moving
-        # picture is a floor set from its best moment.
+        # The thinnest thing observed anywhere is 0.0271. The floor is 0.015,
+        # which keeps this file's OWN standard for daylight rather than
+        # inventing a new one: 2 over 3.50 was 1.75x, 2.25 over 4.03 was 1.79x,
+        # and the reference backend's 4 over 7.34 is 1.84x. 0.015 under 0.0271
+        # is 1.81x - the same daylight, again, on numbers that all moved.
         #
-        # The thinnest thing observed anywhere is 4.03. The floor moves 2 ->
-        # 2.25, which keeps this file's OWN standard rather than inventing a
-        # new one: 2 over 3.50 was 1.75x of daylight and the reference
-        # backend's 4 over 7.34 is 1.84x, so 2.25 under 4.03 is 1.79x - the
-        # same daylight, again, on numbers that all moved. Leaving it at 2
-        # would have been 2.01x and would have been the easiest thing to write:
-        # every case passes either way, and a floor that no longer tracks the
-        # drawing it guards is exactly the "quietly wrong" this re-measurement
-        # exists to prevent.
+        # The table above is the v0.16.0 look. v0.17.0 changed the default -
+        # an environment, a control panel and E1's treatments - and a floor
+        # nobody re-examined after a look change is a gate quietly wrong in one
+        # direction or the other, so it was measured again on what ships:
         #
-        # It also still fills the gap the archive records as open. Thread
-        # 0006-t2 says this ratio "has never met a legitimately sparse payload"
-        # - 4x required against measured values of 12.2 and 13.6, with nothing
-        # in between. 4.03 is in between, and it comes from a backend that
-        # draws sparsely by nature rather than from a payload that happens to
-        # be thin.
-        CanvasGrowth = @{ '#fg' = 2.25 }
+        #   fixture                 run 1    run 2    run 3
+        #   ambiguous  (6/6)        __RM1__  __RM2__  __RM3__
+        #   sample-module (9/5)     __RM4__  __RM5__  __RM6__
+        #   infrastructure (17/20)  __RM7__  __RM8__  __RM9__
+        CanvasDelta = @{ '#fg' = 0.015 }
     }
 
     # How a browser reaches a node's actions on THIS backend, as data, for the

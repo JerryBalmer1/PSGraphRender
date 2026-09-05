@@ -236,28 +236,41 @@ Describe 'Acceptance A: the set renders and comes alive' {
         @($manifest.Smoke.Text.Keys).Count | Should-BeGreaterThan 0
     }
 
-    It 'declares a canvas-growth floor, because every DOM assertion passes over a blank rectangle' {
+    It 'declares a canvas floor, because every DOM assertion passes over a blank rectangle' {
         # This view draws into a canvas. Counting elements says the page ran; it
         # says nothing about whether anything was drawn, which is exactly the
         # failure a smoke test exists to catch.
         #
+        # The floor is CanvasDelta as of v0.17.0 - a fraction of the rectangle
+        # whose pixels the payload changed - rather than CanvasGrowth, the ratio
+        # of PNG byte lengths it replaced here. See the manifest for the
+        # measurement that decided it and templateset.psd1's own comment for
+        # why a ratio cannot survive a painted background.
+        #
         # The first two lines are not ceremony. Written as
-        # `@($manifest.Smoke.CanvasGrowth.Keys).Count | Should-BeGreaterThan 0`
+        # `@($manifest.Smoke.CanvasDelta.Keys).Count | Should-BeGreaterThan 0`
         # this test PASSED against a set that did not exist yet: property access
         # on $null yields $null, @($null) is a one-element array, and the count
         # was 1. Found by running the red - the assertion was in the seven that
         # went green before anything was written.
         Test-Path -LiteralPath $script:ManifestPath | Should-BeTrue
         $manifest = Import-PowerShellDataFile -LiteralPath $script:ManifestPath
-        $manifest.Smoke.Contains('CanvasGrowth') | Should-BeTrue
+        $manifest.Smoke.Contains('CanvasDelta') | Should-BeTrue
 
-        $selectors = @($manifest.Smoke.CanvasGrowth.Keys)
+        $selectors = @($manifest.Smoke.CanvasDelta.Keys)
         $selectors.Count |
-            Should-BeGreaterThan 0 -Because 'a canvas backend with no growth floor is a smoke test that cannot see a blank page'
+            Should-BeGreaterThan 0 -Because 'a canvas backend with no floor is a smoke test that cannot see a blank page'
         foreach ($selector in $selectors) {
-            $manifest.Smoke.CanvasGrowth[$selector] |
-                Should-BeGreaterThan 1 -Because "a floor of 1 or less for $selector is not a floor"
+            $floor = $manifest.Smoke.CanvasDelta[$selector]
+            $floor | Should-BeGreaterThan 0 -Because "a floor of 0 for $selector is not a floor"
+            $floor | Should-BeLessThan 1 -Because "$selector is a fraction of a rectangle and 1 would demand every pixel"
         }
+
+        # And the key it replaced is GONE rather than left beside it. Two floors
+        # on one selector is two answers to one question, and the stale one is
+        # the one nobody re-measures.
+        $manifest.Smoke.Contains('CanvasGrowth') |
+            Should-BeFalse -Because 'CanvasDelta supersedes CanvasGrowth for this backend; a dead key is a floor nobody reads and nobody removes'
     }
 
     It 'ships its own configuration rather than borrowing another backend''s' {

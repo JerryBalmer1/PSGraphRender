@@ -391,13 +391,20 @@ task TestBrowser Build, {
         }
 
         $report = $text | ConvertFrom-Json
+
+        # BOTH floors on every line, whichever one gated. The harness computes
+        # them from the same two pictures, and printing only the one that gated
+        # is how a floor gets re-pinned from argument instead of from
+        # measurement - which is the defect finding 67 recorded.
         foreach ($m in $report.canvas) {
-            Write-Build Green ("  canvas $($m.case) $($m.selector): $($m.drawn) bytes drawn against $($m.empty) empty" +
-                " - ratio $($m.ratio), required $($m.required)")
+            Write-Build Green ("  canvas $($m.case) $($m.selector): changed $($m.changedPixels)/$($m.totalPixels) px" +
+                " = $($m.fraction) | bytes $($m.drawnBytes) drawn / $($m.emptyBytes) empty = ratio $($m.ratio)" +
+                " | gated on $($m.gatedOn) >= $($m.required)")
         }
         Write-Build Green ("Browser: $($report.cases) page(s) came alive, network blocked, across " +
             "$($backends.Count) backend(s) and $($fixtures.Count) fixture(s) at " +
-            "$($report.viewport.width)x$($report.viewport.height)@$($report.deviceScaleFactor)x")
+            "$($report.viewport.width)x$($report.viewport.height)@$($report.deviceScaleFactor)x, " +
+            "changed-pixel threshold $($report.channelThreshold)/255")
     }
     finally {
         Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue

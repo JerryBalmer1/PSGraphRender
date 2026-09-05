@@ -17,11 +17,25 @@ html, body {
    floated over a full-bleed canvas and it deliberately does not: the smoke
    gate screenshots this container and compares it against the same container
    in an EMPTY render, and anything else painted inside that rectangle is in
-   both numbers. Chrome over the canvas does not make a blank page look drawn,
-   but it makes a drawn page look less drawn - the floor stops discriminating
-   long before it stops passing. Measured on one payload with everything else
-   held still: 3.07 with the bar inside the capture, 3.95 with it above, and
-   the empty render fell from 9,252 bytes to 5,168. */
+   both pictures. Measured on one payload with everything else held still:
+   3.07 with the bar inside the capture, 3.95 with it above, and the empty
+   render fell from 9,252 bytes to 5,168.
+
+   THIS PARAGRAPH USED TO BE THE WHOLE GATE, and it said so in prose: "chrome
+   over the canvas does not make a blank page look drawn, but it makes a drawn
+   page look less drawn - the floor stops discriminating long before it stops
+   passing." Nothing turned that sentence into a check, so the next thing
+   painted in the rectangle was found by reading a 1.05 off a page that was
+   drawing perfectly. That is finding 67.
+
+   It is checked now, in two places, and the sentence is history rather than a
+   warning. templateset.psd1 declares CanvasDelta - the fraction of this
+   rectangle whose pixels the payload CHANGED - so anything painted here is in
+   both pictures and cancels instead of dominating. And tests/browser/smoke.cjs
+   refuses to accept a byte-ratio floor at all once the empty capture stops
+   being nearly blank, by measuring its PNG bytes per pixel. A layout change
+   that put chrome back inside this container would still cost contrast; it can
+   no longer quietly cost the gate. */
 body {
   display: flex;
   flex-direction: column;
