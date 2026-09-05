@@ -29,6 +29,66 @@ thought about yet.
 
 ## Open
 
+### The 3D report had no depth, no menus and a gate that could not see it — **large, operator-prompted, taken in v0.17.0**
+
+The operator's words: the 3D page had "nothing but a little extra" — no menus in
+the HTML, no grid or environment giving the nodes depth and contrast, no controls
+for zoom speed or focus-by-distance. The 2D report ships a full sidebar; the 3D
+report shipped a header.
+
+**Logged as large and taken because the operator prompted it**, which is the only
+route a large item has. Two halves in one pass with a hard internal order, and
+the order is the entry worth keeping.
+
+**The instrument was repaired first, because the features would have blinded the
+old one.** The canvas floor was a screenshot-byte ratio of drawn against empty,
+so a painted background sat in the numerator and the denominator together: the
+same drawing scored 4.32 on a flat ground and 1.05 under a vignette, below the
+2.25 that shipped, on a page drawing perfectly. That was finding 67, and it had
+been a *sentence in `base.css`* since v0.15.0 — the file said the floor "stops
+discriminating long before it stops passing" and nothing turned that into a
+check. It is a changed-pixel fraction between the two pictures now, so a
+background is identical in both and cancels.
+
+**This is the 0046-before-0047 pattern inside a single pass**, and the reason it
+was one pass rather than two: every feature in the second half is unshippable as
+a default under the old floor, and the operator wanted the features. The proof
+is in the shipped numbers — the default now reads a byte ratio of **1.13**, which
+the old 2.25 floor would have failed outright, against 0.0325 on the new metric
+with a floor of 0.015.
+
+**What shipped.** A `GridStyle` environment family built from the graph's own
+bounding box; a collapsible in-page control panel whose every control moves the
+same thing its setting moves at render time; click-to-focus and auto-rotate as
+declared settings; two new browser case kinds that drive a control through its
+own DOM events; and the composed look promoted from catalogue variant `E1` to
+the default, with the v0.16.0 look preserved whole as `A5`.
+
+**And it found a feature that had never worked.** `ShowLabels = 'always'` shipped
+at v0.16.0 and never drew a label: `ForceGraph3D` empties the container it is
+handed, `#fg-labels` was nested inside it, and the layer was gone before the
+label code looked for it. Two catalogue variants were pictures of the feature not
+happening, captioned as though it were. It was found because the control panel
+disappeared the same way — which is the argument for building the second thing
+that needs a mechanism.
+
+### The enclosure rules its near wall across the graph — **small**
+
+`GridStyle = 'room'` encloses the graph on six sides, so from any viewpoint
+outside it the near wall is between the reader and the items and its ruling is
+drawn across them. `B5` in the catalogue is a picture of it.
+
+It is geometrically correct and it is not what the environment is for: a
+reference that crosses what it references is competing with it. `floor` is the
+default partly for this reason, and the claim that the environment "never
+occludes an item" was corrected in `theme.psd1`, `settings.schema.psd1` and
+`scene.js` rather than left as a comment doing a gate's job.
+
+**Not taken here, deliberately.** The fix is to cull the near faces, which means
+giving six hand-built planes a consistent outward winding so `side: 1` draws only
+the far half — a change to shipped geometry, and it wants a red of its own rather
+than a ride on a pass that was prompted for something else.
+
 ### The 3D backend looked like a tech demo — **large, operator-prompted, taken in v0.16.0**
 
 Uniform blue spheres on a flat dark ground, no visual language, and not a single

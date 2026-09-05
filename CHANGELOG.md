@@ -20,6 +20,74 @@ v0.13.0; they are a record, not a process.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-09-05
+
+The canvas floor learns to see through a painted background, and the 3D report
+gets depth, menus, and the composed look as its default. **MINOR**: new setting
+types are added — fourteen of them — and no contract change. No `.ps1` under
+`src/` edited; `cytoscape`, `plain` and `index.psd1` byte-identical to v0.16.0.
+
+Two halves in one pass, in a hard order: **the instrument was repaired before
+anything that would have blinded the old one was built.** Every feature in the
+second half was unshippable as a default under the floor the first half
+replaced.
+
+### Fixed
+
+- **The canvas floor could not tell a drawn 3D view from a blank one under a
+  painted background.** It was a screenshot-byte ratio of drawn against empty,
+  and a background sits in both: the same drawing scored 4.32 on a flat ground
+  and **1.05 under a vignette**, below the 2.25 that shipped. It is now a
+  changed-pixel fraction between the two pictures, so a background is identical
+  in both and cancels. `CanvasGrowth` is removed from `forcegraph3d` rather than
+  left beside the new key, and its absence is asserted; it still gates
+  `cytoscape`, where `smoke.cjs` now *measures* the near-blank precondition it
+  used to assume.
+- **`ShowLabels = 'always'` never drew a label.** `ForceGraph3D` empties the
+  container it is handed, and `#fg-labels` was nested inside it, so the layer was
+  deleted before the label code looked for it and the function returned
+  silently. Everything drawn over the canvas is now a sibling in a new
+  `#fg-stage`. Catalogue variants `D3` and `E2` were pictures of the feature not
+  happening, captioned as though it were; both are regenerated.
+
+### Added
+
+- **An environment.** `GridStyle` — `none`, `floor`, `room` — with `GridColor`,
+  `GridOpacity`, `GridGlow`, `GridDivisions`, `GridExtent`, `GridDrop` and
+  `GridLineWidth`. Scene geometry rather than a CSS backdrop, so it turns with
+  the camera, and sized from the graph's own bounding box so it fits any
+  payload.
+- **An in-page control panel**, `ShowControlPanel` (`open`, `collapsed`,
+  `none`). Zoom speed, fit, auto-rotate; depth falloff, environment,
+  click-to-focus; names, direction marks, glow; and one checkbox per
+  classification the payload carries, including the parity filter the 2D sidebar
+  had and this backend did not. Every control moves the same thing its setting
+  moves at render time. All of its text comes from `strings.psd1`.
+- **Click-to-focus and auto-rotate as settings**: `FocusOnClick`,
+  `FocusDistance`, `FocusTransitionMs`, `AutoRotate`, `AutoRotateSpeed`. Focus is
+  the camera and the fog, not depth of field — the vendored bundle ships no
+  post-processing pass, and that limitation is recorded rather than worked
+  around.
+- **Two browser case kinds**, `panel` and `control`, which drive a control
+  through its own DOM events and read the result off the live scene. A handler
+  that was never attached and a handler that does nothing look identical to any
+  check that calls past them.
+
+### Changed
+
+- **The composed look is the default.** `BackgroundStyle` is `vignette`,
+  `GridStyle` is `floor`, the panel is `open`, and the glow, connector, particle
+  and node values are the ones the catalogue's `E1` carried. `ExportedEmphasis`
+  is `ring` and is now an inverted hull rather than a torus: a ring lies flat
+  through an item and vanishes edge-on, in a view whose premise is that the
+  reader is turning it.
+- **The catalogue is twenty-two variants in five families.** `A5` preserves the
+  v0.16.0 default whole, so reversal is a reading rather than a reconstruction.
+  `B5` and `B6` are the other two environments; `B1` and `B2` are the
+  backgrounds the default is not; `D4` is the report with no panel at all.
+- **`E1` is retired.** It became the default, so a row for it would be a second
+  picture of `A0`. The coordinate is not reused.
+
 ## [0.16.0] - 2026-09-04
 
 The 3D backend grows a look, an options surface and a labelled catalogue.

@@ -145,6 +145,78 @@ gone as of pass 0050; see below.*
 varies the backend rather than a setting: the same payload the three layout rows
 draw, rendered by a different directory.
 
+### Pass 0052
+
+**Where it is.** v0.17.0. The 3D report has depth, menus, and the composed look
+as what it ships.
+
+**The instrument was repaired before anything that would have blinded it, and
+that ordering is the whole reason this was one pass.** The canvas floor
+screenshotted `#fg` and divided by the same selector in an empty render, so
+anything painted in that rectangle sat in the numerator and the denominator
+together: the same drawing scored 4.32 on a flat ground and **1.05 under a
+vignette**, below the 2.25 that shipped, on a page drawing perfectly.
+`styles/base.css` had carried that warning as prose since v0.15.0 and nothing
+turned the sentence into a check — finding 67. `smoke.cjs` now compares the two
+pictures against each other: the fraction of the rectangle whose pixels differ
+by more than 12/255 on any channel. A background is identical in both, so it
+contributes nothing and cancels. `CanvasGrowth` is **gone** from `forcegraph3d`
+rather than left beside the new key, and a test asserts its absence — two floors
+on one selector is two answers to one question, and the stale one is the one
+nobody re-measures. It still gates `cytoscape`, where an empty render really is
+nearly blank, and `smoke.cjs` now *measures* that precondition instead of
+assuming it.
+
+**Every feature in the second half was unshippable under the old floor.** That
+is not a claim about tidiness: `BackgroundStyle = 'vignette'` was measured and
+rejected at v0.16.0 for exactly this reason, and it is the default now. Nothing
+about the appetite for risk changed — the gate changed.
+
+**What the graph sits in.** A `GridStyle` environment family — `none`, `floor`,
+`room` — built from the graph's own bounding box, so it fits any payload. Scene
+geometry and not a CSS backdrop, because it has to turn with the camera: a
+perspective floor painted in CSS looks right in a screenshot and reads as broken
+the instant a reader drags. Built from **quads rather than lines**, and forced
+rather than chosen — the vendored bundle draws every link as a cylinder, so
+there is no `Line` constructor anywhere in the live scene to harvest. The same
+tree-shaking limit that made the shape vocabulary explicit vertices.
+
+**Menus in the HTML, which is what the operator asked for.** A collapsible panel
+over the canvas: zoom speed, fit, auto-rotate; depth falloff, environment,
+click-to-focus; names, direction marks, glow; and one checkbox per
+classification the payload carries. Its contract is that every control adjusts
+at runtime what a setting in `Config/` decides at render time, and nothing
+writes back into `CONFIG` — runtime changes are overrides beside it, so
+"declared" and "changed by a reader" stay two facts. Every word it shows comes
+from `strings.psd1`; the markup ships no English, which is the half the 2D
+sidebar gets wrong.
+
+**It found a shipped feature that had never worked.** `ForceGraph3D` *empties*
+the container it is handed, so anything nested inside `#fg` is gone the moment
+the graph initialises. `ShowLabels = 'always'` shipped at v0.16.0 with
+`#fg-labels` inside `#fg` and never drew a single label — the layer was deleted
+before `startLabels` looked for it, `getElementById` returned null, and the
+function returned silently. `D3` and `E2` in the catalogue were pictures of the
+feature not happening, captioned as though it were. It was found by the control
+panel disappearing the same way. There is now an `#fg-stage`: the library gets a
+container with nothing else in it, and everything drawn over the canvas is a
+sibling. The smoke gate still captures `#fg`, which is now exactly the drawing
+and no chrome.
+
+**E1 won and left the table.** "Nebula — the recommended look" is now what `A0`
+draws, so its row would be a second picture of the default. Its coordinate is
+**retired rather than reused**: a label is a thing the operator points with, and
+a pointer that quietly starts meaning something else is worse than one that is
+gone. `A5` is the v0.16.0 default kept whole, so the promotion can be looked at
+rather than read about.
+
+**What it could not do, and said so.** Focus is the camera and the fog, not
+depth of field — a real focus pull needs a post-processing pass and the vendored
+bundle ships no `BokehPass`, so adding one means a second copy of three.js.
+Auto-rotate is turned by hand because the controls the library builds are
+`TrackballControls`, which has no `autoRotate` among its own keys. Both read off
+the vendored bytes rather than from documentation.
+
 ### Pass 0051
 
 **Where it is.** v0.16.0. Three rendering backends, and the third one now has a
@@ -312,6 +384,7 @@ are.** Everything else follows from that one rule.
 | `v0.15.0` | a third backend, `forcegraph3d`. The first evidence that a template set is a rendering backend that does not come from a trivial one |
 | `v0.15.1` | the link probe becomes backend data. `LinkProbe` beside `Smoke`; neither the build task nor the browser harness names a selector any more |
 | `v0.16.0` | the 3D backend's look becomes configuration. Twenty-six settings, a third browser gate (`LookProbe`), and a nineteen-variant catalogue generated from its own table |
+| `v0.17.0` | the canvas floor learns to see through a painted background, and the 3D report gets an environment, a control panel, and the composed look as its default |
 
 The module version and the contract version move independently. For the module:
 **patch** for a normal implementation, **minor** when a template set, a setting
