@@ -365,6 +365,16 @@ is working:
   describe is two. The message states the failure prevented, not the change
   made: `Fail the render when the payload declares an unknown contract major`,
   not `Add contract version check`.
+- **Commit and push after every task, in every pass.** A task is not done
+  until its commit is on the remote. This is not a preference about tidiness:
+  work that lives only in a working tree is invisible to `git status` as
+  *progress*, indistinguishable from work not started, and unrecoverable by
+  anyone but the process holding it. Pass 0052 was stopped by its operator on
+  finding twenty-three files of finished, unpushed work, and the root cause
+  was an authoring defect — the prompt's task spine had been compressed and
+  the cadence line every prompt from 0047 to 0051 carried was dropped. So the
+  rule lives here rather than in a prompt: **no future prompt's brevity
+  overrides it**, and a prompt that omits it has not repealed it.
 
 Two design rules that were kept in the always-loaded tier precisely because they
 get violated from outside the document that argues them:
