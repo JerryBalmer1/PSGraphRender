@@ -512,35 +512,12 @@ task TestLinkMode Build, {
             }
         )
 
-        # How each backend's node actions are reached. Three fields: the element
-        # to click in, the button that opens the actions, and the container they
-        # land in. tests/browser/link-mode.cjs defaults to cytoscape's, so a
-        # backend whose shape matches needs no entry.
+        # Which backends have link modes at all, and how each one's node actions
+        # are reached - both discovered from the manifests. A backend states its
+        # own shape in its own LinkProbe block, beside Smoke and for the same
+        # reason; nothing here and nothing in tests/browser/link-mode.cjs names a
+        # selector. See TemplateSets/cytoscape/templateset.psd1.
         #
-        # THIS IS A SECOND PLACE A BACKEND'S SHAPE IS WRITTEN DOWN, and that is
-        # the same defect the Smoke block was invented to remove from
-        # tests/browser/smoke.cjs. It is here rather than in each
-        # templateset.psd1 for one reason: putting it there means editing
-        # cytoscape's manifest, and this pass's no-regression control is that
-        # cytoscape does not move at all. Logged rather than worked around
-        # silently - see docs/improvements.md.
-        $LINK_PROBE = @{
-            cytoscape    = @{ canvas = '#cy'; menu = '#node-menu'; button = 'right' ; ready = '#cy canvas' }
-            forcegraph3d = @{ canvas = '#fg'; menu = '#fg-actions'; open = '#fg-panel'; button = 'left'
-                ready = '#fg canvas'
-                # A force simulation is still moving when the canvas first
-                # exists, and the view fits itself when it stops. The probe
-                # clicks a point, so it clicks after the item has stopped
-                # arriving at it.
-                settle = 3000
-                # And this backend resolves what is under the pointer in its
-                # render loop rather than on the event, so the pointer has to be
-                # somewhere before the press.
-                hover = 150
-            }
-        }
-
-        # Which backends have link modes at all, discovered from the manifests.
         # `plain` renders a table and has no node action, so it declares no
         # SlotsBySetting and is skipped - which is not a failure and is not a
         # silent inclusion either.
@@ -551,14 +528,15 @@ task TestLinkMode Build, {
                 $manifest = Import-PowerShellDataFile -LiteralPath $manifestPath
                 if (-not $manifest.Contains('SlotsBySetting')) { continue }
                 if (-not $manifest.SlotsBySetting.Contains('LinkMode')) { continue }
-                if (-not $LINK_PROBE.ContainsKey($backend.Name)) {
+                if (-not $manifest.Contains('LinkProbe')) {
                     # By name, not by skipping. A backend that grew link modes
                     # and no way to drive them is a gate quietly checking one
                     # fewer thing than the build reports.
-                    throw ("$($backend.Name) declares link modes and this task does not know how to reach its " +
-                        'node actions. Add an entry to $LINK_PROBE above; a backend the probe skips is a mode nobody checked.')
+                    throw ("$($backend.Name) declares link modes and no LinkProbe block in $manifestPath, so " +
+                        'nothing states how a browser reaches its node actions. Declare LinkProbe beside Smoke; ' +
+                        'a backend the probe skips is a mode nobody checked.')
                 }
-                [pscustomobject]@{ Name = $backend.Name; Probe = $LINK_PROBE[$backend.Name] }
+                [pscustomobject]@{ Name = $backend.Name; Probe = $manifest.LinkProbe }
             }
         )
         if ($probes.Count -eq 0) {
@@ -574,8 +552,12 @@ task TestLinkMode Build, {
                     [System.IO.File]::WriteAllText($file, (New-RenderDocument -ViewModel $spec.payload `
                                 -Meta $meta -Title "link mode $id" -TemplateSetPath $set))
 
-                    $case = @{ id = $id; file = $file; expect = $spec.expect }
-                    foreach ($key in @($probe.Probe.Keys)) { $case[$key] = $probe.Probe[$key] }
+                    # The block whole and verbatim under one key, the same way
+                    # TestBrowser hands smoke.cjs a Smoke block. Flattening its
+                    # fields onto the case is what let the harness default the
+                    # missing ones, and defaulting them is what made the harness
+                    # a third place cytoscape's shape was written down.
+                    $case = @{ id = $id; file = $file; expect = $spec.expect; probe = $probe.Probe }
                     if ($spec.Contains('prefix')) { $case['prefix'] = $spec.prefix }
                     if ($spec.Contains('forbid')) { $case['forbidInHref'] = $spec.forbid }
                     $case

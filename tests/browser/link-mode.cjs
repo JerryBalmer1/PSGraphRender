@@ -29,28 +29,47 @@ const PROBE_POINTS = [
 ];
 
 // Where a backend's canvas is, what opens a node's actions on it, and where
-// those actions land. Named by the JOB rather than assumed here: this file
-// drives more than one backend now, and a selector written into the harness
-// would be a second place a backend's shape is stated - the design bug the
-// Smoke block exists to avoid. The defaults are cytoscape's, so a job written
-// before this file grew the fields behaves exactly as it did.
-const DEFAULTS = { canvas: '#cy', menu: '#node-menu', button: 'right', ready: '#cy canvas', hover: 0 };
+// those actions land. Every one of these comes off the JOB, which carries the
+// backend's own LinkProbe block out of its templateset.psd1 verbatim. NOTHING
+// here may name a selector: a selector written into this file would be a second
+// place a backend's shape is stated, which is the design bug the Smoke block
+// exists to avoid, and it is the bug this file had - the defaults were
+// cytoscape's, so cytoscape's shape was written down twice and every other
+// backend was silently measured against it.
+//
+// Required, and missing means fail BY NAME. A default would let a job that
+// declared nothing be driven as though it had declared cytoscape.
+const REQUIRED = ['Canvas', 'Menu', 'Button', 'Ready'];
 
-// `open` is what proves a node was selected; `menu` is where its actions are.
+// `Open` is what proves a node was selected; `Menu` is where its actions are.
 // They are the same element for a context menu and different for a panel that
 // names the item and then lists what it offers - and they have to be separable,
 // because in `none` mode the ACTIONS are empty by design while the panel is not.
 // Reading "did it open" off the action list would make correct `none` behaviour
 // indistinguishable from a click that landed on nothing.
+//
+// So `Open` falls back to `Menu` and `Hover` to no wait at all. Those two are
+// the only fallbacks left, and neither names anything: one is a relationship
+// between two fields the job did supply, the other is the absence of a delay.
 function selectorsFor(job) {
-  const menu = job.menu || DEFAULTS.menu;
+  const probe = job.probe || {};
+
+  const missing = REQUIRED.filter(k => !probe[k]);
+  if (missing.length > 0) {
+    throw new Error(
+      `case ${job.id}: its backend's LinkProbe declares no ${missing.join(', ')} - ` +
+      'this harness knows no backend selectors and cannot guess one'
+    );
+  }
+
   return {
-    canvas: job.canvas || DEFAULTS.canvas,
-    menu: menu,
-    open: job.open || menu,
-    button: job.button || DEFAULTS.button,
-    ready: job.ready || DEFAULTS.ready,
-    hover: job.hover || DEFAULTS.hover
+    canvas: probe.Canvas,
+    menu: probe.Menu,
+    open: probe.Open || probe.Menu,
+    button: probe.Button,
+    ready: probe.Ready,
+    hover: probe.Hover || 0,
+    settle: probe.Settle || SETTLE_MS
   };
 }
 
@@ -109,16 +128,20 @@ async function runCase(browser, job) {
   // than ignoring, so a hung dialog cannot be mistaken for a passing case.
   page.on('dialog', async d => { dialogs.push(d.message()); await d.dismiss(); });
 
-  const sel = selectorsFor(job);
   const result = { case: job.id, ok: false, message: '', menu: [], dialogs, errors };
 
   try {
+    // Inside the try, so a job that declares too little fails as a named case
+    // rather than as a crash with a context still open.
+    const sel = selectorsFor(job);
+
     await page.goto('file:///' + job.file.replace(/\\/g, '/'), { waitUntil: 'load', timeout: READY_TIMEOUT_MS });
     await page.waitForSelector(sel.ready, { timeout: READY_TIMEOUT_MS });
     // A force simulation is still moving when the canvas first exists, so a
-    // fixed settle is not enough for every backend. The job may ask for longer;
-    // the default is the one cytoscape has always used.
-    await page.waitForTimeout(job.settle || SETTLE_MS);
+    // fixed wait is not enough for every backend and a backend that needs
+    // longer declares Settle. This floor is the harness's own and names no
+    // backend: it is how long any page is given to stop moving.
+    await page.waitForTimeout(sel.settle);
 
     const opened = await openNodeMenu(page, sel);
     if (!opened) {
