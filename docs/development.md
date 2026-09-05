@@ -88,11 +88,27 @@ line. `node --check` cannot see that and this can.
 
 What "alive" means is declared per backend, as data, in `templateset.psd1` under
 `Smoke` — the harness names no selector and knows no backend. A backend with no
-`Smoke` block fails the task rather than being skipped. Cytoscape draws into a
-canvas, so a DOM assertion cannot tell a graph from a blank rectangle; its
-`CanvasGrowth` requires a PNG of `#cy` to be N times larger than the same
+`Smoke` block fails the task rather than being skipped. A canvas backend needs
+more than a DOM assertion, because a DOM assertion cannot tell a graph from a
+blank rectangle, and there are **two floors for that** — a backend declares
+whichever one suits it, and the harness reports both numbers for every canvas on
+every run whichever one gated.
+
+`CanvasGrowth` requires a PNG of the canvas to be N times larger than the same
 selector in that backend's render of an **empty payload**, rendered and measured
-in the same run. A byte constant cannot survive the move to another machine —
+in the same run. `cytoscape` uses it, and it works there because an empty
+cytoscape render really is nearly blank — a precondition `smoke.cjs` now
+*measures* rather than assumes, refusing the metric when the empty capture
+exceeds 0.05 PNG bytes per pixel.
+
+`CanvasDelta` compares those same two pictures **against each other**: the
+fraction of the captured rectangle whose pixels differ by more than 12/255 on any
+channel. `forcegraph3d` uses it, and had to from v0.17.0, because anything
+*painted* inside the rectangle — a gradient, a vignette, a ruled floor — is in
+both pictures and so lands in a ratio's numerator and denominator together. The
+same 3D drawing scored 4.32 on a flat ground and 1.05 under a vignette, below the
+2.25 floor that shipped, on a page drawing perfectly. A difference cancels the
+background instead; the same two cases read 0.0295 and 0.0258. A byte constant cannot survive the move to another machine —
 viewport, device pixel ratio, fonts and Chromium version all change it — so the
 floor is measured where the check runs. Viewport and `deviceScaleFactor` are
 pinned in the harness and echoed into its report; two runs that cannot be

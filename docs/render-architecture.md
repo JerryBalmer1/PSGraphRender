@@ -452,6 +452,28 @@ so the floor comes from wherever the check is executing. The requirement has
 daylight in it — four against a measured twelve — because a ratio that needs
 precision is a constant wearing a disguise.
 
+**2026-09-05 — A floor that a background can blind is not a floor.**
+`CanvasGrowth` divides a drawn capture's PNG size by an empty one's, and anything
+painted inside the captured rectangle is in *both* pictures — so it lands in the
+numerator and the denominator together and drives the ratio toward 1. Measured on
+one 3D document with everything else held still: 4.32 on a flat ground, **1.05
+under a vignette**, against a declared floor of 2.25. The gate could not tell a
+drawn view from a blank one under exactly the backgrounds the report wanted, and
+`styles/base.css` had said so in prose since v0.15.0 without anything turning the
+sentence into a check.
+
+`CanvasDelta` compares the two captures against each other instead — the fraction
+of the rectangle whose pixels differ by more than 12/255 on any channel — so an
+identical background contributes nothing and cancels. Decoded in the browser that
+is already open, because the harness declares one dependency and the whole claim
+is that it needs no other.
+
+**The metric is per backend rather than global**, because changing it changes
+what every declared floor means. `cytoscape` keeps the ratio, where an empty
+render really is nearly blank; `smoke.cjs` measures that precondition rather than
+assuming it. Both numbers print for every canvas on every run whichever one
+gated, so the next floor is re-pinned from measurement rather than from argument.
+
 **2026-08-27 — The browser harness runs on one CI leg, and that is configured
 rather than omitted.** What a browser does with the page does not vary by which
 PowerShell produced it, so three installs buy nothing; every gate that does vary
