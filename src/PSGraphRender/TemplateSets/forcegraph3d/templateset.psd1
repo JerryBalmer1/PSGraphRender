@@ -150,4 +150,42 @@
         # sparsely by nature rather than from a payload that happens to be thin.
         CanvasGrowth = @{ '#fg' = 2 }
     }
+
+    # How a browser reaches a node's actions on THIS backend, as data, for the
+    # same reason Smoke is here. tests/browser/link-mode.cjs reads it and knows
+    # nothing else about any backend.
+    #
+    # It lived in a $LINK_PROBE map in PSGraphRender.build.ps1 until v0.15.1,
+    # which made the build task a second place this backend's shape was written
+    # down - the defect the Smoke block above exists to prevent. Only a backend
+    # declaring SlotsBySetting.LinkMode needs one, and the task throws by name
+    # for one that declares modes and no way to drive them.
+    LinkProbe = @{
+        # The element to click in.
+        Canvas = '#fg'
+
+        # The button that opens a node's actions, the container they land in,
+        # and what proves one was selected. Open and Menu are DIFFERENT here:
+        # this backend opens a panel that names the item and then lists what it
+        # offers, and in `none` mode the actions are empty by design while the
+        # panel is not. Reading "did it open" off the action list would make
+        # correct `none` behaviour indistinguishable from a click that landed
+        # on nothing.
+        Button = 'left'
+        Menu   = '#fg-actions'
+        Open   = '#fg-panel'
+
+        # What must exist before the probe touches anything.
+        Ready  = '#fg canvas'
+
+        # A force simulation is still moving when the canvas first exists, and
+        # the view fits itself when it stops. The probe clicks a point, so it
+        # clicks after the item has stopped arriving at it.
+        Settle = 3000
+
+        # And this backend resolves what is under the pointer in its render
+        # loop rather than on the event, so the pointer has to be somewhere
+        # before the press.
+        Hover  = 150
+    }
 }

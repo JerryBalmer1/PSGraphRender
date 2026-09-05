@@ -131,4 +131,28 @@
         # 12.2. Four is not a marginal call.
         CanvasGrowth       = @{ '#cy' = 4 }
     }
+
+    # How a browser reaches a node's actions on THIS backend, as data, for the
+    # same reason Smoke is here. tests/browser/link-mode.cjs reads it and knows
+    # nothing else about any backend.
+    #
+    # It lived in a $LINK_PROBE map in PSGraphRender.build.ps1 until v0.15.1,
+    # which made the build task a second place this backend's shape was written
+    # down - the defect the Smoke block above exists to prevent. Only a backend
+    # declaring SlotsBySetting.LinkMode needs one, and the task throws by name
+    # for one that declares modes and no way to drive them.
+    LinkProbe = @{
+        # The element to click in.
+        Canvas = '#cy'
+
+        # The button that opens a node's actions, and the container they land
+        # in. `Open` is what proves a node was selected and defaults to Menu:
+        # they are the same element for a context menu, and different for a
+        # panel that names the item and then lists what it offers.
+        Button = 'right'
+        Menu   = '#node-menu'
+
+        # What must exist before the probe touches anything.
+        Ready  = '#cy canvas'
+    }
 }
