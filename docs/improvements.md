@@ -60,7 +60,7 @@ not acquire reasons to change. It cannot go in that file and it cannot name
 `templateset.psd1`. **That is a data shape, which the charter says to log and
 stop on.** *Ledger `0013-t2`.*
 
-### The link probe names each backend's selectors in the build task — **medium**
+### The link probe names each backend's selectors in the build task — **closed in 0.15.1**
 
 `./build.ps1 -Task TestLinkMode` carries a `$LINK_PROBE` map: per backend, the
 element to click in, the button that opens its actions, and the container they
@@ -69,14 +69,43 @@ stays backend-agnostic — but the map itself is **a second place a backend's sh
 is written down**, which is exactly the defect the `Smoke` block was invented to
 remove from `tests/browser/smoke.cjs`.
 
-It belongs in each `templateset.psd1`, beside `Smoke`, for the same reason
+~~It belongs in each `templateset.psd1`, beside `Smoke`, for the same reason
 `Smoke` is there. It is not there because putting it there means editing
 `cytoscape/templateset.psd1`, and pass 0049's no-regression control is that
 `cytoscape` does not move at all. The task throws by name for a backend it does
 not know how to reach, so a fourth backend cannot arrive with its modes silently
-unchecked — but that is a guard against forgetting, not the fix.
+unchecked — but that is a guard against forgetting, not the fix.~~
 
 *Found while adding the third backend, pass `0049`.*
+
+**Closed by pass 0050 at v0.15.1, and the count was wrong: there were three
+copies, not two.** `tests/browser/link-mode.cjs` also carried a `DEFAULTS`
+object — `{ canvas: '#cy', menu: '#node-menu', button: 'right', ready: '#cy
+canvas' }` — so cytoscape's shape was written down in the harness as well, and
+any backend whose job said nothing was driven against cytoscape's fallbacks. The
+entry above saw the map and not the fallbacks, which is what finding a duplicate
+by looking at one of its copies costs.
+
+`LinkProbe` now sits beside `Smoke` in every backend that declares
+`SlotsBySetting.LinkMode`, and reaches the harness whole and verbatim exactly as
+`Smoke` does. `$LINK_PROBE` is gone, `DEFAULTS` is gone, and `Canvas`, `Menu`,
+`Button` and `Ready` are required — missing means failing by name. Two fallbacks
+remain and neither names anything: `Open` falls back to `Menu`, which is a
+relationship between two fields the job did supply, and `Hover` to no wait at
+all.
+
+**The guard survives, inverted.** It fired for a backend absent from the map; it
+now fires for a manifest that declares link modes and no `LinkProbe`, naming the
+manifest and the missing key. `tests/LinkProbe.Tests.ps1` turns that red at build
+time rather than forty seconds into a browser run, and it derives the selectors
+it forbids in the harness **from the manifests**, so a fourth backend's shape is
+covered the day it is declared instead of the day somebody remembers to add it.
+
+**A fourth backend was demonstrated rather than argued.** A scratch copy of
+`cytoscape` declaring link modes and no probe failed the build by name in two
+seconds, before a browser started; the same directory with a `LinkProbe` block
+ran all five link-mode cases green. Fifteen cases, one data edit, no `.ps1` and
+no harness change.
 
 ### The backlog was not swept when the threads were — **small**
 

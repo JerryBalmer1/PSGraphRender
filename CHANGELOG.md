@@ -20,6 +20,48 @@ v0.13.0; they are a record, not a process.
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-09-04
+
+The link probe becomes backend data, and the duplicate turned out to have three
+copies rather than two.
+
+### Changed
+
+- **`LinkProbe` in each backend's `templateset.psd1`, beside `Smoke`.** Where a
+  browser clicks to reach a node's actions is now declared by the backend that
+  has those actions, and `./build.ps1 -Task TestLinkMode` reads it off the
+  manifest it already imports. The `$LINK_PROBE` map in the build task is gone.
+  It was **a second place a backend's shape was written down**, which is exactly
+  what the `Smoke` block exists to prevent, and it was logged rather than fixed
+  at v0.15.0 because pass 0049's no-regression control was that `cytoscape` did
+  not move at all.
+- **`tests/browser/link-mode.cjs` names no backend selector.** Its `DEFAULTS`
+  object held cytoscape's canvas, menu, ready selector and mouse button, so any
+  backend whose job omitted a field was driven against cytoscape's shape — a
+  **third** copy the backlog entry had not counted, found by deriving the check
+  from the manifests instead of from the entry. `Canvas`, `Menu`, `Button` and
+  `Ready` are required and missing fails by name. `Open` still falls back to
+  `Menu` and `Hover` to no wait, and neither of those names anything.
+- **The throw-by-name guard, inverted.** It fired for a backend absent from the
+  map; it fires for a manifest declaring link modes and no `LinkProbe`, naming
+  the manifest and the missing key, before a browser starts.
+
+### Added
+
+- **`tests/LinkProbe.Tests.ps1`.** Every backend declaring
+  `SlotsBySetting.LinkMode` declares a usable `LinkProbe`; no probe map in the
+  build task; no declared selector in the harness, **derived from the manifests**
+  so a fourth backend is covered the day it is declared; and the block is
+  invisible to assembly, asserted by rendering with it stripped and carrying its
+  own red-capability in a `Slots` edit that does move the document.
+
+**No rendered byte moved.** `LinkProbe` is a top-level key and
+`Get-RenderTemplateSet` reads `Layout`, `Slots` and `SlotsBySetting` only. All
+three backends render byte-identically to v0.15.0, the editor-mode byte gate in
+`tests/LinkMode.Tests.ps1` is untouched, and the ten `TestLinkMode` cases are the
+same ten with the same results.
+
+*Ledger `0050`.*
 ## [0.15.0] - 2026-09-04
 
 A third rendering backend, and the seam held.

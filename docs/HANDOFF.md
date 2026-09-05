@@ -135,14 +135,54 @@ the gap that made the requirement untested against a sparse payload.
 
 **New in the build.** `./build.ps1 -Task TestLinkMode` now runs its five
 behaviours against **every** backend that declares link modes, discovered from
-the manifests. Where each backend's actions are reached is a map in that task —
+the manifests. ~~Where each backend's actions are reached is a map in that task —
 and that map is a second place a backend's shape is written down, which is
 logged in `docs/improvements.md` rather than left as a silent trade. It is there
-because `cytoscape/templateset.psd1` could not move this pass.
+because `cytoscape/templateset.psd1` could not move this pass.~~ *That map is
+gone as of pass 0050; see below.*
 
 **Examples.** Eight. `examples/threed/forcegraph3d.html` is the first that
 varies the backend rather than a setting: the same payload the three layout rows
 draw, rendered by a different directory.
+
+### Pass 0050
+
+**Where it is.** v0.15.1. Three rendering backends, and each one now says how to
+drive it.
+
+**What it did.** Moved the link probe out of the build task and into the data.
+`LinkProbe` sits beside `Smoke` in `cytoscape/templateset.psd1` and
+`forcegraph3d/templateset.psd1` — the element to click in, the button that opens
+a node's actions, the container they land in, and what must exist first — and
+`./build.ps1 -Task TestLinkMode` reads it off the manifest it already imported.
+The `$LINK_PROBE` map is gone.
+
+**There were three copies, not two.** The backlog entry that logged this saw the
+map in the build task. `tests/browser/link-mode.cjs` also carried a `DEFAULTS`
+object holding cytoscape's canvas, menu, ready selector and mouse button, so any
+backend whose job said nothing was being driven against cytoscape's shape. That
+is the thing worth knowing here: **an entry written from one copy of a duplicate
+undercounts it**, and the way the third copy surfaced was deriving the check
+from the manifests rather than from the entry.
+
+`Canvas`, `Menu`, `Button` and `Ready` are required now and missing means
+failing by name. Two fallbacks remain and neither names anything: `Open` falls
+back to `Menu` — a relationship between two fields the job did supply — and
+`Hover` to no wait at all. `SETTLE_MS` stays as the harness's own floor, which
+is a wait rather than a selector.
+
+**The guard survives, inverted.** It threw for a backend absent from the map; it
+throws for a manifest that declares link modes and no `LinkProbe`, naming the
+manifest and the key. Demonstrated both ways: a scratch copy of `cytoscape`
+without a probe failed the build in two seconds before a browser started, and
+the same directory with one ran five link-mode cases green — fifteen cases from
+a data edit, with no `.ps1` and no harness change.
+
+**Nothing rendered moved.** `LinkProbe` is a top-level manifest key and
+`Get-RenderTemplateSet` reads `Layout`, `Slots` and `SlotsBySetting` only.
+`tests/LinkProbe.Tests.ps1` asserts that by stripping the block from a scratch
+copy and comparing the two documents, and it carries its own red-capability: a
+`Slots` edit to the same fixture does move the document.
 
 ## What this is
 
@@ -163,7 +203,7 @@ skipping, deliberately.
 
 `contract/viewmodel.schema.json` is the boundary and it is the product. It is
 JSON Schema, language-neutral, and **versioned independently of the module**: it
-is at **1.1.0** while the module is at 0.15.0.
+is at **1.1.0** while the module is at 0.15.1.
 
 Change protocol:
 
@@ -225,6 +265,7 @@ are.** Everything else follows from that one rule.
 | `v0.13.0` | this handoff. Vendor tooling added, resident workflow removed, knowledge archived |
 | `v0.14.0` | link mode: a node link is configuration rather than a hardcoded scheme. First `src/` change since the handoff |
 | `v0.15.0` | a third backend, `forcegraph3d`. The first evidence that a template set is a rendering backend that does not come from a trivial one |
+| `v0.15.1` | the link probe becomes backend data. `LinkProbe` beside `Smoke`; neither the build task nor the browser harness names a selector any more |
 
 The module version and the contract version move independently. For the module:
 **patch** for a normal implementation, **minor** when a template set, a setting
