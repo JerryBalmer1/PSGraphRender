@@ -589,6 +589,240 @@ task TestLinkMode Build, {
     }
 }
 
+# What the page DRAWS, as opposed to what its configuration says. Separate from
+# TestBrowser and TestLinkMode because it asks a third question: TestBrowser
+# establishes that a page came alive, TestLinkMode that the link a live page
+# offers is the one configuration asked for, and this that the DRAWING a live
+# page makes is the one configuration asked for.
+#
+# Neither of the other two can see it. Both are satisfied by a page that draws
+# every item as the same blue ball, which is exactly what this backend did
+# until v0.16.0.
+#
+# A backend joins by declaring a LookProbe block beside Smoke and LinkProbe.
+# Nothing here and nothing in tests/browser/look.cjs names a selector.
+task TestLook Build, {
+    $node = Resolve-BuildTool -Name Node -Command node -Purpose 'a drawing is not a drawing until a browser makes one'
+
+    $harness = Join-Path $TestsRoot 'browser'
+    $playwright = Join-Path $harness 'node_modules/playwright'
+    if (-not (Test-Path -LiteralPath $playwright)) {
+        throw ('The browser harness is not installed. Run ./build.ps1 -Task BootstrapBrowser first. ' +
+            'This task fails rather than skipping, deliberately.')
+    }
+
+    Import-Module (Join-Path $OutRoot "$ModuleName.psd1") -Force -ErrorAction Stop
+
+    $scratch = Join-Path ([System.IO.Path]::GetTempPath()) "psgraphrender-look-$PID"
+    New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+
+    try {
+        $meta = [pscustomobject]@{ contractVersion = '1.0.0'; title = 'Look'; rootPath = 'C:/fixtures/Look' }
+
+        # A HUB and three spokes, plus two more classifications off to the side.
+        # The hub is what makes "highlight the neighbours" a different number
+        # from "highlight the item": hovering it must light five things, and
+        # hovering a leaf must light two, so a mode that quietly highlights
+        # everything and a mode that quietly highlights one cannot both pass.
+        #
+        # Five classifications, four of them named by the shipped mapping and
+        # `Widget` deliberately not, because a producer may send anything and
+        # the fallback is the only branch that is always reachable.
+        $payload = [pscustomobject]@{
+            nodes = @(
+                [pscustomobject]@{ id = 'hub'; name = 'Invoke-Hub'; kind = 'Function'; path = 'src/Hub.ps1'
+                    startLine = 1; isExported = $true; metrics = [pscustomobject]@{ blastRadius = 40; reach = 12 }
+                }
+                [pscustomobject]@{ id = 'k2'; name = 'ThingClass'; kind = 'Class'; path = 'src/Thing.ps1'
+                    startLine = 2; isExported = $false; metrics = [pscustomobject]@{ blastRadius = 1; reach = 1 }
+                }
+                [pscustomobject]@{ id = 'k3'; name = 'ThingEnum'; kind = 'Enum'; path = 'src/Enum.ps1'
+                    startLine = 3; isExported = $false; metrics = [pscustomobject]@{ blastRadius = 2; reach = 1 }
+                }
+                [pscustomobject]@{ id = 'k4'; name = 'Setup'; kind = 'Script'; path = 'src/Setup.ps1'
+                    startLine = 4; isExported = $true; metrics = [pscustomobject]@{ blastRadius = 6; reach = 3 }
+                }
+                [pscustomobject]@{ id = 'k5'; name = 'Gadget'; kind = 'Widget'; path = 'src/Gadget.ps1'
+                    startLine = 5; isExported = $false; metrics = [pscustomobject]@{ blastRadius = 3; reach = 2 }
+                }
+                [pscustomobject]@{ id = 'k6'; name = 'Doohickey'; kind = 'Widget'; path = 'src/Doo.ps1'
+                    startLine = 6; isExported = $false; metrics = [pscustomobject]@{ blastRadius = 20; reach = 8 }
+                }
+            )
+            links = @(
+                [pscustomobject]@{ source = 'hub'; target = 'k2'; kind = 'Calls'; resolution = 'Certain' }
+                [pscustomobject]@{ source = 'hub'; target = 'k3'; kind = 'Calls'; resolution = 'Ambiguous' }
+                [pscustomobject]@{ source = 'hub'; target = 'k4'; kind = 'Calls'; resolution = 'Certain' }
+                [pscustomobject]@{ source = 'k5'; target = 'k6'; kind = 'Calls'; resolution = 'Certain' }
+            )
+        }
+
+        function New-LookSet {
+            param([string] $Name, [hashtable] $Setting, [string] $Backend)
+
+            $dest = Join-Path $scratch "set-$Name"
+            if (Test-Path -LiteralPath $dest) { Remove-Item -LiteralPath $dest -Recurse -Force }
+            Copy-Item -LiteralPath (Join-Path $OutRoot "TemplateSets/$Backend") -Destination $dest -Recurse -Force
+
+            # Every key is written into the file the SCHEMA says it belongs in.
+            # Writing a theme value into settings.psd1 applies it and warns on
+            # every render, which is a green gate over a noisy build.
+            $schema = (Import-PowerShellDataFile -LiteralPath (Join-Path $dest 'Config/settings.schema.psd1')).Entries
+            foreach ($group in @('Settings', 'Theme')) {
+                $file = Join-Path $dest ('Config/' + $(if ($group -eq 'Settings') { 'settings.psd1' } else { 'theme.psd1' }))
+                $text = [System.IO.File]::ReadAllText($file)
+                $touched = $false
+
+                foreach ($key in ($Setting.Keys | Sort-Object)) {
+                    if (-not $schema.Contains($key)) { throw "No schema entry for '$key'; a probe may only move declared settings." }
+                    if ($schema[$key].In -ne $group) { continue }
+
+                    $value = $Setting[$key]
+                    $assignment = if ($value -is [string]) { "    $key = '$($value.Replace("'", "''"))'" }
+                    else { "    $key = $value" }
+
+                    # REPLACE a shipped key, append only a new one. A duplicate
+                    # key is a parse error rather than an override: the file then
+                    # fails to load, the resolver warns and falls back to schema
+                    # defaults, and every case renders the DEFAULT look while the
+                    # report says the feature is missing.
+                    if ($text -match "(?m)^\s*$key\s*=") {
+                        $text = $text -replace "(?m)^\s*$key\s*=.*$", $assignment.Replace('$', '$$')
+                    }
+                    else {
+                        $text = $text.Insert($text.LastIndexOf('}'), $assignment + "`n")
+                    }
+                    $touched = $true
+                }
+                if ($touched) { [System.IO.File]::WriteAllText($file, $text) }
+            }
+            $dest
+        }
+
+        function New-LookDocument {
+            param([string] $Name, [hashtable] $Setting, [string] $Backend)
+
+            $set = New-LookSet -Name "$Backend-$Name" -Setting $Setting -Backend $Backend
+            $file = Join-Path $scratch "$Backend-$Name.html"
+            [System.IO.File]::WriteAllText($file, (New-RenderDocument -ViewModel $payload -Meta $meta `
+                        -Title "look $Name" -TemplateSetPath $set))
+            $file
+        }
+
+        # Which backends have a look to check, discovered from the manifests.
+        # A backend that draws into a canvas and declares no LookProbe is
+        # skipped rather than failed: `plain` renders a table and has no
+        # geometry, no hover and no camera, and demanding a probe of it would be
+        # this file inventing a requirement the backend never took on.
+        $probes = @(
+            foreach ($backend in (Get-ChildItem -LiteralPath (Join-Path $OutRoot 'TemplateSets') -Directory)) {
+                $manifestPath = Join-Path $backend.FullName 'templateset.psd1'
+                if (-not (Test-Path -LiteralPath $manifestPath)) { continue }
+                $manifest = Import-PowerShellDataFile -LiteralPath $manifestPath
+                if (-not $manifest.Contains('LookProbe')) { continue }
+                [pscustomobject]@{ Name = $backend.Name; Probe = $manifest.LookProbe }
+            }
+        )
+        if ($probes.Count -eq 0) {
+            throw ('No backend declares a LookProbe. The look gate found nothing to drive, which is not the ' +
+                'same as passing.')
+        }
+
+        $cases = @(
+            foreach ($p in $probes) {
+                $shipped = Import-PowerShellDataFile -LiteralPath (Join-Path $OutRoot "TemplateSets/$($p.Name)/Config/theme.psd1")
+                $fallback = $shipped.NodeShapeFallback
+
+                # -- B: the mapping was resolved, per item, and an unmapped
+                #       classification took the declared fallback.
+                @{
+                    kind = 'shapes'; backend = $p.Name; name = 'shapes-resolved'; probe = $p.Probe
+                    path = (New-LookDocument -Name 'shapes-resolved' -Setting @{} -Backend $p.Name)
+                    expect = @{ distinctShapes = 4; fallbackFor = 'Widget'; fallbackShape = $fallback }
+                }
+
+                # -- B: and the geometry reached the DRAWING. One theme value
+                #       apart; a byte-identical picture means the mapping was
+                #       resolved into the DOM and never into a triangle.
+                @{
+                    kind = 'pixels'; backend = $p.Name; name = 'shapes-drawn'; probe = $p.Probe
+                    what = 'a kind-to-shape mapping against one shape for every kind'
+                    path = (New-LookDocument -Name 'shape-mapped' -Setting @{} -Backend $p.Name)
+                    other = (New-LookDocument -Name 'shape-uniform' -Setting @{ KindShape = '' } -Backend $p.Name)
+                }
+                @{
+                    kind = 'pixels'; backend = $p.Name; name = 'metric-size-drawn'; probe = $p.Probe
+                    what = 'a declared metrics size key against uniform sizing'
+                    path = (New-LookDocument -Name 'size-metric' -Setting @{ NodeSizeMetric = 'blastRadius'; NodeSizeMetricMax = 3.5 } -Backend $p.Name)
+                    other = (New-LookDocument -Name 'size-uniform' -Setting @{ NodeSizeMetric = '' } -Backend $p.Name)
+                }
+                @{
+                    kind = 'pixels'; backend = $p.Name; name = 'glow-drawn'; probe = $p.Probe
+                    what = 'a glow at full strength against none'
+                    path = (New-LookDocument -Name 'glow-on' -Setting @{ GlowStrength = 2.4; GlowSize = 3.0; GlowOpacity = 0.6 } -Backend $p.Name)
+                    other = (New-LookDocument -Name 'glow-off' -Setting @{ GlowStrength = 0; GlowSize = 1.0; GlowOpacity = 0 } -Backend $p.Name)
+                }
+
+                # -- C: a setting reached the LIVE object that consumes it,
+                #       read back off that object rather than off CONFIG.
+                foreach ($live in @(
+                        @{ n = 'zoom-speed'; s = @{ ZoomSpeed = 0.35 }; f = 'zoomSpeed'; v = 0.35 }
+                        @{ n = 'rotate-speed'; s = @{ RotateSpeed = 2.0 }; f = 'rotateSpeed'; v = 2 }
+                        @{ n = 'particles'; s = @{ ParticleCount = 5 }; f = 'particleCount'; v = 5 }
+                        @{ n = 'fog'; s = @{ FogDensity = 0.004 }; f = 'fogDensity'; v = 0.004 }
+                        @{ n = 'button'; s = @{ NodeActionButton = 'right' }; f = 'nodeActionButton'; v = 'right' }
+                    )) {
+                    @{
+                        kind = 'live'; backend = $p.Name; name = "live-$($live.n)"; probe = $p.Probe
+                        field = $live.f; expect = @{ value = $live.v }
+                        path = (New-LookDocument -Name "live-$($live.n)" -Setting $live.s -Backend $p.Name)
+                    }
+                }
+
+                # -- C: hover does what the setting says, driven through a real
+                #       pointer. Three modes, three different numbers.
+                foreach ($hover in @(
+                        @{ n = 'off'; s = @{ HoverMode = 'none'; HoverTooltip = 'none' }; h = 0; t = ''; tt = 'none' }
+                        @{ n = 'node'; s = @{ HoverMode = 'node'; HoverTooltip = 'label' }; h = 'node'; t = $null; tt = 'label' }
+                        @{ n = 'neighbors'; s = @{ HoverMode = 'neighbors'; HoverTooltip = 'labelAndKind' }; h = 'neighbors'; t = $null; tt = 'labelAndKind' }
+                    )) {
+                    $expect = @{ highlights = $hover.h; tooltip = $hover.tt }
+                    if ($null -ne $hover.t) { $expect['tooltipContains'] = $hover.t }
+                    @{
+                        kind = 'hover'; backend = $p.Name; name = "hover-$($hover.n)"; probe = $p.Probe
+                        expect = $expect
+                        path = (New-LookDocument -Name "hover-$($hover.n)" -Setting $hover.s -Backend $p.Name)
+                    }
+                }
+            }
+        )
+
+        $jobFile = Join-Path $scratch 'job.json'
+        [System.IO.File]::WriteAllText($jobFile, (@{ cases = $cases } | ConvertTo-Json -Depth 12))
+
+        $output = & $node.Path (Join-Path $harness 'look.cjs') $jobFile 2>&1
+        $exit = $LASTEXITCODE
+        $text = ($output | Out-String)
+
+        if ($exit -ne 0) {
+            Write-Host $text
+            throw "The look probe reported failures across $($cases.Count) case(s)."
+        }
+
+        $report = $text | ConvertFrom-Json
+        foreach ($o in $report.observed) {
+            $detail = @($o.PSObject.Properties | Where-Object { $_.Name -ne 'case' } |
+                    ForEach-Object { "$($_.Name)=$(if ($_.Value -is [array]) { $_.Value -join '/' } else { $_.Value })" }) -join ' '
+            Write-Build Green "  look $($o.case): $detail"
+        }
+        Write-Build Green ("Look: $($report.cases) case(s) drew what configuration asked for, network blocked, " +
+            "across $($probes.Count) backend(s) at $($report.viewport.width)x$($report.viewport.height).")
+    }
+    finally {
+        Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 task Build Clean, {
     New-Item -ItemType Directory -Path $OutRoot -Force | Out-Null
 
