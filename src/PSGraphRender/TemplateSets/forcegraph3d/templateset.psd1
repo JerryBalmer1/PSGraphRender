@@ -186,9 +186,29 @@
         # direction or the other, so it was measured again on what ships:
         #
         #   fixture                 run 1    run 2    run 3
-        #   ambiguous  (6/6)        __RM1__  __RM2__  __RM3__
-        #   sample-module (9/5)     __RM4__  __RM5__  __RM6__
-        #   infrastructure (17/20)  __RM7__  __RM8__  __RM9__
+        #   ambiguous  (6/6)        0.0638   0.0601   0.0638
+        #   sample-module (9/5)     0.0324   0.0325   0.0325
+        #   infrastructure (17/20)  0.0409   0.0409   0.0409
+        #
+        # EVERY FIXTURE WENT UP, and it is worth saying why rather than being
+        # pleased about it: the new default draws MORE - a ruled floor, brighter
+        # connectors, more particles - so there are more changed pixels between
+        # the empty render and the drawn one. The thinnest reading moved from
+        # 0.0271 to 0.0324, so the 0.015 floor now has 2.16x of daylight rather
+        # than 1.81x.
+        #
+        # THE FLOOR DID NOT MOVE, and that is a decision rather than an
+        # oversight. It is pinned under the THINNEST thing this backend has ever
+        # been observed to draw, and that observation is still 0.0271 on the
+        # v0.16.0 look - a payload rendered by a caller who turns the
+        # environment off is drawing exactly that, and B6 in the catalogue is a
+        # picture of it. Raising the floor to suit a richer default would gate
+        # on the decoration rather than on the drawing.
+        #
+        # And the number the OLD metric would report on this same default is in
+        # the byte column of every run: 1.12 to 1.20, against the 2.25 that
+        # shipped at v0.16.0. The gate this pass replaced would fail the product
+        # this pass ships.
         CanvasDelta = @{ '#fg' = 0.015 }
     }
 

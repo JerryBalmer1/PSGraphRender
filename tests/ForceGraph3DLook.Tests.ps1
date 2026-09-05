@@ -601,13 +601,46 @@ Describe 'Acceptance E: nothing else moved' {
         $script:Manifest.LinkProbe.Button | Should-Be $settings.NodeActionButton -Because 'a probe pressing a button the document no longer listens on is a green gate over a dead feature'
     }
 
-    It 're-measured the canvas-growth floor under the new look' {
+    It 're-measured the canvas floor under the new look' {
         # A changed look with an unexamined floor is a gate quietly wrong in
         # either direction. The manifest records the measurement the way 3.50
         # over 2 was recorded; this asserts the record was revisited, not that
         # the number moved.
+        #
+        # IT USED TO MATCH `CanvasGrowth` AND `v0.16.0`, AND AT v0.17.0 BOTH OF
+        # THOSE WENT ON PASSING FOR THE WRONG REASON. The key was renamed to
+        # `CanvasDelta` and removed outright, and the word survived only in the
+        # comment explaining its removal; `v0.16.0` survived as the label on a
+        # historical table. So this assertion was green over a floor whose name
+        # it could no longer find and a look it was no longer measured under -
+        # which is the exact failure it exists to prevent, one release later and
+        # aimed at itself.
+        #
+        # Both halves are now derived rather than written down: the key is
+        # whichever one the manifest actually gates this backend on, and the
+        # version is the module's own.
         $text = [System.IO.File]::ReadAllText($script:ManifestPath)
-        $text | Should-MatchString '(?s)CanvasGrowth'
-        $text | Should-MatchString 'v0\.16\.0' -Because 'the floor comment must say which look it was measured under'
+        # Parenthesised, because `@('a', 'b' | Where-Object {...})` binds the
+        # pipeline to 'b' alone and would have tested one of the two names.
+        $gatedOn = @(@('CanvasDelta', 'CanvasGrowth') |
+                Where-Object { $script:Manifest.Smoke.Contains($_) -and @($script:Manifest.Smoke[$_].Keys).Count })
+        @($gatedOn).Count | Should-Be 1 -Because 'exactly one floor gates a selector; two is two answers to one question'
+        $text | Should-MatchString ([regex]::Escape($gatedOn[0])) -Because 'the floor the gate reads must be the floor the comment measures'
+
+        $version = (Import-PowerShellDataFile -LiteralPath (
+                Join-Path $script:RepoRootDir 'src/PSGraphRender/PSGraphRender.psd1')).ModuleVersion
+        $text | Should-MatchString ([regex]::Escape("v$version")) `
+            -Because "the floor comment must say which look it was measured under, and this release is v$version"
+
+        # AND THE TABLE IS FILLED IN. v0.17.0 shipped part 1 with a
+        # re-measurement table of `__RM1__` through `__RM9__` - written to be
+        # completed once part 2 had changed the default, and committed unfilled.
+        # Nothing caught it, because nothing was reading the record; it was
+        # found by a person looking at the file. A placeholder in a measurement
+        # is worse than no measurement, because it occupies the space where one
+        # would be noticed missing.
+        $placeholders = @([regex]::Matches($text, '__[A-Z][A-Z0-9_]*__') |
+                ForEach-Object { $_.Value } | Sort-Object -Unique)
+        $placeholders | Should-BeNull -Because 'a measurement table with a placeholder in it has not been measured'
     }
 }
