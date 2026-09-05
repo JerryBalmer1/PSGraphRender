@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PSGraphRender — 2D chrome idea lab</title>
+<style>
+  :root{
+    --bg:#070B14; --panel:rgba(12,19,34,.86); --line:#1C2A42;
+    --ink:#E8EEF7; --dim:#8FA0B8; --cyan:#52D8FF; --amber:#FFB454; --violet:#9D8CFF;
+  }
+  *{box-sizing:border-box; margin:0}
+  html,body{height:100%}
+  body{background:var(--bg); color:var(--ink);
+    font:14px/1.45 "Segoe UI", system-ui, sans-serif; overflow:hidden}
+
+  #bar{position:fixed; top:0; left:0; right:0; z-index:9; display:flex; gap:8px;
+    align-items:center; padding:12px 16px; background:var(--panel);
+    border-bottom:1px solid var(--line); backdrop-filter:blur(10px)}
+  #bar .t{font-weight:600; margin-right:10px}
+  #bar .sub{color:var(--dim); font-size:12.5px; margin-left:auto}
+  .tab{border:1px solid var(--line); background:rgba(20,30,50,.5); color:var(--ink);
+    border-radius:8px; padding:7px 12px; font:inherit; font-size:13px; cursor:pointer}
+  .tab[aria-pressed="true"]{border-color:var(--cyan); background:rgba(82,216,255,.12); color:#CFF3FF}
+  .tab b{color:var(--cyan); margin-right:6px}
+  .tab:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+
+  .pane{position:fixed; inset:56px 0 0 0; display:none}
+  .pane.on{display:block}
+  .pane .words{position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:9px 16px; color:var(--dim); font-size:12.5px; z-index:8; max-width:720px; text-align:center}
+  .pane .words b{color:var(--cyan)}
+
+  .graphHost{position:absolute; inset:0}
+  .graphHost svg{width:100%; height:100%}
+
+  /* G1 glass sidebar */
+  .g1side{position:absolute; top:18px; left:18px; bottom:18px; width:270px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    backdrop-filter:blur(12px); padding:16px; z-index:3}
+  .g1side h2{font-size:14px; font-weight:600; margin-bottom:2px}
+  .g1side .s{color:var(--dim); font-size:12px; margin-bottom:14px}
+  .grp{margin-bottom:14px}
+  .grp .h{font-size:12.5px; color:var(--dim); margin-bottom:6px}
+  .seg{display:flex; gap:6px; flex-wrap:wrap}
+  .seg span{border:1px solid var(--line); border-radius:7px; padding:5px 9px;
+    font-size:12px; color:var(--ink); background:rgba(20,30,50,.5)}
+  .seg span.on{border-color:var(--cyan); background:rgba(82,216,255,.12); color:#CFF3FF}
+  .kinds label{display:flex; align-items:center; gap:8px; font-size:12.5px; padding:4px 0; color:var(--ink)}
+  .sw{width:10px; height:10px; border-radius:3px; display:inline-block}
+  .searchbox{width:100%; background:rgba(7,11,20,.6); border:1px solid var(--line);
+    border-radius:8px; color:var(--ink); padding:7px 10px; font:inherit; font-size:12.5px}
+
+  /* G2 floating pills */
+  .g2top{position:absolute; top:16px; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; z-index:3}
+  .pill{background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:8px 15px; font-size:12.5px; backdrop-filter:blur(10px); color:var(--ink)}
+  .pill.on{border-color:var(--cyan); color:#CFF3FF}
+  .g2legend{position:absolute; right:16px; top:70px; background:var(--panel);
+    border:1px solid var(--line); border-radius:12px; padding:10px 12px; z-index:3;
+    backdrop-filter:blur(10px)}
+  .g2legend div{display:flex; gap:8px; align-items:center; font-size:12.5px; padding:3px 0}
+
+  /* G3 command bar */
+  .g3bar{position:absolute; top:16px; left:50%; transform:translateX(-50%);
+    width:min(680px, calc(100% - 40px)); background:var(--panel); z-index:3;
+    border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(12px);
+    display:flex; align-items:center; gap:10px; padding:10px 14px}
+  .g3bar input{flex:1; background:none; border:none; color:var(--ink); font:inherit; font-size:14px; outline:none}
+  .g3bar kbd{border:1px solid var(--line); border-radius:5px; padding:2px 7px;
+    font:11px Consolas, monospace; color:var(--dim)}
+  .g3dock{position:absolute; bottom:64px; left:50%; transform:translateX(-50%);
+    display:flex; gap:14px; background:var(--panel); border:1px solid var(--line);
+    border-radius:999px; padding:8px 18px; z-index:3; backdrop-filter:blur(10px)}
+  .g3dock span{display:flex; align-items:center; gap:7px; font-size:12.5px}
+
+  /* G4 zen */
+  .g4hint{position:absolute; top:16px; right:16px; z-index:3; color:var(--dim);
+    font-size:12px; background:var(--panel); border:1px solid var(--line);
+    border-radius:10px; padding:7px 12px; opacity:.85}
+  .g4hint kbd{border:1px solid var(--line); border-radius:4px; padding:1px 6px;
+    font:11px Consolas, monospace; color:var(--cyan)}
+</style>
+</head>
+<body>
+<div id="bar" role="tablist" aria-label="Chrome variants">
+  <span class="t">2D chrome idea lab</span>
+  <button class="tab" data-p="g1" aria-pressed="true"><b>G1</b>Glass sidebar</button>
+  <button class="tab" data-p="g2" aria-pressed="false"><b>G2</b>Floating pills</button>
+  <button class="tab" data-p="g3" aria-pressed="false"><b>G3</b>Command bar</button>
+  <button class="tab" data-p="g4" aria-pressed="false"><b>G4</b>Zen mode</button>
+  <span class="sub">G = the frame around the 2D drawing. Same graph, four frames.</span>
+</div>
+
+<section class="pane on" id="g1">
+  <div class="graphHost"></div>
+  <aside class="g1side">
+    <h2>PSGraphRender</h2>
+    <div class="s">21 items · 24 links · v0.16.0</div>
+    <div class="grp"><input class="searchbox" placeholder="Find an item…" aria-label="Find an item"></div>
+    <div class="grp"><div class="h">Order</div>
+      <div class="seg"><span class="on">Foundation</span><span>Test order</span><span>Call flow</span></div></div>
+    <div class="grp"><div class="h">Colour by</div>
+      <div class="seg"><span class="on">Kind</span><span>Dependents</span></div></div>
+    <div class="grp kinds"><div class="h">Kinds</div>
+      <label><span class="sw" style="background:#52D8FF"></span>Public function</label>
+      <label><span class="sw" style="background:#9D8CFF"></span>Private function</label>
+      <label><span class="sw" style="background:#FFB454"></span>Contract</label>
+      <label><span class="sw" style="background:#8FA0B8"></span>Document</label></div>
+  </aside>
+  <div class="words"><b>G1 — Glass sidebar.</b> Today's sidebar, re-skinned: frosted glass floating over the drawing instead of a solid gray column. Everything stays where you know it.</div>
+</section>
+
+<section class="pane" id="g2">
+  <div class="graphHost"></div>
+  <div class="g2top">
+    <span class="pill on">Foundation</span><span class="pill">Test order</span>
+    <span class="pill">Call flow</span><span class="pill">⌕ Find</span>
+  </div>
+  <div class="g2legend">
+    <div><span class="sw" style="background:#52D8FF"></span>Public</div>
+    <div><span class="sw" style="background:#9D8CFF"></span>Private</div>
+    <div><span class="sw" style="background:#FFB454"></span>Contract</div>
+    <div><span class="sw" style="background:#8FA0B8"></span>Document</div>
+  </div>
+  <div class="words"><b>G2 — Floating pills.</b> No sidebar at all: the few controls that matter float as pills over the top, a small legend hugs the corner, the drawing gets the whole screen.</div>
+</section>
+
+<section class="pane" id="g3">
+  <div class="graphHost"></div>
+  <div class="g3bar"><span style="color:var(--dim)">⌕</span>
+    <input placeholder="Type to find, filter, or switch view — “kind:contract”, “order:callflow”…" aria-label="Command input">
+    <kbd>Ctrl K</kbd></div>
+  <div class="g3dock">
+    <span><span class="sw" style="background:#52D8FF"></span>Public</span>
+    <span><span class="sw" style="background:#9D8CFF"></span>Private</span>
+    <span><span class="sw" style="background:#FFB454"></span>Contract</span>
+    <span><span class="sw" style="background:#8FA0B8"></span>Document</span>
+  </div>
+  <div class="words"><b>G3 — Command bar.</b> Search-first: one bar where you type what you want (“kind:contract”, “order:callflow”), a legend dock at the bottom. Fastest once learned.</div>
+</section>
+
+<section class="pane" id="g4">
+  <div class="graphHost"></div>
+  <div class="g4hint">Chrome hidden — press <kbd>Tab</kbd> for controls, <kbd>/</kbd> to find</div>
+  <div class="words"><b>G4 — Zen mode.</b> Nothing but the drawing. Controls appear on a keypress and leave when you're done. For screenshots, wall screens, and thinking.</div>
+</section>
+
+<script>
+(function(){
+"use strict";
+var KIND_COLOR = {pub:"#52D8FF", priv:"#9D8CFF", con:"#FFB454", doc:"#8FA0B8"};
+var nodes = [
+  {id:"New-RenderDocument", k:"pub",  x:.20, y:.42, w:190},
+  {id:"Show-RenderDocument", k:"pub", x:.20, y:.66, w:195},
+  {id:"Get-RenderTemplateSet", k:"pub", x:.46, y:.78, w:205},
+  {id:"Resolve-RenderConfiguration", k:"priv", x:.46, y:.20, w:240},
+  {id:"Assert-RenderContractVersion", k:"priv", x:.46, y:.38, w:240},
+  {id:"Test-RenderViewModel", k:"priv", x:.46, y:.56, w:195},
+  {id:"Get-HashtableValue", k:"priv", x:.72, y:.28, w:180},
+  {id:"Resolve-RenderTemplateSetPath", k:"priv", x:.72, y:.62, w:255},
+  {id:"viewmodel.schema.json", k:"con", x:.72, y:.46, w:200},
+  {id:"templateset.psd1", k:"con", x:.72, y:.80, w:165},
+  {id:"HANDOFF.md", k:"doc", x:.34, y:.88, w:125}
+];
+var links = [[0,3],[0,4],[0,5],[0,2],[1,0],[2,7],[2,9],[3,6],[4,8],[5,8],[5,6],[1,10]];
+
+function draw(host){
+  var W = host.clientWidth||1200, H = host.clientHeight||700;
+  var ns = "http://www.w3.org/2000/svg";
+  var svg = document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  var defs = document.createElementNS(ns,"defs");
+  defs.innerHTML =
+    '<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'+
+    '<path d="M0,0 L10,5 L0,10 z" fill="#3A506E"/></marker>'+
+    '<filter id="soft" x="-40%" y="-40%" width="180%" height="180%">'+
+    '<feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.45"/></filter>';
+  svg.appendChild(defs);
+  function P(n){ return {x:n.x*W, y:n.y*H}; }
+  links.forEach(function(l){
+    var a=P(nodes[l[0]]), b=P(nodes[l[1]]);
+    var p=document.createElementNS(ns,"path");
+    var mx=(a.x+b.x)/2;
+    p.setAttribute("d","M"+a.x+","+a.y+" C"+mx+","+a.y+" "+mx+","+b.y+" "+(b.x-nodes[l[1]].w/2-6)+","+b.y);
+    p.setAttribute("fill","none"); p.setAttribute("stroke","#2E4160");
+    p.setAttribute("stroke-width","1.4"); p.setAttribute("marker-end","url(#arr)");
+    svg.appendChild(p);
+  });
+  nodes.forEach(function(n){
+    var c=P(n), g=document.createElementNS(ns,"g");
+    var r=document.createElementNS(ns,"rect");
+    r.setAttribute("x",c.x-n.w/2); r.setAttribute("y",c.y-19);
+    r.setAttribute("width",n.w); r.setAttribute("height",38);
+    r.setAttribute("rx",10);
+    r.setAttribute("fill","rgba(16,26,45,.92)");
+    r.setAttribute("stroke",KIND_COLOR[n.k]); r.setAttribute("stroke-width","1.4");
+    r.setAttribute("filter","url(#soft)");
+    var t=document.createElementNS(ns,"text");
+    t.setAttribute("x",c.x); t.setAttribute("y",c.y+4);
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("fill","#E8EEF7");
+    t.setAttribute("font-size","12.5");
+    t.setAttribute("font-family","Segoe UI, system-ui, sans-serif");
+    t.textContent=n.id;
+    g.appendChild(r); g.appendChild(t); svg.appendChild(g);
+  });
+  host.innerHTML=""; host.appendChild(svg);
+}
+function drawAll(){ document.querySelectorAll(".graphHost").forEach(draw); }
+drawAll();
+window.addEventListener("resize", drawAll);
+
+document.querySelectorAll(".tab").forEach(function(t){
+  t.addEventListener("click", function(){
+    document.querySelectorAll(".tab").forEach(function(x){x.setAttribute("aria-pressed","false");});
+    t.setAttribute("aria-pressed","true");
+    document.querySelectorAll(".pane").forEach(function(p){p.classList.remove("on");});
+    document.getElementById(t.dataset.p).classList.add("on");
+    drawAll();
+  });
+});
+})();
+</script>
+</body>
+</html>
