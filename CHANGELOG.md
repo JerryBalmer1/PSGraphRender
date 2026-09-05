@@ -20,6 +20,89 @@ v0.13.0; they are a record, not a process.
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-09-04
+
+The 3D backend grows a look, an options surface and a labelled catalogue.
+**MINOR**: new setting types are added — twenty-six of them — and a new build
+task, both of which this repository's own rule (`docs/HANDOFF.md`) calls minor.
+No contract change, no `.ps1` under `src/` edited, and `cytoscape`, `plain` and
+`index.psd1` byte-identical to v0.15.1.
+
+### Added
+
+- **Shape per classification.** `KindShape` maps a producer's classifications to
+  geometry, with `NodeShapeFallback` for the ones it does not name and
+  `UnresolvedShape` for an item the renderer invented. Eight shapes:
+  sphere, box, octahedron, tetrahedron, icosahedron, cone, cylinder, torus.
+- **Size by metric.** `NodeSizeMetric` and `NodeSizeMetricMax` scale an item by
+  rank over distinct values of any metric the payload carries. Empty by default:
+  the renderer does not know what a producer's metrics mean.
+- **`isExported` and `links[].resolution` are drawn.** Two fields the viewmodel
+  has always carried and nothing rendered. `ExportedEmphasis` picks a channel;
+  `LinkResolutionColor` colours a link by the producer's own word for its
+  confidence, and only `Ambiguous` by default — it is the one value that means
+  *the producer was not sure*.
+- **Glow, depth and environment.** `GlowStrength`, `GlowSize`, `GlowOpacity`,
+  `FogDensity`, `FogColor`, `BackgroundStyle`, `BackgroundGlowColor`,
+  `ToneMappingExposure`.
+- **Link particles.** `ParticleCount`, `ParticleSpeed`, `ParticleWidth`,
+  `ParticleColor` — the one thing on the page that says which way a link points
+  without a reader chasing an arrowhead around a rotation.
+- **Interaction as configuration.** `ZoomSpeed`, `RotateSpeed`, `HoverMode`,
+  `HoverTooltip`, `NodeActionButton`, `ShowLabels`, `LabelMaxNodes`.
+- **`./build.ps1 -Task TestLook`** and `tests/browser/look.cjs`, a third browser
+  gate, driven by a **`LookProbe`** block each backend declares for itself
+  beside `Smoke` and `LinkProbe`. It exists because neither of the other two can
+  see a look: both are satisfied by a page that draws every item as the same
+  blue ball, which is what this backend did while both were green.
+- **`examples/threed/catalog.html`** — nineteen labelled variants in five
+  families, generated from `examples/threed/variants.psd1` by
+  `examples/Build-Examples.ps1 -Variant all`. `A0` is the default and is
+  asserted byte-identical to a no-overlay render. The page is never hand-written.
+
+### Changed
+
+- **The canvas-growth floor moves 2 → 2.25**, re-measured over three runs
+  because this view is no longer still after it settles — particles move the
+  drawn byte count by about 5%. Every ratio went up (thinnest 4.03, was 3.50),
+  so the floor was raised to keep the same 1.8× of daylight the manifest
+  argued for rather than inheriting a number that no longer tracked the drawing.
+- **`LinkProbe.Button` follows `NodeActionButton`.** The page binds one handler
+  rather than both, so a probe pressing the other button opens nothing — which
+  is the correct failure, and better than a gate that stays green while the
+  shipped document listens elsewhere.
+- **`examples/threed/forcegraph3d.html` and its screenshot** regenerate under
+  the new default. Every other example is byte-identical.
+
+### Fixed
+
+- **Hover highlighting reported nothing while visibly highlighting.** The
+  tooltip published the hover state again, with no set, and landed after the
+  handler that computed one. Found by the new browser gate on its first run; a
+  DOM-only check would have gone green over it.
+
+### Notes
+
+- **There is no post-processing bloom and there will not be one.**
+  `UnrealBloomPass` and `ShaderPass` are absent from `3d-force-graph@1.80.0`,
+  verified by inspection of the bytes; the composer it exposes holds only a
+  render pass. Adding one means vendoring **a second copy of three.js**, which
+  is what that bundle's own *"Multiple instances of Three.js being imported"*
+  warning exists to report. The glow is geometry instead — an emissive core in
+  an additively-blended back-face shell. **No file was vendored in this
+  release.** `docs/vendoring.md` records the whole capability inspection.
+- **`BackgroundStyle` ships `flat`, which is not the prettier answer.** A
+  gradient is in the canvas-growth floor's picture of an *empty* render as well
+  as a drawn one, so it does not move that ratio, it removes it: 3.79 → 1.05,
+  and a gradient two steps per channel from flat still scored 1.14. The
+  environment is `B1` and `B2` in the catalogue, and `Config/theme.psd1` carries
+  the measurement so promoting it later is a decision rather than an
+  inheritance.
+- **`KindShape` is a `String` and should be a `ShapeMap`.** Adding a schema type
+  needs a validator under `src/`, and a backend is a directory. Logged in
+  `docs/improvements.md` as a proposal rather than absorbed by a `.ps1` edit.
+
+
 ## [0.15.1] - 2026-09-04
 
 The link probe becomes backend data, and the duplicate turned out to have three

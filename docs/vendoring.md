@@ -58,6 +58,54 @@ what that warning exists to report.
 accepted limitation below. Its claim to need nothing survives a developer-tools
 session.
 
+### What is NOT in that bundle, and what v0.16.0 did about it
+
+The same question had to be asked a second time when that backend grew a look,
+and the answer is not symmetrical — some of what a modern 3D scene wants is in
+the file and some of it is not. **Read from the bytes and confirmed in a
+browser before a line was written**, because a capability claim about this
+library had been wrong before and the requirement-direction gate exists for
+exactly that.
+
+| Wanted | In the bundle? | What was found |
+| --- | --- | --- |
+| custom node objects | yes | `nodeThreeObject`, and a mesh in the scene to take constructors from |
+| link particles | yes | `linkDirectionalParticles` and its four companions |
+| camera speed | yes | `controls()` returns a live TrackballControls with `zoomSpeed` |
+| hover and right-click | yes | `onNodeHover`, `onNodeRightClick`, `onBackgroundRightClick` |
+| emissive materials | yes | `MeshLambertMaterial.emissive`, `emissiveIntensity` |
+| depth fog | **class gone, support intact** | `FogExp2` appears only as the `isFogExp2` flag; `fogDensity` and `fogColor` uniforms are present |
+| **post-processing bloom** | **no** | `UnrealBloomPass` and `ShaderPass` appear **zero** times; `postProcessingComposer()` holds only a render pass |
+
+**Three consequences, and each is a decision rather than a workaround.**
+
+**`THREE` is not a global.** The UMD wrapper exports `ForceGraph3D` and nothing
+else, so `new THREE.BoxGeometry(...)` is not available. `scripts/shapes.js`
+takes `Mesh`, `MeshLambertMaterial`, `Color`, `BufferGeometry` and the position
+attribute's constructor off a mesh the library has already made, and builds
+every other geometry from explicit vertices. **That is also why the shapes are
+vertex arrays rather than three.js geometry classes**: the bundle is
+tree-shaken, and `OctahedronGeometry`, `TetrahedronGeometry`,
+`IcosahedronGeometry` and `TorusGeometry` are not in it at all. Reading
+constructors off instances would have reached four shapes; vertices reach all
+eight and depend on nothing tree-shaking can remove.
+
+**Fog is duck-typed.** `scripts/scene.js` hands the scene an object carrying
+`isFogExp2`, a `Color` and a `density`, because that is precisely what the
+renderer reads. three.js tests capability with `isXxx` flags rather than
+`instanceof` so that objects from elsewhere work; this uses that deliberately.
+
+**There is no bloom, and there will not be one.** `UnrealBloomPass` ships as an
+ES module that imports `three`, so vendoring it means vendoring **a second copy
+of three.js** — the thing the bundle's own *"Multiple instances of Three.js
+being imported"* warning exists to report — and takes the page from 1.4 MB to
+roughly 2 MB. So the glow is geometry instead: an emissive core inside an
+additively-blended back-face shell, per item. It occludes correctly against
+things in front of it and costs one extra mesh rather than three full-frame
+passes. **What it cannot do is bleed across the frame the way a real bloom
+does, and that is the trade.** `Config/theme.psd1` says so where a reader
+setting `GlowStrength` will see it.
+
 ## Why they are not loaded from a CDN
 
 **Because the browser gate runs with the network blocked, and a harness that can
@@ -204,7 +252,7 @@ being tested, and that is the accepted side. **Do not strip the comment.**
 
 ### Why the 3D backend's page is twice the size
 
-`examples/threed/forcegraph3d.html` is about 1.3 MB against roughly 620 KB for
+`examples/threed/forcegraph3d.html` is about 1.4 MB against roughly 620 KB for
 the cytoscape rows beside it. The library is larger, it contains a whole 3D
 engine, and that is the price of the view. It is recorded here rather than
 hidden, the same way the 126 KB → 607 KB cost of vendoring at v0.5.0 was.

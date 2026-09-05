@@ -145,6 +145,51 @@ gone as of pass 0050; see below.*
 varies the backend rather than a setting: the same payload the three layout rows
 draw, rendered by a different directory.
 
+### Pass 0051
+
+**Where it is.** v0.16.0. Three rendering backends, and the third one now has a
+look a caller can change without editing it.
+
+**What it did.** Twenty-six settings on `forcegraph3d`: geometry per
+classification with a declared fallback, size by any metric the payload carries,
+glow, fog, environment, particles, tone mapping, camera speed, hover mode,
+tooltip content, which button opens an item's actions, and label visibility.
+`isExported` and `links[].resolution` are drawn for the first time. **No
+contract change and no `.ps1` under `src/`** — every distinction is driven by a
+field the viewmodel already carried or by configuration, and every setting reuses
+a schema type that already existed.
+
+**The third gate exists because the first two could not see a look.**
+`-Task TestBrowser` establishes a page came alive and `-Task TestLinkMode` that
+its links go where configuration said. Both were green over a backend that drew
+every item as the same blue ball. `-Task TestLook` reads a `LookProbe` block the
+backend declares for itself, and it needs **two kinds of evidence**: the DOM for
+what the page *resolved* — a canvas cannot be read — and screenshots for what it
+*drew*. Either alone goes green over the other's failure.
+
+**It found two things on its first run, and neither was findable otherwise.**
+The hover count was always zero while the drawing was visibly highlighting,
+because the tooltip published the hover state again with no set and landed last.
+And the fog case asserted equality against a value the page deliberately
+normalises by camera distance — replaced with a proportionality check over two
+documents, which is the right assertion for anything that scales.
+
+**The prettiest default lost to a gate, and that is the entry worth keeping.**
+`BackgroundStyle` was `vignette` until it was measured: a gradient is in the
+canvas-growth floor's picture of an *empty* render as well as a drawn one, so it
+does not move that ratio, it removes it — 3.79 to 1.05, and a gradient two steps
+per channel from flat still scored 1.14. It ships `flat`. The environment is
+`B1` and `B2` in the catalogue, and the measurement is in `Config/theme.psd1` so
+that promoting it later is a decision rather than an inheritance.
+
+**The catalogue is the delivery vehicle.** Nineteen labelled variants in five
+families, each one overlay of declared settings from `A0` — which is the
+default, asserted byte-identical to a no-overlay render. `catalog.html` is
+generated from `examples/threed/variants.psd1`, always from the whole table, so
+a variant is in the catalogue because it is in the table and drift is
+impossible. The point of the labels is that "do this, but like that" becomes a
+coordinate instead of a paragraph.
+
 ### Pass 0050
 
 **Where it is.** v0.15.1. Three rendering backends, and each one now says how to
@@ -203,7 +248,7 @@ skipping, deliberately.
 
 `contract/viewmodel.schema.json` is the boundary and it is the product. It is
 JSON Schema, language-neutral, and **versioned independently of the module**: it
-is at **1.1.0** while the module is at 0.15.1.
+is at **1.1.0** while the module is at 0.16.0.
 
 Change protocol:
 
@@ -266,6 +311,7 @@ are.** Everything else follows from that one rule.
 | `v0.14.0` | link mode: a node link is configuration rather than a hardcoded scheme. First `src/` change since the handoff |
 | `v0.15.0` | a third backend, `forcegraph3d`. The first evidence that a template set is a rendering backend that does not come from a trivial one |
 | `v0.15.1` | the link probe becomes backend data. `LinkProbe` beside `Smoke`; neither the build task nor the browser harness names a selector any more |
+| `v0.16.0` | the 3D backend's look becomes configuration. Twenty-six settings, a third browser gate (`LookProbe`), and a nineteen-variant catalogue generated from its own table |
 
 The module version and the contract version move independently. For the module:
 **patch** for a normal implementation, **minor** when a template set, a setting

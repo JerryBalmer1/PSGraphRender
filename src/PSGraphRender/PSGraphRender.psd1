@@ -1,6 +1,6 @@
 @{
     RootModule           = 'PSGraphRender.psm1'
-    ModuleVersion        = '0.15.1'
+    ModuleVersion        = '0.16.0'
     GUID                 = '3f9b1c47-58ad-4c2e-b0d6-9e14a7c82f35'
     Author               = 'Jerry Balmer'
     CompanyName          = 'Community'

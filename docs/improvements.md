@@ -29,6 +29,66 @@ thought about yet.
 
 ## Open
 
+### The 3D backend looked like a tech demo — **large, operator-prompted, taken in v0.16.0**
+
+Uniform blue spheres on a flat dark ground, no visual language, and not a single
+interaction a caller could configure. Every DOM assertion and both browser gates
+were green over it, because neither of them can see a look.
+
+**Logged as large and taken because the operator prompted it**, which is the
+only route a large item has — the size rules above say large is *logged and
+stopped on, never taken unprompted*, and this was neither unprompted nor small:
+twenty-six new settings, four new script files, a third browser gate and a
+nineteen-variant catalogue.
+
+What shipped, and what each of it is driven by:
+
+- **Shape per classification**, from a declared `kind → shape` mapping with a
+  declared fallback, over eight geometries. `isExported` and
+  `links[].resolution` gained visual channels of their own. All of it from
+  fields the viewmodel already carried; **no contract change, and none needed**.
+- **Glow, fog, environment, particles, tone mapping**, all declared theme values.
+- **Zoom and rotate speed, hover mode, tooltip content, pointer button, label
+  visibility**, all declared behaviour settings, all read back off the live
+  objects that consume them by `tests/browser/look.cjs`.
+- **`examples/threed/catalog.html`**, generated from `examples/threed/variants.psd1`.
+
+Three things are worth keeping from how it went:
+
+- **Two of the three findings came from the browser gate on its first run**, and
+  neither was findable any other way. The hover count was always zero while the
+  drawing was visibly highlighting, because the tooltip published the hover
+  state again with no set and landed last. And the fog check asserted equality
+  against a value the page deliberately normalises. *Presence is not
+  consumption* now has a second body of evidence behind it.
+- **The prettiest default lost to a gate.** A gradient background is in the
+  canvas-growth floor's picture of an *empty* render as well as a drawn one, so
+  it took that gate from 3.79 to 1.05 — and a gradient two steps per channel
+  from flat still scored 1.14. `BackgroundStyle` ships `flat`; the environment
+  is B1 and B2 in the catalogue. Recorded in `Config/theme.psd1` with the
+  numbers, so promoting it later is a decision rather than an inheritance.
+- **A look is judged by looking.** Six rounds of measure-render-look went into
+  the default before it was worth shipping, and every one of them moved a
+  number that had been chosen by reasoning.
+
+### `KindShape` is a String and should be a `ShapeMap` — **medium, logged not taken**
+
+It is a map from a producer's classifications to this renderer's shape names,
+which is exactly what `ColorMap` is for colours. It ships as a `String` with a
+`kind=shape` grammar parsed in the page, because **adding a schema TYPE needs a
+validator under `src/PSGraphRender/Private/Config/`** and the pass that added it
+was forbidden from editing a `.ps1` — a backend is a directory, and that
+constraint is the point rather than an inconvenience.
+
+The cost is real and bounded: the keys and values are validated in the browser
+instead of at render time, so a typo degrades one classification silently rather
+than warning by name the way every other mistyped setting does.
+
+`ShapeMap` would validate the VALUES against a shape vocabulary and never the
+keys, for the same reason `ColorMap` never validates its keys. **That is a
+module change and therefore a proposal, not an edit made in passing.**
+
+
 ### There is no CHANGELOG — **closed in 0.9.0**
 
 `CHANGELOG.md` exists and says at the top that it was derived from the tags

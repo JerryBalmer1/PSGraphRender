@@ -104,6 +104,52 @@ A new schema *type* is not a new setting and may need a validator — `ColorList
 did, as every other type in that switch did when it was added. The distinction
 holds: types are machinery, settings are data.
 
+**v0.16.0 is the largest test that rule has had.** The 3D backend gained
+twenty-six settings in one pass — geometry per classification, size by metric,
+glow, fog, environment, particles, camera speed, hover behaviour, pointer
+mapping and label visibility — and edited **no `.ps1` at all**. Every one of
+them reuses a type that already existed.
+
+It also found where the rule bites, and the bite is the interesting half.
+`KindShape` maps a producer's classifications to shape names and **wants to be a
+`ShapeMap`**, exactly as `KindColor` is a `ColorMap`. It ships as a `String`
+carrying a `kind=shape` grammar parsed in the browser, because the type would
+have needed a validator and the pass could not add one. The cost is that its
+values are validated a layer down instead of at render time, so a typo degrades
+one classification silently rather than warning by name. That is logged in
+`docs/improvements.md` as a proposal — which is what the rule is *for*: the
+constraint made the missing machinery visible instead of letting a `.ps1` edit
+absorb it quietly.
+
+## What a backend declares to a gate
+
+A backend states its own shape, in its own `templateset.psd1`, for every gate
+that has to drive it. Three blocks now, each added when a gate existed that
+could not otherwise avoid naming a selector:
+
+| Block | Gate | Answers |
+| --- | --- | --- |
+| `Smoke` | `-Task TestBrowser` | what "this page came alive" means here |
+| `LinkProbe` | `-Task TestLinkMode` | how a browser reaches an item's actions |
+| `LookProbe` | `-Task TestLook` | where the page states what it resolved and what its live objects report |
+
+**The rule is the same one every time**: a harness naming `#fg` would be a second
+place that backend's shape is written down, and pass 0050 paid for the lesson
+that an item written from one copy of a duplicate undercounts the duplicate.
+
+`LookProbe` exists because neither of the other two can see a *look*. Both are
+satisfied by a page that draws every item as the same blue ball — which is
+exactly what the 3D backend did until v0.16.0, with both gates green. A backend
+that declares no `LookProbe` is skipped rather than failed: `plain` renders a
+table and has no geometry, no hover and no camera.
+
+**It reads two kinds of evidence and needs both.** The DOM says what the page
+*resolved* — a canvas cannot be read, so a backend that draws one states in text
+what it did, the same argument the item counts are made of. The pixels say what
+it *drew* — two documents one setting apart must not screenshot identically.
+Either alone goes green over the other's failure: a DOM-only check passes a page
+that resolves a shape per item and then draws a sphere every time.
+
 ## Gravity, and the measurements behind it
 
 `scripts/foundation.js` assigns layers itself. It is not dagre, and this was
