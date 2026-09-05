@@ -174,6 +174,47 @@ async function run() {
         } finally { await context.close(); }
       }
 
+      // ---- C: a setting SCALES a live value, proven by two documents rather
+      //         than by one reading. The right check for anything the page
+      //         normalises: the fog density that reaches the scene is the
+      //         configured number divided by how far the camera ended up, so
+      //         one document can only ever say "some fog exists". Two say the
+      //         setting is what moved it.
+      else if (c.kind === 'liveRatio') {
+        const a = await load(browser, probe, c.path);
+        const b = await load(browser, probe, c.other);
+        try {
+          const read = async page => {
+            const v = await page.evaluate(sel => {
+              const el = document.querySelector(sel);
+              return el ? JSON.parse(el.getAttribute('data-live') || 'null') : null;
+            }, probe.Live);
+            return v ? Number(v[c.field]) : null;
+          };
+          const va = await read(a.page), vb = await read(b.page);
+          if (!va || !vb) {
+            fail(results, id, 'one of the two documents reported no ' + c.field
+              + ': ' + JSON.stringify([va, vb]));
+          } else {
+            const ratio = va / vb;
+            // Loose, deliberately. Both documents lay the same payload out the
+            // same way, but the camera lands where zoomToFit puts it and that
+            // is not identical to the last decimal between two runs.
+            const lo = c.expect.ratio * 0.85, hi = c.expect.ratio * 1.15;
+            if (ratio < lo || ratio > hi) {
+              fail(results, id, c.field + ' was ' + va + ' at one setting and ' + vb
+                + ' at the other - ratio ' + ratio.toFixed(3) + ', and ' + c.expect.ratio
+                + ' was configured. The setting does not scale the live value.');
+            } else {
+              notes.push({ case: id, field: c.field, high: va, low: vb, ratio: Number(ratio.toFixed(3)) });
+            }
+          }
+          for (const opened of [a, b]) {
+            if (opened.errors.length) { fail(results, id, opened.errors.length + ' console error(s): ' + opened.errors.slice(0, 3).join(' | ')); }
+          }
+        } finally { await a.context.close(); await b.context.close(); }
+      }
+
       // ---- C: hover does what the setting says, driven through a real pointer.
       else if (c.kind === 'hover') {
         const { context, page, errors } = await load(browser, probe, c.path);

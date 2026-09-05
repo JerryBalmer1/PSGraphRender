@@ -97,11 +97,11 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'LabelMaxNodes'; Type = 'Integer' }
     ) {
         $entry = Get-SchemaEntry -Key $Key
-        $entry | Should -Not -BeNullOrEmpty -Because "$Key is an option this pass promised and the schema is where an option becomes real"
-        $entry.Type | Should -Be $Type
-        $entry.In | Should -Be 'Settings' -Because 'behaviour belongs in settings.psd1 and the schema says which file every value lives in'
-        $entry.Contains('Default') | Should -BeTrue -Because 'a setting with no default is a setting that cannot be left alone'
-        $entry.Description | Should -Not -BeNullOrEmpty
+        $entry | Should-NotBeNull -Because "$Key is an option this pass promised and the schema is where an option becomes real"
+        $entry.Type | Should-Be $Type
+        $entry.In | Should-Be 'Settings' -Because 'behaviour belongs in settings.psd1 and the schema says which file every value lives in'
+        $entry.Contains('Default') | Should-BeTrue -Because 'a setting with no default is a setting that cannot be left alone'
+        $entry.Description | Should-NotBeNull
     }
 
     # In = Theme. Appearance: what it LOOKS like.
@@ -127,11 +127,11 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'ToneMappingExposure'; Type = 'Number' }
     ) {
         $entry = Get-SchemaEntry -Key $Key
-        $entry | Should -Not -BeNullOrEmpty -Because "$Key is an option this pass promised and the schema is where an option becomes real"
-        $entry.Type | Should -Be $Type
-        $entry.In | Should -Be 'Theme'
-        $entry.Contains('Default') | Should -BeTrue
-        $entry.Description | Should -Not -BeNullOrEmpty
+        $entry | Should-NotBeNull -Because "$Key is an option this pass promised and the schema is where an option becomes real"
+        $entry.Type | Should-Be $Type
+        $entry.In | Should-Be 'Theme'
+        $entry.Contains('Default') | Should-BeTrue
+        $entry.Description | Should-NotBeNull
     }
 
     It 'bounds every new Number and Integer, so a variant cannot ask for a value that renders nothing' -ForEach @(
@@ -141,9 +141,9 @@ Describe 'Acceptance A: every option is a declared setting' {
         @{ Key = 'ParticleSpeed' }, @{ Key = 'ParticleWidth' }, @{ Key = 'ToneMappingExposure' }
     ) {
         $entry = Get-SchemaEntry -Key $Key
-        $entry | Should -Not -BeNullOrEmpty
-        $entry.Contains('Min') | Should -BeTrue -Because 'an unbounded number is a setting whose worst value nobody has considered'
-        $entry.Contains('Max') | Should -BeTrue
+        $entry | Should-NotBeNull
+        $entry.Contains('Min') | Should-BeTrue -Because 'an unbounded number is a setting whose worst value nobody has considered'
+        $entry.Contains('Max') | Should-BeTrue
     }
 
     It 'ships a current value for every new key, in the file the schema names' -ForEach @(
@@ -177,13 +177,13 @@ Describe 'Acceptance A: every option is a declared setting' {
         # A schema entry with no shipped value renders the default and warns at
         # nobody, which is the quiet half of a setting that does not exist.
         $values = Import-PowerShellDataFile -LiteralPath (Join-Path $script:ShippedSet "Config/$File")
-        $values.Contains($Key) | Should -BeTrue -Because "$Key must ship a deliberate current value in $File, not fall through to its schema default"
+        $values.Contains($Key) | Should-BeTrue -Because "$Key must ship a deliberate current value in $File, not fall through to its schema default"
     }
 
     It 'names a shape vocabulary big enough for the mapping to say anything' {
         $entry = Get-SchemaEntry -Key 'NodeShapeFallback'
-        $entry | Should -Not -BeNullOrEmpty
-        @($entry.Values).Count | Should -BeGreaterOrEqual 5 -Because 'a mapping with four shapes cannot distinguish four kinds and a fallback'
+        $entry | Should-NotBeNull
+        @($entry.Values).Count | Should-BeGreaterThanOrEqual 5 -Because 'a mapping with four shapes cannot distinguish four kinds and a fallback'
     }
 
     It 'declares the shape mapping as producer-blind data, the way KindColor is' {
@@ -193,22 +193,36 @@ Describe 'Acceptance A: every option is a declared setting' {
         # a grammar in a String rather than a map type is that adding a type
         # needs a validator under src/, which this pass may not touch.
         $entry = Get-SchemaEntry -Key 'KindShape'
-        $entry | Should -Not -BeNullOrEmpty
-        $entry.Contains('Values') | Should -BeFalse -Because 'enumerating classifications here is the defect, not the feature'
+        $entry | Should-NotBeNull
+        $entry.Contains('Values') | Should-BeFalse -Because 'enumerating classifications here is the defect, not the feature'
     }
 
-    It 'still declares no setting the page does not read' {
-        # Every schema key must be consumed by this backend's own scripts. The
-        # inverse of the usual check, and the one that keeps a settings surface
-        # from becoming a list of promises.
+    It 'still declares no setting nothing consumes' {
+        # Every schema key must be consumed SOMEWHERE. The inverse of the usual
+        # check, and the one that keeps a settings surface from becoming a list
+        # of promises: twenty-six new keys is exactly the size of change where
+        # one of them quietly reaches nothing.
+        #
+        # THREE places consume one, not one, and the distinction is the reason
+        # this check nearly went wrong. A value can be read by the page's
+        # scripts, or named by the stylesheet as a custom property, or resolved
+        # when the document is ASSEMBLED - which is what LinkMode is, and it
+        # appears in no .js at all because SlotsBySetting decides which files
+        # are in the document rather than what a script branches on. A check
+        # that only read the scripts would have called the oldest setting here
+        # dead.
         $code = (Get-ChildItem -LiteralPath (Join-Path $script:ShippedSet 'scripts') -Recurse -Filter *.js |
                 ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }) -join "`n"
         $css = (Get-ChildItem -LiteralPath (Join-Path $script:ShippedSet 'styles') -Filter *.css |
                 ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }) -join "`n"
+        $atAssembly = @($script:Manifest.SlotsBySetting.Keys)
+
         $unread = @($script:Entries.Keys | Where-Object {
-                $code -notmatch [regex]::Escape($_) -and $css -notmatch [regex]::Escape($_)
+                $code -notmatch [regex]::Escape($_) -and
+                $css -notmatch [regex]::Escape($_) -and
+                $atAssembly -notcontains $_
             })
-        $unread | Should -BeNullOrEmpty -Because 'a declared setting nothing reads is a setting that does not exist'
+        $unread | Should-BeNull -Because 'a declared setting nothing reads is a setting that does not exist'
     }
 }
 
@@ -217,29 +231,29 @@ Describe 'Acceptance A: every option is a declared setting' {
 Describe 'Acceptance D: the catalogue is real' {
 
     It 'has a variant table' {
-        Test-Path -LiteralPath $script:VariantTablePath | Should -BeTrue -Because 'the catalogue is generated FROM this table; without it there is nothing to generate from'
+        Test-Path -LiteralPath $script:VariantTablePath | Should-BeTrue -Because 'the catalogue is generated FROM this table; without it there is nothing to generate from'
     }
 
     It 'carries at least 16 variants across at least 5 families' {
         $table = Get-VariantTable
-        $table | Should -Not -BeNullOrEmpty
+        $table | Should-NotBeNull
         $variants = @($table.Variants)
-        $variants.Count | Should -BeGreaterOrEqual 16
-        @($variants.Family | Sort-Object -Unique).Count | Should -BeGreaterOrEqual 5
+        $variants.Count | Should-BeGreaterThanOrEqual 16
+        @($variants.Family | Sort-Object -Unique).Count | Should-BeGreaterThanOrEqual 5
     }
 
     It 'labels every variant with a family letter and a number, uniquely' {
         $table = Get-VariantTable
         $labels = @($table.Variants.Label)
-        @($labels | Sort-Object -Unique).Count | Should -Be $labels.Count -Because 'a label is a coordinate and two variants cannot share one'
-        foreach ($label in $labels) { $label | Should -Match '^[A-E][0-9]+$' }
+        @($labels | Sort-Object -Unique).Count | Should-Be $labels.Count -Because 'a label is a coordinate and two variants cannot share one'
+        foreach ($label in $labels) { $label | Should-MatchString '^[A-E][0-9]+$' }
     }
 
     It 'gives every variant a one-line caption saying what it changes from default' {
         $table = Get-VariantTable
         foreach ($v in $table.Variants) {
-            $v.Caption | Should -Not -BeNullOrEmpty -Because "$($v.Label) is a coordinate the operator will point with, and a coordinate with no caption points at nothing"
-            $v.Caption | Should -Not -Match "`n"
+            $v.Caption | Should-NotBeNull -Because "$($v.Label) is a coordinate the operator will point with, and a coordinate with no caption points at nothing"
+            $v.Caption | Should-NotMatchString "`n"
         }
     }
 
@@ -250,32 +264,32 @@ Describe 'Acceptance D: the catalogue is real' {
         else { $null }
         if ($t) { @($t.Variants | ForEach-Object { @{ Label = $_.Label } }) } else { @(@{ Label = '(no variant table)' }) }
     ) {
-        $Label | Should -Not -Be '(no variant table)' -Because 'there is no variant table to enumerate'
-        Test-Path -LiteralPath (Join-Path $script:CatalogRoot "$Label.html") | Should -BeTrue
-        Test-Path -LiteralPath (Join-Path $script:CatalogRoot "$Label.png") | Should -BeTrue
+        $Label | Should-NotBe '(no variant table)' -Because 'there is no variant table to enumerate'
+        Test-Path -LiteralPath (Join-Path $script:CatalogRoot "$Label.html") | Should-BeTrue
+        Test-Path -LiteralPath (Join-Path $script:CatalogRoot "$Label.png") | Should-BeTrue
     }
 
     It 'has a generated catalogue page that names every variant in the table' {
         $page = Join-Path $script:ExamplesRoot 'threed/catalog.html'
-        Test-Path -LiteralPath $page | Should -BeTrue
+        Test-Path -LiteralPath $page | Should-BeTrue
         $html = [System.IO.File]::ReadAllText($page)
         $table = Get-VariantTable
         foreach ($v in $table.Variants) {
-            $html | Should -BeLike "*$($v.Label)*" -Because "$($v.Label) exists in the table, so it must exist in the page the table generates"
+            $html | Should-BeLikeString "*$($v.Label)*" -Because "$($v.Label) exists in the table, so it must exist in the page the table generates"
         }
     }
 
     It 'ships a catalogue page that fetches nothing and inlines no library' {
         $html = [System.IO.File]::ReadAllText((Join-Path $script:ExamplesRoot 'threed/catalog.html'))
-        $html | Should -Not -Match 'https?://' -Because 'offline is absolute, and a catalogue page is an artifact like any other'
-        $html | Should -Not -Match 'ForceGraph3D' -Because 'the catalogue is a grid of links and pictures; it draws no graph'
+        $html | Should-NotMatchString 'https?://' -Because 'offline is absolute, and a catalogue page is an artifact like any other'
+        $html | Should-NotMatchString 'ForceGraph3D' -Because 'the catalogue is a grid of links and pictures; it draws no graph'
     }
 
     It 'declares A0 as the shipped default, so every conversation has a fixed origin' {
         $table = Get-VariantTable
         $a0 = @($table.Variants | Where-Object { $_.Label -eq 'A0' })
-        @($a0).Count | Should -Be 1
-        @($a0[0].Overlay.Keys).Count | Should -Be 0 -Because 'A0 IS the default: an overlay with anything in it is a different look'
+        @($a0).Count | Should-Be 1
+        @($a0[0].Overlay.Keys).Count | Should-Be 0 -Because 'A0 IS the default: an overlay with anything in it is a different look'
     }
 
     It 'keeps every variant to one overlay diff, touching only settings and theme' {
@@ -285,7 +299,7 @@ Describe 'Acceptance D: the catalogue is real' {
         $known = @($script:Entries.Keys)
         foreach ($v in $table.Variants) {
             foreach ($key in @($v.Overlay.Keys)) {
-                $known | Should -Contain $key -Because "$($v.Label) overlays '$key', which is not a declared setting - a variant may only move configuration"
+                $known | Should-ContainCollection $key -Because "$($v.Label) overlays '$key', which is not a declared setting - a variant may only move configuration"
             }
         }
     }
@@ -299,8 +313,8 @@ Describe 'Acceptance E: nothing else moved' {
         Push-Location $script:RepoRootDir
         try {
             $diff = & git diff --name-only "$script:BaseRef" -- "src/PSGraphRender/TemplateSets/$_" 2>&1
-            $LASTEXITCODE | Should -Be 0
-            @($diff | Where-Object { $_ }) | Should -BeNullOrEmpty -Because "this pass is about the 3D backend and $_ is not it"
+            $LASTEXITCODE | Should-Be 0
+            @($diff | Where-Object { $_ }) | Should-BeNull -Because "this pass is about the 3D backend and $_ is not it"
         }
         finally { Pop-Location }
     }
@@ -309,7 +323,7 @@ Describe 'Acceptance E: nothing else moved' {
         Push-Location $script:RepoRootDir
         try {
             $diff = & git diff --name-only "$script:BaseRef" -- 'src/PSGraphRender/TemplateSets/index.psd1' 2>&1
-            @($diff | Where-Object { $_ }) | Should -BeNullOrEmpty
+            @($diff | Where-Object { $_ }) | Should-BeNull
         }
         finally { Pop-Location }
     }
@@ -318,7 +332,7 @@ Describe 'Acceptance E: nothing else moved' {
         Push-Location $script:RepoRootDir
         try {
             $diff = @(& git diff --name-only "$script:BaseRef" -- 'src/**/*.ps1' 'src/*.ps1' 2>&1 | Where-Object { $_ })
-            $diff | Should -BeNullOrEmpty -Because 'the whole claim of the seam is that a backend needs no module change'
+            $diff | Should-BeNull -Because 'the whole claim of the seam is that a backend needs no module change'
         }
         finally { Pop-Location }
     }
@@ -327,7 +341,7 @@ Describe 'Acceptance E: nothing else moved' {
         Push-Location $script:RepoRootDir
         try {
             $diff = @(& git diff --name-only "$script:BaseRef" -- 'contract' 2>&1 | Where-Object { $_ })
-            $diff | Should -BeNullOrEmpty -Because 'every distinction here is driven by a field the viewmodel already carries, or by configuration'
+            $diff | Should-BeNull -Because 'every distinction here is driven by a field the viewmodel already carries, or by configuration'
         }
         finally { Pop-Location }
     }
@@ -344,20 +358,20 @@ Describe 'Acceptance E: nothing else moved' {
             $graph = [System.IO.File]::ReadAllText((Join-Path $script:ShippedSet 'scripts/graph.js'))
             $labelSource = ($graph + (Get-ChildItem -LiteralPath (Join-Path $script:ShippedSet 'scripts') -Recurse -Filter *.js |
                         ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }) -join "`n")
-            $labelSource | Should -Match 'createElement' -Because 'the tooltip must be built as an element'
-            $labelSource | Should -Not -Match '\.innerHTML\s*=' -Because 'innerHTML anywhere in this backend re-opens the injection surface 0049 closed'
+            $labelSource | Should-MatchString 'createElement' -Because 'the tooltip must be built as an element'
+            $labelSource | Should-NotMatchString '\.innerHTML\s*=' -Because 'innerHTML anywhere in this backend re-opens the injection surface 0049 closed'
         }
 
         It 'still fits the view immediately as well as on settle' {
             $graph = [System.IO.File]::ReadAllText((Join-Path $script:ShippedSet 'scripts/graph.js'))
-            $graph | Should -Match 'onEngineStop' -Because 'the second fit is what catches the drift after warmup'
-            ([regex]::Matches($graph, 'fitView\s*\(')).Count | Should -BeGreaterOrEqual 2 -Because 'fitting only on settle leaves the view unfitted for the whole cooldown'
+            $graph | Should-MatchString 'onEngineStop' -Because 'the second fit is what catches the drift after warmup'
+            ([regex]::Matches($graph, 'fitView\s*\(')).Count | Should-BeGreaterThanOrEqual 2 -Because 'fitting only on settle leaves the view unfitted for the whole cooldown'
         }
 
         It 'still sizes the drawing buffer from the container explicitly' {
             $graph = [System.IO.File]::ReadAllText((Join-Path $script:ShippedSet 'scripts/graph.js'))
-            $graph | Should -Match 'clientWidth' -Because 'left to itself the library opened a 1280x900 buffer inside an 859px box'
-            $graph | Should -Match 'clientHeight'
+            $graph | Should-MatchString 'clientWidth' -Because 'left to itself the library opened a 1280x900 buffer inside an 859px box'
+            $graph | Should-MatchString 'clientHeight'
         }
 
         It 'still beats the user agent on [hidden] for every element that uses it' {
@@ -365,8 +379,8 @@ Describe 'Acceptance E: nothing else moved' {
             # attribute. The notice is inset:0, so losing it puts an invisible
             # sheet over the canvas that swallows every click.
             $css = [System.IO.File]::ReadAllText((Join-Path $script:ShippedSet 'styles/base.css'))
-            $css | Should -Match '#fg-notice\[hidden\]'
-            $css | Should -Match '#fg-status\[hidden\]'
+            $css | Should-MatchString '#fg-notice\[hidden\]'
+            $css | Should-MatchString '#fg-status\[hidden\]'
         }
     }
 
@@ -376,18 +390,18 @@ Describe 'Acceptance E: nothing else moved' {
             $script:Manifest.SlotsBySetting.Values | ForEach-Object { $_.Values | ForEach-Object { $_ } } | ForEach-Object { $_ }
         )
         foreach ($file in $vendor.Files) {
-            @($slotted) | Should -Contain "vendor/$($file.Name)" -Because 'a vendored file no slot names never reaches the document'
+            @($slotted) | Should-ContainCollection "vendor/$($file.Name)" -Because 'a vendored file no slot names never reaches the document'
         }
         $onDisk = @(Get-ChildItem -LiteralPath (Join-Path $script:ShippedSet 'vendor') -File |
                 Where-Object { $_.Name -ne 'vendor.psd1' } | Select-Object -ExpandProperty Name)
-        @($onDisk | Sort-Object) | Should -Be @(@($vendor.Files.Name) | Sort-Object) -Because 'a blob with no provenance is worse than a CDN link'
+        @($onDisk | Sort-Object) | Should-BeCollection @(@($vendor.Files.Name) | Sort-Object) -Because 'a blob with no provenance is worse than a CDN link'
     }
 
     It 'drives the link probe from the setting that decides the button' {
         # If NodeActionButton is a setting, the gate that exercises node actions
         # has to follow it, or the pass ships a mode nothing drove.
         $settings = Import-PowerShellDataFile -LiteralPath (Join-Path $script:ShippedSet 'Config/settings.psd1')
-        $script:Manifest.LinkProbe.Button | Should -Be $settings.NodeActionButton -Because 'a probe pressing a button the document no longer listens on is a green gate over a dead feature'
+        $script:Manifest.LinkProbe.Button | Should-Be $settings.NodeActionButton -Because 'a probe pressing a button the document no longer listens on is a green gate over a dead feature'
     }
 
     It 're-measured the canvas-growth floor under the new look' {
@@ -396,7 +410,7 @@ Describe 'Acceptance E: nothing else moved' {
         # over 2 was recorded; this asserts the record was revisited, not that
         # the number moved.
         $text = [System.IO.File]::ReadAllText($script:ManifestPath)
-        $text | Should -Match '(?s)CanvasGrowth'
-        $text | Should -Match 'v0\.16\.0' -Because 'the floor comment must say which look it was measured under'
+        $text | Should-MatchString '(?s)CanvasGrowth'
+        $text | Should-MatchString 'v0\.16\.0' -Because 'the floor comment must say which look it was measured under'
     }
 }

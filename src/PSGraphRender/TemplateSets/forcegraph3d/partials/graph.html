@@ -9,7 +9,23 @@
     <span id="fg-hint"></span>
   </div>
 
-  <div id="fg"></div>
+  <div id="fg">
+    <!-- Always-on item names, positioned over the canvas from projected
+         coordinates. Empty and hidden unless ShowLabels asks for it; every
+         label in it is a span carrying textContent, never markup. -->
+    <div id="fg-labels" hidden></div>
+  </div>
+
+  <!-- What the page RESOLVED, for a check to read. Same argument as the counts
+       above and the same rule: a drawing cannot be read from the DOM, so a
+       backend that makes one states what it did in text as well. The
+       selectors are declared to the harness in templateset.psd1's LookProbe
+       block, so no gate names an element of this backend's.
+
+       Attributes rather than a global: exposing the graph instance for tooling
+       would put it in every shipped report. -->
+  <div id="fg-resolved" hidden data-resolved="[]"></div>
+  <div id="fg-live" hidden data-live="{}" data-hover="{}"></div>
 
   <!-- What a selected item offers. Empty until something is clicked, and in
        `none` mode it stays empty of links for every item, because the files

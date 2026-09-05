@@ -34,7 +34,17 @@
 
         SCRIPT           = @('scripts/bootstrap.js')
         SCRIPT_ACTIONS   = @('scripts/actions.js')
+
+        # Geometry, mood and labels, split from the view rather than piled into
+        # it. The split is by WHAT EACH ONE NEEDS TO KNOW: shapes.js knows the
+        # vendored bundle's constructors and nothing about a payload, scene.js
+        # knows the renderer and nothing about items, graph.js knows the
+        # payload, and labels.js knows only how to put text where a projection
+        # says. A change to the shape vocabulary touches one file.
+        SCRIPT_SHAPES    = @('scripts/shapes.js')
+        SCRIPT_SCENE     = @('scripts/scene.js')
         SCRIPT_GRAPH     = @('scripts/graph.js')
+        SCRIPT_LABELS    = @('scripts/labels.js')
 
         # Node links. These two are the DEFAULTS, and SlotsBySetting below
         # overrides them with whichever mode the render is configured for.
@@ -121,34 +131,53 @@
         # compresses to. The harness measures the empty render itself, in the
         # same run, so the floor comes from the machine doing the checking.
         #
-        # MEASURED, NOT COPIED. The reference backend records 12.2 and requires
-        # 4, and taking those digits would have been the easiest thing to write
-        # and wrong: this backend draws far less ink for the same payload -
-        # lit spheres and thin lines on a dark ground, against filled boxes with
-        # labels - so its numbers are lower and its floor is a different number.
+        # MEASURED, NOT COPIED - and RE-MEASURED at v0.16.0, because the look
+        # changed and a floor nobody re-examined after a look change is a gate
+        # quietly wrong in one direction or the other.
         #
-        # Measured at 1280x900 DSF 1 against this backend's own empty render
-        # (5,168 bytes) in the same run, at two moments, because a force layout
-        # is still moving when a check first looks at it:
+        # The v0.15.1 measurement is kept below because it is what the floor of
+        # 2 was argued from, and the argument is what has to be re-run:
         #
-        #   fixture              while settling   settled
+        #   fixture              while settling   settled   (v0.15.1)
         #   ambiguous  (6/6)         4.51           6.49
         #   sample-module (9/5)      5.20           3.50
         #   infrastructure (17/20)   6.26           4.77
         #
-        # The thinnest thing observed anywhere is 3.50 - sample-module settled,
-        # which is nine items and five links spread across the frame and is
-        # genuinely close to empty. Two is the floor. That is 1.75x below the
-        # thinnest case, and the reference backend's 4 sits 1.84x below its own
-        # thinnest (7.34); the same daylight, not the same digit, which is what
-        # "four is not a marginal call" was actually claiming.
+        # v0.16.0 draws more ink for the same payload - shaped geometry, glow
+        # shells, link particles and coloured resolutions all put pixels where
+        # there were none - so every ratio went UP. Three consecutive runs at
+        # 1280x900 DSF 1, against this backend's own empty render, which is
+        # still 5,168 bytes because BackgroundStyle stays 'flat':
         #
-        # It also fills in a gap the archive records as open. Thread 0006-t2
-        # says this ratio "has never met a legitimately sparse payload" - 4x
-        # required against measured values of 12.2 and 13.6, with nothing in
-        # between. 3.50 is in between, and it comes from a backend that draws
-        # sparsely by nature rather than from a payload that happens to be thin.
-        CanvasGrowth = @{ '#fg' = 2 }
+        #   fixture                run 1   run 2   run 3
+        #   ambiguous  (6/6)        8.96    9.01    9.04
+        #   sample-module (9/5)     4.28    4.24    4.03
+        #   infrastructure (17/20)  6.09    5.86    5.90
+        #
+        # THREE RUNS RATHER THAN ONE, and that is new. Until v0.16.0 this view
+        # was still after it settled, so one measurement was the measurement.
+        # It is not still any more: ParticleCount puts moving marks on every
+        # link, so the drawn byte count now varies by about 5% between runs of
+        # the same document. A floor set from a single reading of a moving
+        # picture is a floor set from its best moment.
+        #
+        # The thinnest thing observed anywhere is 4.03. The floor moves 2 ->
+        # 2.25, which keeps this file's OWN standard rather than inventing a
+        # new one: 2 over 3.50 was 1.75x of daylight and the reference
+        # backend's 4 over 7.34 is 1.84x, so 2.25 under 4.03 is 1.79x - the
+        # same daylight, again, on numbers that all moved. Leaving it at 2
+        # would have been 2.01x and would have been the easiest thing to write:
+        # every case passes either way, and a floor that no longer tracks the
+        # drawing it guards is exactly the "quietly wrong" this re-measurement
+        # exists to prevent.
+        #
+        # It also still fills the gap the archive records as open. Thread
+        # 0006-t2 says this ratio "has never met a legitimately sparse payload"
+        # - 4x required against measured values of 12.2 and 13.6, with nothing
+        # in between. 4.03 is in between, and it comes from a backend that
+        # draws sparsely by nature rather than from a payload that happens to
+        # be thin.
+        CanvasGrowth = @{ '#fg' = 2.25 }
     }
 
     # How a browser reaches a node's actions on THIS backend, as data, for the
@@ -171,6 +200,15 @@
         # panel is not. Reading "did it open" off the action list would make
         # correct `none` behaviour indistinguishable from a click that landed
         # on nothing.
+        #
+        # SINCE v0.16.0 THIS IS A SETTING, and this value has to be the same one
+        # Config/settings.psd1 ships as NodeActionButton. The page binds ONE
+        # handler rather than both, so a probe pressing the other button opens
+        # nothing and the whole link gate goes red - which is the correct
+        # failure, and better than the alternative: a gate that pressed a fixed
+        # button would stay green while the shipped document listened on
+        # another, and the mode nobody drove would be the one every reader got.
+        # tests/ForceGraph3DLook.Tests.ps1 asserts the two agree.
         Button = 'left'
         Menu   = '#fg-actions'
         Open   = '#fg-panel'
@@ -187,5 +225,56 @@
         # loop rather than on the event, so the pointer has to be somewhere
         # before the press.
         Hover  = 150
+    }
+
+    # How a browser checks what this backend DREW, as data, for the same reason
+    # Smoke and LinkProbe are here. tests/browser/look.cjs reads it and knows
+    # nothing else about any backend.
+    #
+    # It exists because neither of the other two gates can see a look. Smoke
+    # asks whether a page came alive and LinkProbe asks where a link goes, and
+    # both are satisfied by a page that draws every item as the same blue ball
+    # - which is exactly what this backend did until v0.16.0. A backend that
+    # declares no LookProbe is skipped rather than failed: `plain` renders a
+    # table and has no geometry, no hover and no camera, so demanding one of it
+    # would be the gate inventing a requirement the backend never took on.
+    LookProbe = @{
+        # The element the drawing lives in, and what must exist before the
+        # probe touches anything.
+        Canvas   = '#fg'
+        Ready    = '#fg canvas'
+
+        # A force simulation is still moving when the canvas first exists, and
+        # the view fits itself when it stops. Longer than LinkProbe's, because
+        # the pixel cases compare two screenshots and a graph still drifting
+        # would make two runs of the SAME document differ - which is a
+        # difference the check must not be able to manufacture.
+        Settle   = 3200
+        Hover    = 220
+
+        # Where the page states what it RESOLVED, per item: the classification
+        # each item carries and the geometry the mapping produced for it, as
+        # JSON in an attribute. The same argument as the counts in #fg-status -
+        # a drawing cannot be read from the DOM, so a backend that makes one
+        # says in text what it did.
+        Resolved = '#fg-resolved'
+
+        # And where it states what its LIVE objects report: zoom speed off the
+        # controls, particle count off the graph, fog density off the scene.
+        # Read back from the object that consumes each value rather than echoed
+        # from CONFIG, because a value that reaches the document and never
+        # reaches the object is exactly the failure this gate exists to catch.
+        # data-hover on the same element carries what the last pointer move
+        # highlighted.
+        Live     = '#fg-live'
+
+        # Where to look for an item, as fractions of the canvas box so the job
+        # carries no pixel coordinate that holds at one viewport only. Scanned
+        # in order until one lands: a fitted force layout puts items near the
+        # centre but not reliably AT it.
+        Points   = @(
+            @(0.5, 0.5), @(0.42, 0.46), @(0.58, 0.54), @(0.5, 0.38), @(0.5, 0.62)
+            @(0.36, 0.5), @(0.64, 0.5), @(0.44, 0.58), @(0.56, 0.42)
+        )
     }
 }

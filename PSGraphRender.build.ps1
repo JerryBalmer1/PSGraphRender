@@ -769,7 +769,6 @@ task TestLook Build, {
                         @{ n = 'zoom-speed'; s = @{ ZoomSpeed = 0.35 }; f = 'zoomSpeed'; v = 0.35 }
                         @{ n = 'rotate-speed'; s = @{ RotateSpeed = 2.0 }; f = 'rotateSpeed'; v = 2 }
                         @{ n = 'particles'; s = @{ ParticleCount = 5 }; f = 'particleCount'; v = 5 }
-                        @{ n = 'fog'; s = @{ FogDensity = 0.004 }; f = 'fogDensity'; v = 0.004 }
                         @{ n = 'button'; s = @{ NodeActionButton = 'right' }; f = 'nodeActionButton'; v = 'right' }
                     )) {
                     @{
@@ -777,6 +776,20 @@ task TestLook Build, {
                         field = $live.f; expect = @{ value = $live.v }
                         path = (New-LookDocument -Name "live-$($live.n)" -Setting $live.s -Backend $p.Name)
                     }
+                }
+
+                # -- C: and one that SCALES rather than arrives. Fog density is
+                #       normalised by camera distance so one value means one
+                #       appearance on any payload, which means no single
+                #       reading can be compared to the setting - the first
+                #       version of this case asserted equality and failed
+                #       against a correct page, reporting 0.00399 where 0.004
+                #       was configured. Two documents, one twice the other.
+                @{
+                    kind = 'liveRatio'; backend = $p.Name; name = 'live-fog-scales'; probe = $p.Probe
+                    field = 'fogDensity'; expect = @{ ratio = 2 }
+                    path = (New-LookDocument -Name 'fog-high' -Setting @{ FogDensity = 0.008 } -Backend $p.Name)
+                    other = (New-LookDocument -Name 'fog-low' -Setting @{ FogDensity = 0.004 } -Backend $p.Name)
                 }
 
                 # -- C: hover does what the setting says, driven through a real

@@ -7,7 +7,7 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--PageBackground, #0d1117);
+  background: var(--PageBackground, #080b12);
   color: var(--BodyColor, #e6edf3);
   font-family: var(--BodyFont, system-ui, -apple-system, Segoe UI, sans-serif);
   font-size: 13px;
@@ -27,11 +27,43 @@ body {
   flex-direction: column;
 }
 
-/* The library sizes its canvas to this element. */
+/* The library sizes its canvas to this element.
+
+   It is also the ENVIRONMENT. BackgroundStyle decides whether the canvas is
+   cleared opaque or drawn transparent over what is painted here, so a gradient
+   costs nothing in the scene: no skybox, no extra geometry, and no texture -
+   which is the one thing that could not have been offline anyway.
+
+   Keyed off an ATTRIBUTE rather than off the custom property, because CSS
+   cannot branch on a custom property's value and a stylesheet that could not
+   tell 'gradient' from 'vignette' drew them identically - which is exactly
+   what the first version of this file did, and it was found by two variants
+   screenshotting to the same bytes. graph.js sets the attribute from the same
+   setting. */
 #fg {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+  background: var(--PageBackground, #080b12);
+}
+
+/* Top-lit, like a horizonless studio: brightest above the graph, falling away
+   below it. */
+:root[data-background="gradient"] #fg {
+  background:
+    linear-gradient(to bottom,
+      var(--BackgroundGlowColor, #16304d) 0%,
+      var(--PageBackground, #080b12) 62%,
+      var(--PageBackground, #080b12) 100%);
+}
+
+/* Centred, so the light is behind the graph rather than above it. The
+   difference is what the graph reads as sitting IN rather than against. */
+:root[data-background="vignette"] #fg {
+  background:
+    radial-gradient(120% 90% at 50% 42%,
+      var(--BackgroundGlowColor, #16304d) 0%,
+      var(--PageBackground, #080b12) 68%);
 }
 
 /* Setting `display` on an element that is sometimes `hidden` beats the user
@@ -41,8 +73,14 @@ body {
    the notice - which is inset:0 - became an invisible sheet across the whole
    viewport that swallowed every click on the canvas under it. The second one
    cost a grid of eighty-one clicks that hit nothing and a hunt through the
-   camera code, and what found it was elementFromPoint naming the notice. */
+   camera code, and what found it was elementFromPoint naming the notice.
+
+   #fg-labels joins the list for the same reason and would have failed the same
+   way: it is inset:0 over the canvas. It is pointer-events:none as well, which
+   is belt and braces on purpose - the notice taught this file that one
+   full-bleed overlay is all it takes. */
 #fg-status[hidden],
+#fg-labels[hidden],
 #fg-notice[hidden] {
   display: none;
 }
@@ -53,8 +91,8 @@ body {
   gap: 16px;
   align-items: baseline;
   padding: 10px 14px;
-  background: var(--ChromeBackground, #161b22);
-  border-bottom: 1px solid var(--ChromeBorder, #30363d);
+  background: var(--ChromeBackground, #0e1420);
+  border-bottom: 1px solid var(--ChromeBorder, #1f2937);
 }
 
 #fg-title {
@@ -70,6 +108,44 @@ body {
   color: var(--MutedColor, #8b949e);
 }
 
+/* The always-on label layer. Never takes a click: it covers the whole canvas,
+   and the canvas is the only thing on this page a reader interacts with. */
+#fg-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fg-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--BodyColor, #e6edf3);
+  /* Over a drawing rather than over a background: the text has to stay legible
+     against a bright item and against empty space, and a translucent plate is
+     what does both. A text-shadow alone fails against a glow shell. */
+  background: color-mix(in srgb, var(--PageBackground, #080b12) 72%, transparent);
+  text-shadow: 0 1px 2px var(--PageBackground, #080b12);
+}
+
+/* The hover tooltip's own contents. The library owns the box; these are the
+   elements this page appends into it, and they are elements rather than a
+   string because a label is free text from a producer. */
+.fg-tip-name {
+  font-weight: 600;
+}
+
+.fg-tip-sub {
+  color: var(--MutedColor, #8b949e);
+  font-size: 11px;
+}
+
 #fg-panel {
   position: fixed;
   left: 14px;
@@ -77,8 +153,8 @@ body {
   /* A length is a number in Config, so the unit is applied here. */
   max-width: calc(var(--PanelWidth, 340) * 1px);
   padding: 12px 14px;
-  background: var(--ChromeBackground, #161b22);
-  border: 1px solid var(--ChromeBorder, #30363d);
+  background: var(--ChromeBackground, #0e1420);
+  border: 1px solid var(--ChromeBorder, #1f2937);
   border-radius: 6px;
 }
 
@@ -114,7 +190,7 @@ body {
   font: inherit;
   color: var(--AccentColor, #58a6ff);
   background: none;
-  border: 1px solid var(--ChromeBorder, #30363d);
+  border: 1px solid var(--ChromeBorder, #1f2937);
   border-radius: 4px;
   padding: 3px 8px;
   cursor: pointer;

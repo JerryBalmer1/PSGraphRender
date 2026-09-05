@@ -87,7 +87,10 @@ const STRINGS = /*__STRINGS__*/ null;
 
 /*__SLOT_SCRIPT_NODE_LINK__*/
 /*__SLOT_SCRIPT_ACTIONS__*/
+/*__SLOT_SCRIPT_SHAPES__*/
+/*__SLOT_SCRIPT_SCENE__*/
 /*__SLOT_SCRIPT_GRAPH__*/
+/*__SLOT_SCRIPT_LABELS__*/
 
     // Everything above declares; this runs. Order matters exactly once: the
     // panel has to exist before a click can fill it.
